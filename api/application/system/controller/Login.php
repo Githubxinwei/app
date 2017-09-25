@@ -8,9 +8,6 @@ class Login{
 	public function index(){
 		echo 1;
 	}
-	//注册
-	function register(){
-		
-	}
+	
 } 
  ?>
