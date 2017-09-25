@@ -8,6 +8,5 @@ class Login{
 	public function index(){
 		echo 1;
 	}
-	
 } 
  ?>
