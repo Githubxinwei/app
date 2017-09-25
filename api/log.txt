@@ -1,0 +1,3 @@
+2017-09-11 14:26:07  {"productCode":"QUICK_WAP_PAY","body":"","subject":"xgkj","out_trade_no":"32324532523","total_amount":0.01,"timeout_express":"1m"}
+2017-09-11 14:26:46  {"productCode":"QUICK_WAP_PAY","body":"","subject":"xgkj","out_trade_no":"32324532523","total_amount":0.01,"timeout_express":"1m"}
+2017-09-11 14:26:48  {"productCode":"QUICK_WAP_PAY","body":"","subject":"xgkj","out_trade_no":"32324532523","total_amount":0.01,"timeout_express":"1m"}
