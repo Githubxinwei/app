@@ -76,6 +76,14 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 	}
 	return $jsapi_params;
 }
+//返回小程序模板信息
+function get_app($type){
+	$arr = [
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'http://www.xiguakeji.cc/images/logo-2.png','fee'=>100],
+		2=>['code'=>2,'name'=>'预约小程序','pic'=>'http://www.xiguakeji.cc/images/logo-2.png','fee'=>50]
+	];
+	return $arr[$type];
+}
 //加密方法
 function xgmd5($pwd){
 	$res = 'xiguakeji.com'.$pwd;
