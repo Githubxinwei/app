@@ -24,7 +24,7 @@ class Login{
 		    $data['lastIp'] = $info[0]['nowIp'];
 		    $data['nowIp'] = $_SERVER["REMOTE_ADDR"];
 		    $data['lastTime'] = $info[0]['nowTime'];
-		    $data['nowTime'] = strtotime('Y年m月d日H:i:s',time());
+		    $data['nowTime'] = date('Y年m月d日H:i:s',time());
             $res = db('system') -> where('username',$username) -> update($data);
             if($res){
                 $arr['code'] = 10000;$arr['msg'] = '登录成功';$arr['msg_test'] = '登录成功';
