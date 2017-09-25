@@ -8,8 +8,9 @@ class Login{
      * 登录请求接口
      */
 	public function index(){
-		$username = input('post.username','','htmlspecialchars');
-		$password = input('post.password','','htmlspecialchars');
+		$username = input('get.username','','htmlspecialchars');
+		$password = input('get.password','','htmlspecialchars');
+
 		if(!$username || !$password){
 		    $arr['code'] = 10001;$arr['msg'] = '账号或密码为空';$arr['msg_test'] = '账号或密码为空';
 		    return json($arr);
