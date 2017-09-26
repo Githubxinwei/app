@@ -81,7 +81,7 @@ class Config{
      *添加或者更新系统站点设置信息表
      */
     public function setSystemSite(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
@@ -143,7 +143,7 @@ class Config{
      *添加或者支付参数设置
      */
     public function setSystemPay(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
@@ -206,7 +206,7 @@ class Config{
      *添加或者系统内发送通知的参数
      */
     public function setSystemSms(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
