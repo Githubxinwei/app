@@ -20,7 +20,7 @@ class Config{
 	 *添加或者更新平台设置
 	 */
 	public function setSystemOauth(){
-	    $data = input('','','htmlspecialchars');
+	    $data = input('post.','','htmlspecialchars');
 	    if (!$data){
 	        $return['code'] = 10001;
 	        $return['msg'] = '无参数';
@@ -28,8 +28,8 @@ class Config{
 	        return json($return);
         }
         //判断是否有id
-        if(isset($data['Id'])){
-	        $info = db('SystemOauth') -> find($data['Id'] * 1);
+        if(isset($data['id'])){
+	        $info = db('SystemOauth') -> find($data['id'] * 1);
 	        if(!$info){
                 $return['code'] = 10003;
                 $return['msg'] = '更新信息不存在';
@@ -56,14 +56,14 @@ class Config{
      *获取平台设置
      */
     public function getSystemOauth(){
-        $id = input('Id','','htmlspecialchars');
+        $id = input('id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
             $return['msg_test'] = '缺少参数';
             return json($return);
         }
-        $data = db('SystemOauth') -> where("Id = :id",['id' => $id*1]) -> find();
+        $data = db('SystemOauth') -> where("id = :id",['id' => $id*1]) -> find();
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '查询信息不存在';
@@ -82,7 +82,7 @@ class Config{
      *添加或者更新系统站点设置信息表
      */
     public function setSystemSite(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
@@ -90,8 +90,8 @@ class Config{
             return json($return);
         }
         //判断是否有id
-        if(isset($data['Id'])){
-            $info = db('SystemSite') -> find($data['Id'] * 1);
+        if(isset($data['id'])){
+            $info = db('SystemSite') -> find($data['id'] * 1);
             if(!$info){
                 $return['code'] = 10003;
                 $return['msg'] = '更新信息不存在';
@@ -118,14 +118,14 @@ class Config{
      *获取系统站点设置信息表数据
      */
     public function getSystemSite(){
-        $id = input('Id','','htmlspecialchars');
+        $id = input('id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
             $return['msg_test'] = '缺少参数';
             return json($return);
         }
-        $data = db('SystemSite') -> where("Id = :id",['id' => $id*1]) -> find();
+        $data = db('SystemSite') -> where("id = :id",['id' => $id*1]) -> find();
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '查询信息不存在';
@@ -144,7 +144,7 @@ class Config{
      *添加或者支付参数设置
      */
     public function setSystemPay(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
@@ -152,8 +152,8 @@ class Config{
             return json($return);
         }
         //判断是否有id
-        if(isset($data['Id'])){
-            $info = db('SystemPay') -> find($data['Id'] * 1);
+        if(isset($data['id'])){
+            $info = db('SystemPay') -> find($data['id'] * 1);
             if(!$info){
                 $return['code'] = 10003;
                 $return['msg'] = '更新信息不存在';
@@ -180,14 +180,14 @@ class Config{
      *获取系统支付参数设置
      */
     public function getSystemPay(){
-        $id = input('Id','','htmlspecialchars');
+        $id = input('id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
             $return['msg_test'] = '缺少参数';
             return json($return);
         }
-        $data = db('SystemPay') -> where("Id = :id",['id' => $id*1]) -> find();
+        $data = db('SystemPay') -> where("id = :id",['id' => $id*1]) -> find();
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '查询信息不存在';
@@ -207,7 +207,7 @@ class Config{
      *添加或者系统内发送通知的参数
      */
     public function setSystemSms(){
-        $data = input('','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
@@ -215,8 +215,8 @@ class Config{
             return json($return);
         }
         //判断是否有id
-        if(isset($data['Id'])){
-            $info = db('SystemSms') -> find($data['Id'] * 1);
+        if(isset($data['id'])){
+            $info = db('SystemSms') -> find($data['id'] * 1);
             if(!$info){
                 $return['code'] = 10003;
                 $return['msg'] = '更新信息不存在';
@@ -243,14 +243,14 @@ class Config{
      *获取系统内发送通知的参数
      */
     public function getSystemSms(){
-        $id = input('Id','','htmlspecialchars');
+        $id = input('id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
             $return['msg_test'] = '缺少参数';
             return json($return);
         }
-        $data = db('SystemSms') -> where("Id = :id",['id' => $id*1]) -> find();
+        $data = db('SystemSms') -> where("id = :id",['id' => $id*1]) -> find();
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '查询信息不存在';

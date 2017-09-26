@@ -21,17 +21,17 @@ class Own extends Action{
      */
 	public function createUserApp(){
         $data = input("post.",'','htmlspecialchars');
-        $data['custom_id'] = $this -> data['Id'] * 1;
+        $data['custom_id'] = $this -> custom -> id;
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '参数不存在';
             $return['msg_test'] = '参数不存在';
             return json($return);
         }
-        if(!isset($data['type'])){
+        if(!isset($data['type']) || !isset($data['custom_id'])){
             $return['code'] = 10002;
-            $return['msg'] = '小程序类型不存在';
-            $return['msg_test'] = '小程序类型不存在';
+            $return['msg'] = '参数值缺失';
+            $return['msg_test'] = '参数值缺失';
             return json($return);
         }
         if(!get_app($data['type'])){
@@ -40,22 +40,10 @@ class Own extends Action{
             $return['msg_test'] = '小程序不存在';
             return json($return);
         }
-        if(!isset($data['custom_id'])){
-            $return['code'] = 10004;
-            $return['msg'] = '用户id不存在';
-            $return['msg_test'] = '用户id不存在';
-            return json($return);
-        }
-        $is_true = db('custom') -> find($data['custom_id']);
-        if(!$is_true){
-            $return['code'] = 10005;
-            $return['msg'] = '当前用户不存在';
-            $return['msg_test'] = '当前用户不存在';
-            return json($return);
-        }
+
         //判断当前用户是否可以在创建小程序
-        $maxappnum = db('custom') -> getFieldById($data['custom_id'],'max_app_num');
-        $app_num = db('custom') -> getFieldById($data['custom_id'],'app_num');
+        $maxappnum = db('custom') -> getFieldByid($data['custom_id'],'max_app_num');
+        $app_num = db('custom') -> getFieldByid($data['custom_id'],'app_num');
         if($app_num >= $maxappnum){
             $return['code'] = 10006;
             $return['msg'] = '当前用户小程序数据已满';
@@ -65,11 +53,11 @@ class Own extends Action{
         //获取当前用户随机的字符串
         $flag = true;
         while($flag){
-            $appId = getNumber();
-            $res = db('app') -> where("appid = :appid and custom_id = :custom_id",['appid' => $appId,'custom_id' => $data['custom_id']]) -> select();
+            $appid = getNumber();
+            $res = db('app') -> where("appid = :appid and custom_id = :custom_id",['appid' => $appid,'custom_id' => $data['custom_id']]) -> select();
             if(!$res){
                 $flag = false;
-                $data['appid'] = $appId;
+                $data['appid'] = $appid;
             }
         }
         $app_info = get_app($data['type']);
@@ -78,10 +66,10 @@ class Own extends Action{
         $data['create_time'] = time();
         $data['try_time'] = time() + 60 * 60;
         $data['use_time'] = time() + 60 * 60;
-        $id = db('app') -> insertGetId($data);
+        $id = db('app') -> insertGetid($data);
         if($id){
             //更新用户的数据表
-            db('custom') -> where("Id",$data['custom_id']) -> setInc('app_num',1);
+            db('custom') -> where("id",$data['custom_id']) -> setInc('app_num',1);
             $return['code'] = 10000;
             $return['data'] = ['id' => $id,'appid' => $data['appid'],'try_time' => $data['try_time']];
             $return['msg'] = '添加成功';
@@ -100,7 +88,7 @@ class Own extends Action{
      */
     public function buyUserApp(){
         $data = input("post.",'','htmlspecialchars');
-        $data['custom_id'] = $this -> data['Id'] * 1;
+        $data['custom_id'] = $this -> custom -> id;
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '参数不存在';
@@ -113,13 +101,7 @@ class Own extends Action{
             $return['msg_test'] = '用户id不存在';
             return json($return);
         }
-        $is_true = db('custom') -> find($data['custom_id']);
-        if(!$is_true){
-            $return['code'] = 10003;
-            $return['msg'] = '当前用户不存在';
-            $return['msg_test'] = '当前用户不存在';
-            return json($return);
-        }
+
         if(!isset($data['appid'])){
             $return['code'] = 10004;
             $return['msg'] = 'appid不存在';
@@ -156,7 +138,7 @@ class Own extends Action{
             return json($return);
         }
         //判断用户是否有钱
-        $userMoney = db('custom') -> getFieldById($data['custom_id'],'wallet');
+        $userMoney = db('custom') -> getFieldByid($data['custom_id'],'wallet');
         if($fee > $userMoney){
             $return['code'] = 10009;
             $return['msg'] = '用户余额不足';
@@ -164,7 +146,7 @@ class Own extends Action{
             return json($return);
         }
 
-        $res = db('custom') -> where(['Id' => $data['custom_id']]) -> setDec('wallet',$fee);
+        $res = db('custom') -> where(['id' => $data['custom_id']]) -> setDec('wallet',$fee);
         if($res){
             $info['update_time'] = time();
 
@@ -182,7 +164,7 @@ class Own extends Action{
 
             db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> setInc('fee',$fee);
 
-            db('custom') -> where(['Id' => $data['custom_id']]) -> setInc('expense',$fee);
+            db('custom') -> where(['id' => $data['custom_id']]) -> setInc('expense',$fee);
             $use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> value('use_time');
             $return['code'] = 10000;
             $return['data'] = ['use_time' => $use_time];
