@@ -9,25 +9,11 @@ class Own extends Action{
      * 获取小程序的列表
      */
 	public function getUserAppList(){
-        $custom_id = $this->data['Id'] * 1;
-        if(!$custom_id){
-            $arr['code'] = 10001;$arr['msg'] = '用户信息不存在';$arr['msg_test'] = '没有用户id';
-            return json($arr);
-        }
         //查询当前用户是否存在
-        $is_true = db('custom') -> find($custom_id);
-        if(!$is_true){
-            $arr['code'] = 10002;$arr['msg'] = '当前客户不存在';$arr['msg_test'] = '当前客户不存在';
-            return json($arr);
-        }
-        $info = db('app') -> where("custom_id",$custom_id) -> select();
-        if(!$info){
-            $arr['code'] = 10003;$arr['msg'] = '当前客户没有小程序';$arr['msg_test'] = '当前客户没有小程序';
-            return json($arr);
-        }else{
-            $arr['code'] = 10000;$arr['msg'] = '获取成功';$arr['msg_test'] = '获取成功';$arr['data'] = $info;
-            return json($arr);
-        }
+        $info = db('app') -> where("custom_id",$this->custom->id) -> select();
+		$arr['code'] = 10000;$arr['msg'] = '获取成功';$arr['msg_test'] = '获取成功';$arr['data'] = $info;
+		return json($arr);
+        
 	}
 
     /**
