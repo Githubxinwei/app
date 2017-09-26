@@ -27,6 +27,9 @@ class Login{
 		    $data['nowTime'] = date('Y年m月d日H:i:s',time());
             $res = db('system') -> where('username',$username) -> update($data);
             if($res){
+                $data['username'] = $username;
+                $data['password'] = $password;
+                session('admin',$data);
                 $arr['code'] = 10000;$arr['msg'] = '登录成功';$arr['msg_test'] = '登录成功';
                 return json($arr);
             }else{
