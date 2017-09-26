@@ -85,7 +85,7 @@ function get_app($type){
 	if($type == 'all'){
 		return $arr;
 	}else{
-		return $arr[$type];
+		return isset($arr[$type]) ? $arr[$type] : false;
 	}
 }
 //加密方法
@@ -163,6 +163,13 @@ function put_qrcode($value,$name,$qr_path,$logo='',$state=false){
 	}
         return $last;
 }
+
+//获取8位的整形的字符串
+function getNumber(){
+    return mt_rand(10000000,99999999);
+}
+
+
 //https请求(支持GET和POST)
  function http_request($url,$data = null){
 	$curl = curl_init();

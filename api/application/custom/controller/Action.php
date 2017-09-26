@@ -4,8 +4,14 @@ use think\Controller;
 class Action extends Controller{
 
 	function _initialize(){
-		//判断用户是否已登录
-		$this->custom_id = 1;
+		$data = session('custom');
+		if(!$data){
+            $return['code'] = 99999;
+            $return['msg'] = '请登录';
+            $return['msg_test'] = '请登录';
+            halt($return);
+        }
+        $this -> data = $data;
 	}
 }
 

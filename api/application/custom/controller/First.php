@@ -18,7 +18,7 @@ class First{
         }
         $info = db('custom') -> where('username',$username) -> select();
         if(!$info){
-            $arr['code'] = 10002;$arr['msg'] = '账号错误';$arr['msg_test'] = '账号或密码错误';
+            $arr['code'] = 10002;$arr['msg'] = '账号或密码错误';$arr['msg_test'] = '账号错误';
             return json($arr);
         }
         if($info[0]['password'] == xgmd5($password)){
@@ -34,7 +34,7 @@ class First{
                 return json($arr);
             }
         }else{
-            $arr['code'] = 10003;$arr['msg'] = '密码错误';$arr['msg_test'] = '账号或密码错误';
+            $arr['code'] = 10003;$arr['msg'] = '账号或密码错误';$arr['msg_test'] = '密码错误';
             return json($arr);
         }
 	}
@@ -59,12 +59,14 @@ class First{
         $data['ip'] = $_SERVER["REMOTE_ADDR"];
         $data['register_time'] = time();
         $data['password'] = xgmd5($data['password']);
+        //默认的每个用户的初始金额是10000元
+        $data['wallet'] = 10000;
         $res = model('custom') -> allowField(true) -> save($data);
         if($res){
             $arr['code'] = 10000;$arr['msg'] = '注册成功';$arr['msg_test'] = '注册成功';
             return json($arr);
         }else{
-            $arr['code'] = 10004;$arr['msg'] = '添加数据失败';$arr['msg_test'] = '网络错误';
+            $arr['code'] = 10004;$arr['msg'] = '网络错误';$arr['msg_test'] = '添加数据失败';
             return json($arr);
         }
 
