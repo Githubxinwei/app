@@ -35,6 +35,7 @@ class Own extends Action{
      */
 	public function createUserApp(){
         $data = input("post.",'','htmlspecialchars');
+        $data['custom_id'] = $this -> data['Id'] * 1;
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '参数不存在';
@@ -113,6 +114,7 @@ class Own extends Action{
      */
     public function buyUserApp(){
         $data = input("post.",'','htmlspecialchars');
+        $data['custom_id'] = $this -> data['Id'] * 1;
         if(!$data){
             $return['code'] = 10001;
             $return['msg'] = '参数不存在';
