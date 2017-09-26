@@ -7,6 +7,7 @@ class Config{
     public function __construct()
     {
         $data = session('admin');
+        $data = model('system') ->find();
         if($data == null){
             $return['code'] = 99999;
             $return['msg'] = '请登录';
