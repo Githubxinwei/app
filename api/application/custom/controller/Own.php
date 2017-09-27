@@ -183,9 +183,6 @@ class Own extends Action{
         }
 
 
-
-
-
     }
 
 
