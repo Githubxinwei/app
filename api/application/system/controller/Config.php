@@ -4,22 +4,22 @@ namespace app\system\controller;
 /*****超级管理员后台参数设置*****/
 class Config{
 
-//    public function __construct()
-//    {
-//        $data = session('admin');
-//        if($data == null){
-//            $return['code'] = 99999;
-//            $return['msg'] = '请登录';
-//            $return['msg_test'] = '请登录';
-//            halt($return);
-//        }
-//    }
+    public function __construct()
+    {
+        $data = session('admin');
+        if($data == null){
+            $return['code'] = 99999;
+            $return['msg'] = '请登录';
+            $return['msg_test'] = '请登录';
+            halt($return);
+        }
+    }
 
     /**
 	 *添加或者更新平台设置
 	 */
 	public function setSystemOauth(){
-	    $data = input('get.','','htmlspecialchars');
+	    $data = input('post.','','htmlspecialchars');
 	    if (!$data){
 	        $return['code'] = 10001;
 	        $return['msg'] = '无参数';
@@ -61,7 +61,7 @@ class Config{
     /**
      *获取平台设置
      */
-    public function getSystemOauth(){
+    public function SystemOauth(){
         $id = input('post.id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
@@ -88,7 +88,7 @@ class Config{
      *添加或者更新系统站点设置信息表
      */
     public function setSystemSite(){
-        $data = input('get.','','htmlspecialchars');
+        $data = input('post.','','htmlspecialchars');
         if (!$data){
             $return['code'] = 10001;
             $return['msg'] = '无参数';
