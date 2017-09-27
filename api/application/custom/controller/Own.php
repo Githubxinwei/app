@@ -53,7 +53,7 @@ class Own extends Action{
         //获取当前用户随机的字符串
         $flag = true;
         while($flag){
-            $appid = getNumber();
+            $appid = $this -> getNumber();
             $res = db('app') -> where("appid = :appid and custom_id = :custom_id",['appid' => $appid,'custom_id' => $data['custom_id']]) -> select();
             if(!$res){
                 $flag = false;
@@ -81,6 +81,10 @@ class Own extends Action{
             $return['msg_test'] = '添加失败';
             return json($return);
         }
+    }
+
+    private function getNumber(){
+        return mt_rand(10000000,99999999);
     }
 
     /**

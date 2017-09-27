@@ -19,7 +19,7 @@ class Config{
 	 *添加或者更新平台设置
 	 */
 	public function setSystemOauth(){
-	    $data = input('post.','','htmlspecialchars');
+	    $data = input('get.','','htmlspecialchars');
 	    if (!$data){
 	        $return['code'] = 10001;
 	        $return['msg'] = '无参数';
@@ -35,6 +35,13 @@ class Config{
                 $return['msg_test'] = '更新信息不存在';
                 return json($return);
             }
+        }else{
+            $id = db('SystemOauth') -> value('id');
+            $return['code'] = 10004;
+            $return['msg'] = '设置信息已存在';
+            $return['msg_test'] = '数据库里面有数据,返回id';
+            $return['data'] = ['id' => $id];
+            return json($return);
         }
         $arr = array($data);
         $res = model('SystemOauth') -> allowField(true) -> saveAll($arr);
@@ -97,6 +104,13 @@ class Config{
                 $return['msg_test'] = '更新信息不存在';
                 return json($return);
             }
+        }else{
+            $id = db('SystemSite') -> value('id');
+            $return['code'] = 10004;
+            $return['msg'] = '设置信息已存在';
+            $return['msg_test'] = '数据库里面有数据,返回id';
+            $return['data'] = ['id' => $id];
+            return json($return);
         }
         $arr = array($data);
         $res = model('SystemSite') -> allowField(true) -> saveAll($arr);
@@ -160,6 +174,13 @@ class Config{
                 $return['msg_test'] = '更新信息不存在';
                 return json($return);
             }
+        }else{
+            $id = db('SystemPay') -> value('id');
+            $return['code'] = 10004;
+            $return['msg'] = '设置信息已存在';
+            $return['msg_test'] = '数据库里面有数据,返回id';
+            $return['data'] = ['id' => $id];
+            return json($return);
         }
         $arr = array($data);
         $res = model('SystemPay') -> allowField(true) -> saveAll($arr);
@@ -223,6 +244,13 @@ class Config{
                 $return['msg_test'] = '更新信息不存在';
                 return json($return);
             }
+        }else{
+            $id = db('SystemSms') -> value('id');
+            $return['code'] = 10004;
+            $return['msg'] = '设置信息已存在';
+            $return['msg_test'] = '数据库里面有数据,返回id';
+            $return['data'] = ['id' => $id];
+            return json($return);
         }
         $arr = array($data);
         $res = model('SystemSms') -> allowField(true) -> saveAll($arr);
