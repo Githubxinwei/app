@@ -1,344 +1,188 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2017/9/1 0001
- * Time: 16:16  个人中心的上面两个 理财专区和股权专区的控制器
- */
-namespace Home\Controller;
-use Think\Controller;
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: 流年 <liu21st@gmail.com>
+// +----------------------------------------------------------------------
 
-class MoneyController extends Controller{
-
-
-    // /*用户来，判断session存不存在，*/
-    function __construct(){
-        parent::__construct();
-        $this->user_id = session('xigua_user_id');
-        $res = $this->is_weixin();
-        if ($res == 1){
-            //$info = M('zhuce')->where("user_id = '$this->user_id'")->find();
-            if (!$this->user_id){
-                redirect(U('/Login/User/register',array('id'=>$_GET['id'],'agent_id'=>$_GET['agent_id'])));
-            }else{
-                $user_info=M('users')->where("user_id = '$this->user_id'")->find();
-                if(!$user_info){
-                    $redirect_uri='http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-                    redirect('http://'.$_SERVER['HTTP_HOST'].U('/wxapi/oauth/index/')."?surl=".$redirect_uri);exit;
-                }
-            }
-
-        }else {
-            if(!$this->user_id){
-                $now_url = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-                //dump($_GET);
-                //dump($now_url);
-                $this -> assign('now_url',$now_url);
-                $this->display('Login_error');exit;
-            }else{
-                $this -> user_id = session('xigua_user_id');
-            }
+// 应用公共文件
+// 记录财务日志
+function flog($user_id,$action,$money,$type,$remark){
+    if(empty($remark)){$remark = null;}
+    model('finance_log') -> save(array(
+        'user_id' => $user_id,
+        'type' => $type,
+        'money' => $money,
+        'action' => $action,
+        'create_time' => time(),
+        'remark' => $remark
+    ));
+}
+//缓存文件方法，默认有效时间7200秒
+function file_cache($name,$value,$time){
+    if(empty($name)){return __FUNCTION__.'()方法传参$name文件名不能为空';}
+    $name = dirname(__file__).'/file/'.$name.'.php';
+    if(empty($value)){
+        if(!file_exists($name)){return false;}
+        $res = json_decode(file_get_contents($name),true);
+        if($res['last_time'] < time()){
+            unlink($name);
+            return false;//文件已过期
         }
+        return $res['value'];
+    }elseif($value == 'del'){
+        unlink($name);return true;
+    }
+    $path_arr = explode('/', $name);
+    $path = explode($path_arr[count($path_arr)-1],$name);
+    if(!file_exists($path[0])){
+        mkdir($path[0]);chmod($path[0],0777);
+    }
+    if(empty($time)){$time = 9999999999;}
+    $puts['value'] = $value;$puts['last_time'] = time()+$time;
+    $res = file_put_contents($name,  json_encode($puts));
+    $return = ($res) ?  true : false;
+    return $return;
+}
+// 取得微信支付参数
+function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
+
+    \Think\loader::import('Wechat.jspay');
+    $jsapi = new \jspay();
+    $param = $GLOBALS['_CFG']['mp'];
+    $param['key'] = $GLOBALS['_CFG']['mp']['key'];
+    $param['openid'] = $openid;
+    $param['body'] = empty($remark) ? '在线支付' : $remark;
+    $param['out_trade_no'] = $out_trade_no;
+    $param['total_fee'] = $money * 100;
+    $param['notify_url'] = $notify_url;
+    // $ext = null;
+    // if(is_array($ext)){
+    // 	$param = array_merge($param, $ext);
+    // }
+    $jsapi -> set_param($param,null);
+    $uo = $jsapi -> unifiedOrder('JSAPI');
+    // 发生错误则提示
+    if($uo['code'] != 10000){
+        return $uo;
+    }
+    $jsapi_params = $jsapi -> get_jsApi_parameters();
+    if($jsapi_params){
 
     }
-
-    //判断打开方式
-    function is_weixin(){
-        if ( strpos($_SERVER['HTTP_USER_AGENT'], 'MicroMessenger') !== false ) {
-            return 1;
-        }
-        return 2;
+    return $jsapi_params;
+}
+//返回小程序模板信息
+function get_app($type){
+    $arr = [
+        1=>['code'=>1,'name'=>'电商小程序','pic'=>'http://www.xiguakeji.cc/images/logo-2.png','fee'=>100],
+        2=>['code'=>2,'name'=>'预约小程序','pic'=>'http://www.xiguakeji.cc/images/logo-2.png','fee'=>50]
+    ];
+    if($type == 'all'){
+        return $arr;
+    }else{
+        return isset($arr[$type]) ? $arr[$type] : false;
     }
-
-
-    public function manage(){
-        $this -> display();
+}
+//加密方法
+function xgmd5($pwd){
+    $res = 'xiguakeji.com'.$pwd;
+    return md5($res);
+}
+//生成长度16的随机字符串
+function createNonceStr($length = 16) {
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    $str = "";
+    for ($i = 0; $i < $length; $i++) {
+        $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
     }
-
-    /**
-     * type 1 已购买  还没有过期的 2 已领取 3 已过期
-     */
-    public function managebb(){
-        $page = $_GET['p'];
-        $page = htmlspecialchars($page,ENT_QUOTES);
-        $page = $page * 1;
-        $start = ($page -1) * 10;
-        $type = I('post.type');
-        if($type == 1){
-            $data = M('user_manage')
-                -> field('*')
-                -> where("user_id = {$this->user_id} and state = 1 and type = 0")
-                -> limit($start,10)
-                -> order('last_time asc')
-                -> select();
-            foreach ($data as $k => $v){
-                $time = $v['last_time'] + 3600 * $v['time'];
-                $cha = $time - time();
-                if($cha > 0){
-                    $yourhour = (int)(($cha%(3600*24))/(3600));
-                    $yourmin = (int)($cha%(3600)/60);
-                    $data[$k]['atime'] = $yourhour . '小时' . $yourmin . '分';
-                }else{
-                    $data[$k]['atime'] = '可领取';
-                }
-            }
-            $this -> assign('data',$data);
-            $this->display('Money_manage1');
-        }else if($type == 2){
-            $data = M('manage_log')
-                -> alias("a")
-                -> field("a.*,b.name")
-                -> join("left join __USER_MANAGE__ as b on a.manage_id = b.id")
-                -> where("a.user_id = {$this->user_id}")
-                -> limit($start,10)
-                -> order('a.create_time desc')
-                -> select();
-            $this -> assign('data',$data);
-            $this->display('Money_manage2');
-        }else if($type == 3){
-            $data = M('user_manage')
-                -> alias('a')
-                -> field('a.*,sum(b.money) as zong')
-                -> join("left join __MANAGE_LOG__ as b on a.id = b.manage_id")
-                -> where("a.user_id = {$this->user_id} and a.state = 1 and a.type = 1")
-                -> group('a.id')
-                -> limit($start,10)
-                -> order('last_time desc')
-                -> select();
-//            foreach ($data as $k => $v){
-//                //计算总共得了多少钱
-//                $money = $v['day'] * 24 / $v['time'] * $v['fee'];
-//                $data[$k]['zong'] = $money;
-//            }
-            $this -> assign('data',$data);
-            $this->display('Money_manage3');
+    return "z".$str;
+}
+function msg_everify($tel,$code){
+    $key =  '4c9ff96cc33a783b21329b8c20e8ee7c';//您申请的APPKEY
+    $tpl_id = '43730';//您申请的短信模板ID，根据实际情况修改
+    $tpl_value = '#code#='.$code;//您设置的模板变量，根据实际情况修改
+    $sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
+    $smsConf = array(
+        'key'   => $key,
+        'mobile'    => $tel, //接受短信的用户手机号码
+        'tpl_id'    => $tpl_id,
+        'tpl_value' => $tpl_value,
+    );
+    $content = http_request($sendUrl,$smsConf,1); //请求发送短信
+    if($content){
+        $result = json_decode($content,true);
+        $error_code = $result['error_code'];
+        if($error_code == 0){
+            return true;//状态为0，说明短信发送成功
+        }else{
+            return false;//状态非0，说明失败
         }
-
+    }else{
+        return false;//返回内容异常，以下可根据业务逻辑自行修改
     }
-
-    /**
-     * 领取
-     */
-    public function lingqu(){
-        $id = I("post.id");
-        $id = htmlspecialchars($id,ENT_QUOTES);
-        $id = $id * 1;
-        if(!$id){$arr['code'] = 0;$arr['info'] = "缺少数据,请稍后重试";$this->ajaxReturn($arr);return;}
-        $data = M('user_manage') -> find($id);
-        if(!$data['state']){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        if($data['type'] == 1){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        if($data['user_id'] != $this->user_id){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        //判断时间是否到了
-        if((time() - $data['last_time'])/3600 < $data['time']){
-            $arr['code'] = 0;$arr['info'] = "领取时间还未到";$this->ajaxReturn($arr);return;
-        }
-        //判断是否出局  条件  设定的领取次数和已领取的次数一样的话，出局
-        if($data['cishu'] >= $data['day']){
-            M('user_manage') -> where("id = {$id}") -> setField('type',1);
-            $arr['code'] = 0;$arr['info'] = "对不起,当前理财产品已出局";$this->ajaxReturn($arr);return;
-        }
-        //领取时间到了，领取返利
-        $res = array(
-            'user_id' => $data['user_id'],
-            'money' => $data['fee'],
-            'create_time' => time(),
-            'manage_id' => $id
-        );
-        $re =  M('manage_log') -> add($res);
-        if($re){
-            M('user_manage') -> where("id = {$id}") -> setField('last_time',time());
-            M('user_manage') -> where("id = {$id}") -> setInc('cishu',1);
-            if($data['cishu'] + 1 >= $data['day']){
-                M('user_manage') -> where("id = {$id}") -> setField('type',1);
-            }
-            $a = M('user') -> where("user_id = {$data['user_id']}") -> setInc('money',$data['fee']);
-            $arr['code'] = 1;$arr['info'] = "领取成功";$this->ajaxReturn($arr);return;
-        }
-
+}
+//生成参数二维码
+function put_qrcode($value,$name,$qr_path,$logo='',$state=false){
+    if(empty($value)){throw new \think\Exception('缺少vaule值', 100006);}
+    if(empty($name)){$name = time().rand(1000,9999);}
+    if(!file_exists('./static/qrcode/')){
+        mkdir('./static/qrcode/');chmod('./static/qrcode/',0777);
     }
-
-
-    public function guquan(){
-        $this -> display();
+    if(empty($qr_path)){$qr_path = './static/qrcode/'.date("Ymd").'/';}else{$qr_path = './static/'.$qr_path;}
+    if(!file_exists($qr_path)){
+        mkdir($qr_path);chmod($qr_path,0777);
     }
-
-    //请求数据
-    public function guquanbb(){
-        $page = $_GET['p'];
-        $page = htmlspecialchars($page,ENT_QUOTES);
-        $page = $page * 1;
-        $start = ($page -1) * 10;
-        $type = I('post.type');
-        if($type == 1){
-            //获取所有的股权
-            $data = M('user_guquan')
-                -> where("user_id = {$this->user_id} and state = 1 and flag = 0")
-                -> limit($start,10)
-                -> select();
-            //日息
-            $info = F('guquan','',DATA_ROOT);
-            $this -> assign('rixi',$info['rixi']);
-
-            //判断是否可以领取
-            foreach ($data as $k => $v){
-                foreach ($data as $k => $v){
-                    $time = $v['last_time'] + 3600 * 24;
-                    $cha = $time - time();
-                    if($cha > 0){
-                        $yourhour = (int)(($cha%(3600*24))/(3600));
-                        $yourmin = (int)($cha%(3600)/60);
-                        $data[$k]['atime'] = $yourhour . '小时' . $yourmin . '分';
-                    }else{
-                        $data[$k]['atime'] = '可领取';
-                    }
-                }
-            }
-            $this -> assign('data',$data);
-            $this -> display('Money_guquan1');
-        }else if($type == 2){
-            $data = M('guquan_log')
-                -> where("user_id = {$this->user_id}")
-                -> limit($start,10)
-                -> order('create_time desc')
-                -> select();
-            $this -> assign('data',$data);
-            $this->display('Money_guquan2');
+    $QR = $qr_path.$name.'_linshi.png';
+    $last = $qr_path.$name.'.png';
+    if(!file_exists($last) || $state){
+        \Think\Loader::import('phpqrcode.phpqrcode');
+        $errorCorrectionLevel = "L";
+        $matrixPointSize = "6";
+        if(!empty($logo)){
+            \QRcode::png($value, $QR, $errorCorrectionLevel, $matrixPointSize,1,true);
+            $QR = imagecreatefromstring(file_get_contents($QR));
+            $logo = imagecreatefromstring(file_get_contents($logo));
+            $QR_width = imagesx($QR);
+            $QR_height = imagesy($QR);
+            $logo_width = imagesx($logo);
+            $logo_height = imagesy($logo);
+            $logo_qr_width = $QR_width / 5;
+            $scale = $logo_width / $logo_qr_width;
+            $logo_qr_height = $logo_height / $scale;
+            $from_width = ($QR_width - $logo_qr_width) / 2;
+            imagecopyresampled($QR, $logo, $from_width, $from_width, 0, 0, $logo_qr_width, $logo_qr_height, $logo_width, $logo_height);
+            imagepng($QR,$last);unlink($qr_path.$name.'_linshi.png');
+        }else{
+            \QRcode::png($value, $last, $errorCorrectionLevel, $matrixPointSize,1,true);
         }
     }
+    return $last;
+}
+
+//获取8位的整形的字符串
+function getNumber(){
+    return mt_rand(10000000,99999999);
+}
 
 
-    function guquanLq(){
-//        if($this->user_id != 11441){
-//            $arr['code'] = 0;$arr['info'] = "测试中";$this->ajaxReturn($arr);return;
-//        }
-        $id = I("post.id");
-        $id = htmlspecialchars($id,ENT_QUOTES);
-        $id = $id * 1;
-        if(!$id){$arr['code'] = 0;$arr['info'] = "缺少数据,请稍后重试";$this->ajaxReturn($arr);return;}
-        $data = M('user_guquan') -> find($id);
-        if(!$data['state']){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        if($data['flag'] != 0){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        if($data['user_id'] != $this->user_id){
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-
-        $switch = F('guquanlingqu');
-        if(!$switch){
-            $switch['switch'] = 0;
-        }
-        if($switch['switch'] == 1){
-            //判断是否有公派信息
-            $is_c = M('gongpai_user') ->  where(['user_id' => $data['user_id']]) -> select();
-            if(!$is_c){
-                $arr['code'] = 0;$arr['info'] = "公派没有点位，无法领取";$this->ajaxReturn($arr);return;
-
-            }
-        }
-
-        //判断时间是否到了
-        $info = F('guquan');
-        if(!$info['rixi']){
-            file_put_contents('error.txt','日息不存在' . date('Y-m-d H:i:s',time() . $info['rixi']),FILE_APPEND);
-            $arr['code'] = 0;$arr['info'] = "数据错误";$this->ajaxReturn($arr);return;
-        }
-        //判断时间是否可以领取
-        //判断时间是否到了
-        if((time() - $data['last_time'])/3600 < 24){
-            $arr['code'] = 0;$arr['info'] = "领取时间还未到";$this->ajaxReturn($arr);return;
-        }
-        //file_put_contents('D:/text3.txt',$v['type']);
-        //利用用户的本金加上送的钱
-        $money = $data['money'] * 2;
-        $money = $money * $info['rixi'] / 100;
-        $arr = array(
-            'user_id' => $data['user_id'],
-            'money' => $data['money'],
-            'fee' => $money,
-            'bili' => $info['rixi'] / 100,
-            'create_time' => time(),
-            'guquan_id' => $data['id']
-        );
-        // file_put_contents('D:/text2.txt',$v['type']);
-        $res =   M('guquan_log') -> add($arr);
-
-        if($res){
-            //成功，把领取记录保存起来
-
-            //添加成功，修改最后领取的时间
-            $is_true = M('user_guquan') -> where(['id' => $data['id']]) -> setField('last_time',time());
-            if($is_true){
-                $count = M('guquan_log') -> where(['guquan_id' => $data['id']]) -> count();
-                M('user_guquan') -> where(['id' => $data['id']]) -> setField('cishu',$count);
-                if($count >= 50){
-                    M('user_guquan') -> where(['id' => $data['id']]) -> setField('state',0);
-                    M('user_guquan') -> where(['id' => $data['id']]) -> setField('flag',3);
-                }
-                //如果余额支付，则没有分红
-                //  file_put_contents('D:/text1.txt',$v['type']);
-                if($data['type'] == 1){
-                }else{
-                    //判断后台是否开启
-                    flog($money,$data['user_id'],2);
-
-                }
-                $res = M('user') -> where("user_id = {$data['user_id']}") -> setInc('money',$money);
-                M('user') -> where(['user_id' => $data['user_id']]) -> setField('fee',0);
-                $arr['code'] = 1;$arr['info'] = "领取成功";$this->ajaxReturn($arr);return;
-
-            }
-
-
-        }
+//https请求(支持GET和POST)
+function http_request($url,$data = null){
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+    if(!empty($data)){
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
     }
-
-    function tuihui(){
-        $user_id = $this -> user_id;
-        if(!$user_id){
-            echo -2;exit;
-        }
-        //获取支付宝信息
-        $alipay_nunber = I('post.alipay_number');
-        $name = I('post.name');
-        if(!$alipay_nunber || !$name){
-            echo -4;exit;
-        }
-
-        //查询当前人的所有的生效的
-        $data = M('user_guquan') -> where("state = 1 and flag = 0 and user_id = {$user_id}") -> select();
-        if($data){
-            $res = M('user_guquan') -> where("state = 1 and flag = 0 and user_id = {$user_id}") -> setField('flag',2);
-            if($res){
-                //把支付宝信息保存在alipay
-                $re = M('alipay') -> where("user_id = {$this->user_id}") -> select();
-                if($re){
-                    $info = array(
-                        'alipay_number' => $alipay_nunber,
-                        'name' => $name,
-                    );
-                    M('alipay') -> where("user_id = {$this->user_id}") -> save($info);
-                }else{
-                    $info = array(
-                        'alipay_number' => $alipay_nunber,
-                        'name' => $name,
-                        'user_id' => $user_id,
-                    );
-                    M('alipay') -> add($info);
-                }
-                echo 0;exit;
-            }
-        }
-        echo -2;
-
-    }
-
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    $output = curl_exec($curl);
+    //var_dump(curl_error($curl));
+    curl_close($curl);
+    return $output;
 }

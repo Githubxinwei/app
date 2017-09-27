@@ -115,7 +115,7 @@ class Own extends Action{
             return json($return);
         }
         //判断当前用户的小程序是否有这个appid
-        $is_true = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> select();
+        $is_true = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> select();
         if(!$is_true){
             $return['code'] = 10006;
             $return['msg'] = '当前用户没有此小程序';
@@ -150,22 +150,22 @@ class Own extends Action{
         if($res){
             $info['update_time'] = time();
 
-            db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> update($info);
+            db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> update($info);
             //判断当前购买的时间是否在过期
-            $use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> value('use_time');
+            $use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> value('use_time');
             $year_time = strtotime('1 year');
             if($use_time > time()){
                 //还没过，应该在原来的基础上添加
                 db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> setInc('use_time',$year_time - time());
             }else{
                 //过期了，在现在的时间上添加
-                db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> setField('use_time',$year_time);
+                db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> setField('use_time',$year_time);
             }
 
-            db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> setInc('fee',$fee);
+            db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> setInc('fee',$fee);
 
             db('custom') -> where(['id' => $data['custom_id']]) -> setInc('expense',$fee);
-            $use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']*1]) -> value('use_time');
+            $use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> value('use_time');
             $return['code'] = 10000;
             $return['data'] = ['use_time' => $use_time];
             $return['msg'] = '购买成功';
