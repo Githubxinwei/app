@@ -54,7 +54,7 @@ class Own extends Action{
         $flag = true;
         while($flag){
             $appid = $this -> getNumber();
-            $res = db('app') -> where("appid = :appid and custom_id = :custom_id",['appid' => $appid,'custom_id' => $data['custom_id']]) -> select();
+            $res = db('app') -> where("appid = :appid",['appid' => $appid]) -> select();
             if(!$res){
                 $flag = false;
                 $data['appid'] = $appid;
