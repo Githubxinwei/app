@@ -55,7 +55,7 @@ class Config{
      *获取平台设置
      */
     public function getSystemOauth(){
-        $id = input('id','','htmlspecialchars');
+        $id = input('post.id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
@@ -117,7 +117,7 @@ class Config{
      *获取系统站点设置信息表数据
      */
     public function getSystemSite(){
-        $id = input('id','','htmlspecialchars');
+        $id = input('post.id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
@@ -179,7 +179,7 @@ class Config{
      *获取系统支付参数设置
      */
     public function getSystemPay(){
-        $id = input('id','','htmlspecialchars');
+        $id = input('post.id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
@@ -242,7 +242,7 @@ class Config{
      *获取系统内发送通知的参数
      */
     public function getSystemSms(){
-        $id = input('id','','htmlspecialchars');
+        $id = input('post.id','','htmlspecialchars');
         if(!$id){
             $return['code'] = 10002;
             $return['msg'] = 'id不存在';
