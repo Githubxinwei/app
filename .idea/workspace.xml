@@ -2,9 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="17134d92-2e10-4d94-82c7-aa69b3af05c3" name="默认的" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/api/application/pay/controller/Notify.php" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/api/application/pay/controller/Pay.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/api/application/custom/controller/Own.php" afterPath="$PROJECT_DIR$/api/application/custom/controller/Own.php" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -30,11 +27,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Pay.php" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Pay.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/api/application/pay/controller/Pay.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="406">
-              <caret line="38" column="8" lean-forward="false" selection-start-line="38" selection-start-column="8" selection-end-line="38" selection-end-column="8" />
+            <state relative-caret-position="-493">
+              <caret line="31" column="13" lean-forward="true" selection-start-line="31" selection-start-column="13" selection-end-line="31" selection-end-column="13" />
               <folding />
             </state>
           </provider>
@@ -50,11 +47,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Own.php" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Own.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="43">
-              <caret line="227" column="20" lean-forward="false" selection-start-line="227" selection-start-column="20" selection-end-line="227" selection-end-column="20" />
+            <state relative-caret-position="203">
+              <caret line="196" column="32" lean-forward="false" selection-start-line="196" selection-start-column="32" selection-end-line="196" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -458,7 +455,7 @@
       <workItem from="1506387800880" duration="27349000" />
       <workItem from="1506435603641" duration="653000" />
       <workItem from="1506475599163" duration="26039000" />
-      <workItem from="1506581604846" duration="7227000" />
+      <workItem from="1506581604846" duration="7862000" />
     </task>
     <task id="LOCAL-00004" summary="添加总后台的设置四个功能">
       <created>1506395271399</created>
@@ -555,7 +552,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="65637000" />
+    <option name="totallyTimeSpent" value="66272000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -962,18 +959,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
+    <entry file="file://$PROJECT_DIR$/api/application/pay/controller/Pay.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="43">
-          <caret line="227" column="20" lean-forward="false" selection-start-line="227" selection-start-column="20" selection-end-line="227" selection-end-column="20" />
+        <state relative-caret-position="-493">
+          <caret line="31" column="13" lean-forward="true" selection-start-line="31" selection-start-column="13" selection-end-line="31" selection-end-column="13" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/api/application/pay/controller/Pay.php">
+    <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="406">
-          <caret line="38" column="8" lean-forward="false" selection-start-line="38" selection-start-column="8" selection-end-line="38" selection-end-column="8" />
+        <state relative-caret-position="203">
+          <caret line="196" column="32" lean-forward="false" selection-start-line="196" selection-start-column="32" selection-end-line="196" selection-end-column="32" />
           <folding />
         </state>
       </provider>
