@@ -1,0 +1,4 @@
+.idea/
+b.php
+./api/application/database.php
+api/application/.gitignore
