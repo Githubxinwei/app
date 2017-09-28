@@ -182,6 +182,119 @@ class Own extends Action{
             return json($return);
         }
 
+    }
+
+
+    /**
+     * 删除小程序
+     */
+    public function delUserApp(){
+        $data = input('post.','','htmlspecialchars');
+        if(!isset($data['appid'])){
+            $return['code'] = 10001;
+            $return['msg'] = '参数值缺失';
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid格式错误';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $res = db('app') -> where(['appid' => $data['appid'],'custom_id' => $this->custom->id]) -> setField('is_del',1);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '删除成功';
+            $return['msg_test'] = '删除成功';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg'] = '删除失败';
+            $return['msg_test'] = 'appid可能传递错了或者这个小程序不是当前用户的';
+            return json($return);
+        }
+
+    }
+
+
+    /**
+     * 获取小程序的基本信息
+     * appid
+     */
+    public function getAppInfo(){
+        $data = input('post.','','htmlspecialchars');
+        if(!isset($data['appid'])){
+            $return['code'] = 10001;
+            $return['msg'] = '参数值缺失';
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid格式错误';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        //判断当前用户的小程序是否有这个appid
+        $info = db('app') -> field('name,pic,desc,tel,site_url,address') ->  where(['custom_id' => $this->custom -> id,'appid' => $data['appid']]) -> select();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            $return['msg'] = '';
+            $return['msg_test'] = '成功';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg'] = '查询数据失败';
+            $return['msg_test'] = '参数可能传递错了,或者这个小程序不是这个用户的';
+            return json($return);
+        }
+    }
+
+
+    /**
+     * 设置小程序的姓名，标志，简介等信息
+     * appid
+     */
+    public function setAppInfo(){
+        $data = input('post.','','htmlspecialchars');
+        if(!isset($data['appid'])){
+            $return['code'] = 10001;
+            $return['msg'] = '参数值缺失';
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid格式错误';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        if(!isset($data['name'])){
+            $return['code'] = 10003;
+            $return['msg'] = '请填写小程序名字';
+            $return['msg_test'] = '请填写小程序名字';
+            return json($return);
+        }
+        if(!isset($data['tel'])){
+            $return['code'] = 10004;
+            $return['msg'] = '请填写正确的客服电话';
+            $return['msg_test'] = '客服电话没填';
+            return json($return);
+        }
+        $res = db('app') -> where(['appid' => $data['appid'],'custom_id' => $this->custom->id]) -> update($data);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '修改成功';
+            $return['msg_test'] = '修改成功';
+            return json($return);
+        }else{
+            $return['code'] = 10005;
+            $return['msg'] = '修改失败';
+            $return['msg_test'] = '参数可能传递错了,或者这个小程序不是这个用户的';
+            return json($return);
+        }
 
     }
 
