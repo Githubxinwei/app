@@ -87,50 +87,6 @@ class Own extends Action{
 		return mt_rand(10000000,99999999);
 	}
 
-<<<<<<< HEAD
-    /**
-     * 小程序购买
-     */
-    public function buyUserApp(){
-        $this -> data['custom_id'] = $this -> custom -> id;
-        if(!isset($this -> data['appid'])){
-            $return['code'] = 10004;
-            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10005;
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-        //判断当前用户的小程序是否有这个appid
-        $is_true = db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> select();
-        if(!$is_true){
-            $return['code'] = 10006;
-            $return['msg_test'] = '这个客户没有创建这个小程序';
-            return json($return);
-        }
-        $app_type = $is_true[0]['type'];
-        $app_info = get_app($app_type);
-        if(!$app_info){
-            $return['code'] = 10007;
-            $return['msg_test'] = '小程序类型不存在';
-            return json($return);
-        }
-        $fee = $app_info['fee'];
-        if(!$fee || $fee <= 0){
-            $return['code'] = 10008;
-            $return['msg'] = '小程序价格错误';
-            return json($return);
-        }
-        //判断用户是否有钱
-        $userMoney = db('custom') -> getFieldByid($this -> data['custom_id'],'wallet');
-        if($fee > $userMoney){
-            $return['code'] = 10009;
-            $return['msg'] = '用户余额不足';
-            return json($return);
-        }
-=======
 	/**
 	 * 小程序购买
 	 */
@@ -193,7 +149,6 @@ class Own extends Action{
 			$return['msg_test'] = '用户余额不足';
 			return json($return);
 		}
->>>>>>> 7e777ec4c5ea51ddac21b4c32d5b794bfae75533
 
 		$res = db('custom') -> where(['id' => $data['custom_id']]) -> setDec('wallet',$fee);
 		if($res){
@@ -213,19 +168,6 @@ class Own extends Action{
 
 			db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> setInc('fee',$fee);
 
-<<<<<<< HEAD
-            db('custom') -> where(['id' => $this -> data['custom_id']]) -> setInc('expense',$fee);
-            $use_time = db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> value('use_time');
-            $return['code'] = 10000;
-            $return['data'] = ['use_time' => $use_time];
-            $return['msg'] = '购买成功';
-            return json($return);
-        }else{
-            $return['code'] = 10010;
-            $return['msg'] = '更新数据失败';
-            return json($return);
-        }
-=======
 			db('custom') -> where(['id' => $data['custom_id']]) -> setInc('expense',$fee);
 			$use_time = db('app') -> where(['custom_id' => $data['custom_id'],'appid' => $data['appid']]) -> value('use_time');
 			$return['code'] = 10000;
@@ -239,39 +181,10 @@ class Own extends Action{
 			$return['msg_test'] = '更新数据失败';
 			return json($return);
 		}
->>>>>>> 7e777ec4c5ea51ddac21b4c32d5b794bfae75533
 
 	}
 
 
-<<<<<<< HEAD
-    /**
-     * 删除小程序
-     */
-    public function delUserApp(){
-        if(!isset($this -> data['appid'])){
-            $return['code'] = 10001;
-            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-        $res = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $this->custom->id]) -> setField('is_del',1);
-        if($res){
-            $return['code'] = 10000;
-            $return['msg'] = '删除成功';
-            $return['msg_test'] = '删除成功';
-            return json($return);
-        }else{
-            $return['code'] = 10003;
-            $return['msg'] = '删除失败';
-            $return['msg_test'] = 'appid可能传递错了或者这个小程序不是当前用户的';
-            return json($return);
-        }
-=======
 	/**
 	 * 删除小程序
 	 */
@@ -301,76 +214,10 @@ class Own extends Action{
 			$return['msg_test'] = 'appid可能传递错了或者这个小程序不是当前用户的';
 			return json($return);
 		}
->>>>>>> 7e777ec4c5ea51ddac21b4c32d5b794bfae75533
 
 	}
 
 
-<<<<<<< HEAD
-    /**
-     * 获取小程序的基本信息
-     * appid
-     */
-    public function getAppInfo(){
-        if(!isset($this -> data['appid'])){
-            $return['code'] = 10001;
-            $return['msg'] = '参数值缺失';
-            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-        //判断当前用户的小程序是否有这个appid
-        $info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish') ->  where(['custom_id' => $this->custom -> id,'appid' => $this -> data['appid']]) -> select();
-        if($info){
-            $return['code'] = 10000;
-            $return['data'] = $info;
-            $return['msg'] = '';
-            $return['msg_test'] = '成功';
-            return json($return);
-        }else{
-            $return['code'] = 10003;
-            $return['msg'] = '查询数据失败';
-            $return['msg_test'] = '参数可能传递错了,或者这个小程序不是这个用户的';
-            return json($return);
-        }
-    }
-
-
-    /**
-     * 设置小程序的姓名，标志，简介等信息
-     * appid
-     */
-    public function setAppInfo(){
-        if(!isset($this -> data['appid']) || !isset($this -> data['name']) || !isset($this -> data['tel'])){
-            $return['code'] = 10001;
-            $return['msg_test'] = '缺少appid或name或tel';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-
-        $res = model('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $this->custom->id]) -> allowField(true) -> update($this -> data);
-        if($res){
-            $return['code'] = 10000;
-            $return['msg'] = '修改成功';
-            $return['msg_test'] = '修改成功';
-            return json($return);
-        }else{
-            $return['code'] = 10005;
-            $return['msg'] = '修改失败';
-            $return['msg_test'] = '参数可能传递错了,或者这个小程序不是这个用户的';
-            return json($return);
-        }
-=======
 	/**
 	 * 获取小程序的基本信息
 	 * appid
@@ -448,7 +295,6 @@ class Own extends Action{
 			$return['msg_test'] = '参数可能传递错了,或者这个小程序不是这个用户的';
 			return json($return);
 		}
->>>>>>> 7e777ec4c5ea51ddac21b4c32d5b794bfae75533
 
 	}
 
