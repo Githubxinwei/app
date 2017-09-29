@@ -15,7 +15,7 @@ class Own extends Action{
      */
 	public function getUserAppList(){
         //查询当前用户是否存在
-        $info = db('app') -> where("custom_id",$this->custom->id) -> select();
+        $info = db('app') -> where("custom_id",$this->custom->id) -> where('is_del','0') -> select();
 		$arr['code'] = 10000;$arr['msg'] = '获取成功';$arr['msg_test'] = '获取成功';$arr['data'] = $info;
 		return json($arr);
 

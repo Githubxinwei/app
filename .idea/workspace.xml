@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="17134d92-2e10-4d94-82c7-aa69b3af05c3" name="默认的" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/api/application/custom/controller/Shop.php" afterPath="$PROJECT_DIR$/api/application/custom/controller/Shop.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/api/application/database.php" afterPath="$PROJECT_DIR$/api/application/database.php" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -22,9 +20,11 @@
       <file leaf-file-name="Shop.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Shop.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="160">
-              <caret line="389" column="50" lean-forward="false" selection-start-line="389" selection-start-column="39" selection-end-line="389" selection-end-column="50" />
-              <folding />
+            <state relative-caret-position="594">
+              <caret line="425" column="41" lean-forward="true" selection-start-line="425" selection-start-column="41" selection-end-line="425" selection-end-column="41" />
+              <folding>
+                <element signature="e#6#98#0#PHP" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -32,8 +32,8 @@
       <file leaf-file-name="database.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/api/application/database.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="609">
-              <caret line="29" column="32" lean-forward="true" selection-start-line="29" selection-start-column="32" selection-end-line="29" selection-end-column="32" />
+            <state relative-caret-position="667">
+              <caret line="31" column="28" lean-forward="false" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -43,7 +43,17 @@
         <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Action.php">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="145">
-              <caret line="5" column="27" lean-forward="true" selection-start-line="5" selection-start-column="27" selection-end-line="5" selection-end-column="27" />
+              <caret line="5" column="27" lean-forward="false" selection-start-line="5" selection-start-column="27" selection-end-line="5" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Own.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="4959">
+              <caret line="171" column="9" lean-forward="false" selection-start-line="171" selection-start-column="9" selection-end-line="171" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -63,6 +73,7 @@
       <find>get</find>
       <find>\$data</find>
       <find>input</find>
+      <find>del</find>
     </findStrings>
     <replaceStrings>
       <replace>'msg_test1'</replace>
@@ -96,8 +107,8 @@
         <option value="$PROJECT_DIR$/api/application/custom/model/GoodsCate.php" />
         <option value="$PROJECT_DIR$/api/application/custom/model/Goods.php" />
         <option value="$PROJECT_DIR$/api/application/pay/controller/Pay.php" />
-        <option value="$PROJECT_DIR$/api/application/custom/controller/Own.php" />
         <option value="$PROJECT_DIR$/api/application/database.php" />
+        <option value="$PROJECT_DIR$/api/application/custom/controller/Own.php" />
         <option value="$PROJECT_DIR$/api/application/custom/controller/Shop.php" />
       </list>
     </option>
@@ -358,7 +369,7 @@
       <workItem from="1506435603641" duration="653000" />
       <workItem from="1506475599163" duration="26039000" />
       <workItem from="1506581604846" duration="13473000" />
-      <workItem from="1506646976517" duration="1067000" />
+      <workItem from="1506646976517" duration="5761000" />
     </task>
     <task id="LOCAL-00004" summary="添加总后台的设置四个功能">
       <created>1506395271399</created>
@@ -455,7 +466,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="72950000" />
+    <option name="totallyTimeSpent" value="77644000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -817,14 +828,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="696">
-          <caret line="24" column="14" lean-forward="false" selection-start-line="24" selection-start-column="14" selection-end-line="24" selection-end-column="14" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/api/application/extra/queue.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="145">
@@ -841,24 +844,34 @@
     <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Action.php">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="145">
-          <caret line="5" column="27" lean-forward="true" selection-start-line="5" selection-start-column="27" selection-end-line="5" selection-end-column="27" />
+          <caret line="5" column="27" lean-forward="false" selection-start-line="5" selection-start-column="27" selection-end-line="5" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Own.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4959">
+          <caret line="171" column="9" lean-forward="false" selection-start-line="171" selection-start-column="9" selection-end-line="171" selection-end-column="9" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/api/application/database.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="609">
-          <caret line="29" column="32" lean-forward="true" selection-start-line="29" selection-start-column="32" selection-end-line="29" selection-end-column="32" />
+        <state relative-caret-position="667">
+          <caret line="31" column="28" lean-forward="false" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="28" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/api/application/custom/controller/Shop.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="389" column="50" lean-forward="false" selection-start-line="389" selection-start-column="39" selection-end-line="389" selection-end-column="50" />
-          <folding />
+        <state relative-caret-position="594">
+          <caret line="425" column="41" lean-forward="true" selection-start-line="425" selection-start-column="41" selection-end-line="425" selection-end-column="41" />
+          <folding>
+            <element signature="e#6#98#0#PHP" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
