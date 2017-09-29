@@ -7,6 +7,8 @@
  * 商品，分类
  */
 namespace app\custom\controller;
+use think\Db;
+
 class Shop extends Action{
 
     public function _initialize()
@@ -172,13 +174,11 @@ class Shop extends Action{
     public function getUserGoodById(){
         if(!isset($this -> data['appid']) || !isset($this -> data['good_id'])){
             $return['code'] = 10001;
-            $return['msg'] = '参数值缺失';
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -203,7 +203,6 @@ class Shop extends Action{
     public function updateUserGood(){
         if(!isset($this -> data['appid']) || !isset($this -> data['good_id']) || !isset($this -> data['name']) || (!isset($this -> data['price']) && !isset($this -> data['spec']))){
             $return['code'] = 10001;
-            $return['msg'] = '参数值缺失';
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
@@ -271,14 +270,12 @@ class Shop extends Action{
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
         $is_true = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> select();
         if(!$is_true){
             $return['code'] = 10003;
-            $return['msg'] = '当前用户没有此小程序';
             $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
             return json($return);
         }
@@ -309,7 +306,6 @@ class Shop extends Action{
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -340,7 +336,6 @@ class Shop extends Action{
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10001;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -367,13 +362,11 @@ class Shop extends Action{
         $custom_id = $this -> custom -> id;
         if(!isset($this -> data['appid']) || !isset($this -> data['name'])){
             $return['code'] = 10002;
-            $return['msg'] = '缺少参数值';
             $return['msg_test'] = 'appid不存在或者分类名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -395,6 +388,42 @@ class Shop extends Action{
         }else{
             $return['code'] = 10005;
             $return['msg'] = '添加分类信息失败';
+            return json($return);
+        }
+    }
+
+
+    /**
+     * 分类的顺序调整
+     * cate_id1 cate_id2 appid
+     */
+    public function setCateSort(){
+        if(!isset($this->data['cate_id1']) || !isset($this->data['cate_id2'])|| !isset($this->data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = 'appid不存在或者分类id不存在';
+            return json($return);
+        }
+        $code1 = db('goods_cate') -> where(['id' => $this->data['cate_id1'],'appid' => $this->data['appid'],'custom_id' => $this -> custom->id]) -> value('code');
+        $code2 = db('goods_cate') -> where(['id' => $this->data['cate_id2'],'appid' => $this->data['appid'],'custom_id' => $this -> custom->id]) -> value('code');
+        if(!isset($code1) || !isset($code2)){
+            $return['code'] = 10002;
+            $return['msg_test'] = '两个id可能传递错误，或者appid不正确';
+            return json($return);
+        }
+        Db::startTrans();
+        try{
+            $res1 = db('goods_cate') -> where(['id' => $this->data['cate_id1']]) -> setField('code',$code2);
+            $res2 = db('goods_cate') -> where(['id' => $this->data['cate_id2']]) -> setField('code',$code1);
+            if($res1 && $res2){
+                Db::commit();
+                $return['code'] = 10000;
+                $return['msg_test'] = '成功了';
+                return json($return);
+            }
+        }catch (\Exception $e){
+            Db::rollback();
+            $return['code'] = 10003;
+            $return['msg_test'] = '更新是出错了';
             return json($return);
         }
 
