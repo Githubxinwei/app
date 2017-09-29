@@ -193,13 +193,11 @@ class Own extends Action{
     public function getAppInfo(){
         if(!isset($this -> data['appid'])){
             $return['code'] = 10001;
-            $return['msg'] = '参数值缺失';
             $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -232,7 +230,6 @@ class Own extends Action{
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid格式错误';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -252,6 +249,24 @@ class Own extends Action{
 
     }
 
+
+    /**
+     * 微信支付的商户号和商户key
+     * appid,mchid,mkey
+     */
+    public function setUserWxKey(){
+        if(!isset($this->data['appid']) || !isset($this->data['mchid']) || !isset($this->data['mkey'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }
+        if(!preg_match("/[a-zA-z1-9]{10}$/",$this -> data['mchid']) || !preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = '商户号或者appid格式不正确';
+            return json($return);
+        }
+        $info = db('auth_info') -> field('mchid,mkey') -> where(['apps' => $this -> data['appid'],'custom_id' => $this->custom-> id]) -> find();
+    }
 
 
 
