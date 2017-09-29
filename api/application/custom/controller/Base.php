@@ -23,9 +23,10 @@ class Base extends Action{
 		}
 		$tmp  = base64_decode($base64);//解码
 		//写文件
-		$path = 'Uploads/13222222222/'.date("Ymd").'/';
+		$path = 'Uploads/'.$this->custom->username.'/'.date("Ymd").'/';
 		if(!is_dir($path)){
-			mkdir($path);
+			//mkdir($path);
+			mkdir(iconv("UTF-8", "GBK", $path),0777,true);
 		}
 		$name = time().rand(1000,9999);
 		file_put_contents($path.$name.".".$img_type[1], $tmp);
@@ -36,7 +37,7 @@ class Base extends Action{
 		echo json_encode($result);
 	}
 	//遍历目录输出目录及其下的所有文件 利用函数的递归解决
-	function my_scandir($dir){  
+	private function my_scandir($dir){  
 		$files=array();  
 		if(is_dir($dir)){  
 			if($handle=opendir($dir)){  
@@ -73,7 +74,7 @@ class Base extends Action{
 		$arr =array();
 		//获取到指定文件夹内的照片数量
 		$img = array('gif','png','jpg');//所有图片的后缀名
-		$dir = 'Uploads/13222222222';
+		$dir = 'Uploads/'.$this->custom->username;
 		$pic = $this->my_scandir($dir);
 		foreach($pic as $k=>$p)
 		{
