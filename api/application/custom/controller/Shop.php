@@ -33,10 +33,15 @@ class Shop extends Action{
             return json($return);
         }
         $custom_id = $this -> custom -> id;
-        $is_true = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> select();
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10003;
             $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
+            return json($return);
+        }
+        if($is_true['custom_id'] != $this->custom->id){
+            $return['code'] = 10005;
+            $return['msg_test'] = '当前小程序不是这个用户的';
             return json($return);
         }
         $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
@@ -46,9 +51,9 @@ class Shop extends Action{
             $cate_id = $this -> data['cate_id'] * 1;
             $where = "FIND_IN_SET($cate_id,cid)";
         }
-        $number = db('goods') -> where(['custom_id' => $custom_id,'appid' => $this -> data['appid']]) -> count();
+        $number = db('goods') -> where(['appid' => $this -> data['appid']]) -> count();
         $info = db('goods')
-            -> where(['custom_id' => $custom_id,'appid' => $this -> data['appid']])
+            -> where(['appid' => $this -> data['appid']])
             -> where($where)
             -> page($page,$limit)
             -> order('id desc')
@@ -81,7 +86,7 @@ class Shop extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $res = db('goods') -> where(['id' => $this -> data['good_id'] * 1,'appid' => $this -> data['appid'],'custom_id' => $this->custom->id]) -> delete();
+        $res = db('goods') -> where(['id' => $this -> data['good_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
@@ -118,13 +123,17 @@ class Shop extends Action{
             return json($return);
         }
 
-        $is_true = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $this->custom -> id]) -> select();
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10011;
             $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
             return json($return);
         }
-
+        if($is_true['custom_id'] != $this -> custom->id){
+            $return['code'] = 10011;
+            $return['msg_test'] = '当前小程序不是这个用户的';
+            return json($return);
+        }
         //如果上传图片，判断图片是否是十个
         if(isset($this -> data['pic'])){
             $pic_number = count(explode(',',$this -> data['pic']));
@@ -182,7 +191,7 @@ class Shop extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $info = db('goods') -> where(['appid' => $this -> data['appid'],'id' => $this -> data['good_id']*1,'custom_id' => $this->custom->id]) -> find();
+        $info = db('goods') -> where(['id' => $this -> data['good_id']*1,'custom_id' => $this->custom->id]) -> find();
         if($info){
             $return['code'] = 10000;
             $return['data'] = $info;
@@ -243,7 +252,7 @@ class Shop extends Action{
         }
         $good_id = $this -> data['good_id'];
         unset($this -> data['good_id']);
-        $good_id = db('goods') -> where(['id' => $good_id,'appid' => $this -> data['appid'],'custom_id' => $this->custom->id])  -> update($this -> data);
+        $good_id = db('goods') -> where(['id' => $good_id,'custom_id' => $this->custom->id])  -> update($this -> data);
         if($good_id){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
@@ -273,10 +282,15 @@ class Shop extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $is_true = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> select();
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10003;
             $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
+            return json($return);
+        }
+        if($is_true['custom_id'] != $this -> custom->id){
+            $return['code'] = 10004;
+            $return['msg_test'] = '小程序不是这个用户的';
             return json($return);
         }
         $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
@@ -311,7 +325,7 @@ class Shop extends Action{
         }
         $cate_id = $this -> data['cate_id'];
 
-        $res = db('goods_cate') -> where(['id' => $cate_id,'custom_id' => $this->custom->id,'appid' => $this->data['appid']]) -> delete();
+        $res = db('goods_cate') -> where(['id' => $cate_id,'custom_id' => $this->custom->id]) -> delete();
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
@@ -341,7 +355,7 @@ class Shop extends Action{
         }
         $info['id'] = $this -> data['cate_id'];
         $info['name'] = $this -> data['name'];
-        $res = model('goods_cate') -> where(['id' => $this -> data['cate_id'],'custom_id' => $this->custom->id,'appid' => $this->data['appid']]) -> update($info);
+        $res = model('goods_cate') -> where(['id' => $this -> data['cate_id'],'custom_id' => $this->custom->id]) -> update($info);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
@@ -370,10 +384,15 @@ class Shop extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $is_true = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> select();
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10004;
             $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
+            return json($return);
+        }
+        if($is_true['custom_id'] != $this->custom->id){
+            $return['code'] = 10006;
+            $return['msg_test'] = '当前小程序不是这个用户的';
             return json($return);
         }
         $code = db('goods_cate') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> max('code');
@@ -403,8 +422,8 @@ class Shop extends Action{
             $return['msg_test'] = 'appid不存在或者分类id不存在';
             return json($return);
         }
-        $code1 = db('goods_cate') -> where(['id' => $this->data['cate_id1'],'appid' => $this->data['appid'],'custom_id' => $this -> custom->id]) -> value('code');
-        $code2 = db('goods_cate') -> where(['id' => $this->data['cate_id2'],'appid' => $this->data['appid'],'custom_id' => $this -> custom->id]) -> value('code');
+        $code1 = db('goods_cate') -> where(['id' => $this->data['cate_id1'],'custom_id' => $this -> custom->id]) -> value('code');
+        $code2 = db('goods_cate') -> where(['id' => $this->data['cate_id2'],'custom_id' => $this -> custom->id]) -> value('code');
         if(!isset($code1) || !isset($code2)){
             $return['code'] = 10002;
             $return['msg_test'] = '两个id可能传递错误，或者appid不正确';

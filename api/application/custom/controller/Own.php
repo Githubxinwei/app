@@ -96,9 +96,14 @@ class Own extends Action{
             return json($return);
         }
         //判断当前用户的小程序是否有这个appid
-        $is_true = db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> select();
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10006;
+            $return['msg_test'] = '这个客户没有创建这个小程序';
+            return json($return);
+        }
+        if($is_true['custom_id'] != $this -> custom->id){
+            $return['code'] = 10011;
             $return['msg_test'] = '这个客户没有创建这个小程序';
             return json($return);
         }
@@ -127,22 +132,22 @@ class Own extends Action{
         if($res){
             $info['update_time'] = time();
 
-            db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> update($info);
+            db('app') -> where(['appid' => $this -> data['appid']]) -> update($info);
             //判断当前购买的时间是否在过期
-            $use_time = db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> value('use_time');
+            $use_time = db('app') -> where(['appid' => $this -> data['appid']]) -> value('use_time');
             $year_time = strtotime('1 year');
             if($use_time > time()){
                 //还没过，应该在原来的基础上添加
-                db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']*1]) -> setInc('use_time',$year_time - time());
+                db('app') -> where(['appid' => $this -> data['appid']*1]) -> setInc('use_time',$year_time - time());
             }else{
                 //过期了，在现在的时间上添加
-                db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> setField('use_time',$year_time);
+                db('app') -> where(['appid' => $this -> data['appid']]) -> setField('use_time',$year_time);
             }
 
-            db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> setInc('fee',$fee);
+            db('app') -> where(['appid' => $this -> data['appid']]) -> setInc('fee',$fee);
 
             db('custom') -> where(['id' => $this -> data['custom_id']]) -> setInc('expense',$fee);
-            $use_time = db('app') -> where(['custom_id' => $this -> data['custom_id'],'appid' => $this -> data['appid']]) -> value('use_time');
+            $use_time = db('app') -> where(['appid' => $this -> data['appid']]) -> value('use_time');
             $return['code'] = 10000;
             $return['data'] = ['use_time' => $use_time];
             $return['msg'] = '购买成功';
@@ -170,7 +175,7 @@ class Own extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $res = db('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $this->custom->id]) -> setField('is_del',1);
+        $res = db('app') -> where(['appid' => $this -> data['appid']]) -> setField('is_del',1);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
@@ -202,7 +207,12 @@ class Own extends Action{
             return json($return);
         }
         //判断当前用户的小程序是否有这个appid
-        $info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish') ->  where(['custom_id' => $this->custom -> id,'appid' => $this -> data['appid']]) -> select();
+        $info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish') ->  where(['appid' => $this -> data['appid']]) -> find();
+        if($info['custom_id'] != $this->custom->id){
+            $return['code'] = 10004;
+            $return['msg_test'] = '这个app不是这个用户的';
+            return json($return);
+        }
         if($info){
             $return['code'] = 10000;
             $return['data'] = $info;
@@ -234,7 +244,7 @@ class Own extends Action{
             return json($return);
         }
 
-        $res = model('app') -> where(['appid' => $this -> data['appid'],'custom_id' => $this->custom->id]) -> update($this -> data);
+        $res = model('app') -> where(['appid' => $this -> data['appid']]) -> update($this -> data);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
@@ -265,16 +275,79 @@ class Own extends Action{
             $return['msg_test'] = '商户号或者appid格式不正确';
             return json($return);
         }
-        $info = db('auth_info') -> field('mchid,mkey') -> where(['apps' => $this -> data['appid'],'custom_id' => $this->custom-> id]) -> find();
-        dump($info);
-        if(!$info || !is_null($info['mchid']) || !is_null($info['mkey'])){
+        $info = db('auth_info') -> field('custom_id,mchid,mkey') -> where(['apps' => $this -> data['appid']]) -> find();
+        if(!$info){
             $return['code'] = 10003;
-            $return['msg_test'] = '该小程序的授权信息不存在或者已经添加过了,或者当前用户没有此小程序';
+            $return['msg_test'] = '该小程序的授权信息不存在';
+            return json($return);
+        }
+        if($info['custom_id'] != $this->custom->id){
+            $return['code'] = 10006;
+            $return['msg_test'] = '这个授权信息不是这个用户的';
+            return json($return);
+        }
+        if($info['mchid']|| $info['mkey']){
+            $return['code'] = 10004;
+            $return['msg_test'] = '商户号或秘钥已存在';
+            return json($return);
+        }
+        $mData['mchid'] = $this->data['mchid'];
+        $mData['mkey'] = $this->data['mkey'];
+        $res = db('auth_info')  -> where(['apps' => $this -> data['appid']]) -> update($mData);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg_test'] = '添加成功';
             return json($return);
         }else{
-            $mData['mchid'] = $this->data['mchid'];
-            $mData['mkey'] = $this->data['mkey'];
-            db('auth_info')  -> where(['apps' => $this -> data['appid'],'custom_id' => $this->custom-> id]) -> update($mData);
+            $return['code'] = 10005;
+            $return['msg_test'] = 'appid或许不对';
+            return json($return);
+        }
+    }
+
+    /**
+     * 解除小程序的商户号和商户key
+     * appid
+     */
+    public function clearWxKey(){
+        if(!isset($this->data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid格式不正确';
+            return json($return);
+        }
+        //是否设置了授权
+        $info = db('auth_info') -> field('custom_id,mchid,mkey') -> where(['apps' => $this->data['appid']]) -> find();
+        if(!$info){
+            $return['code'] = 10003;
+            $return['msg_test'] = '该小程序的授权信息不存在';
+            return json($return);
+        }
+        if($info['custom_id'] != $this->custom->id){
+            $return['code'] = 10005;
+            $return['msg_test'] = '不是这个用户的';
+            return json($return);
+        }
+        if(!$info['mchid']||!$info['mkey']){
+            $return['code'] = 10004;
+            $return['msg_test'] = '商户号或秘钥不存在';
+            return json($return);
+        }
+        $m_data['mchid'] = '';
+        $m_data['mkey'] = '';
+        $res = db('auth_info') -> where(['apps' => $this->data['appid']]) -> update($m_data);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg_test'] = 'OK';
+            return json($return);
+        }else{
+            $return['code'] = 10006;
+            $return['msg_test'] = '失败了';
+            return json($return);
         }
     }
 
