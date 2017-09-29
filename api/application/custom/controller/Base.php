@@ -25,7 +25,8 @@ class Base extends Action{
 		//写文件
 		$path = 'Uploads/13222222222/'.date("Ymd").'/';
 		if(!is_dir($path)){
-			mkdir($path);
+			//mkdir($path);
+			mkdir(iconv("UTF-8", "GBK", $path),0777,true);
 		}
 		$name = time().rand(1000,9999);
 		file_put_contents($path.$name.".".$img_type[1], $tmp);
