@@ -299,7 +299,6 @@ class Shop extends Action{
         $return['msg'] = '';
         $return['msg_test'] = '成功了';
         return json($return);
-
     }
 
     public function delCateById(){
