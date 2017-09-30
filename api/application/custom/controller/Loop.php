@@ -29,12 +29,17 @@ class Loop extends Action{
      * appid
      */
     public function getLoopImgList(){
-        $info = db('loop_img') -> where(['appid' => $this->data['appid'],'custom_id' => $this->custom->id]) -> select();
+        $info = db('loop_img') -> where(['appid' => $this->data['appid']]) -> find();
         if(!$info){
             $return['code'] = 10003;
-            $return['msg_test'] = 'appid不正确或者当前用户没有此小程序,或当前的小程序不是这个用户的,或者没有创建轮播图';
+            $return['msg_test'] = 'appid不正确或者当前用户没有此小程序,或或者没有创建轮播图';
             return json($return);
         }else{
+            if($info['custom_id'] != $this->custom->id){
+                $return['code'] = 10004;
+                $return['msg_test'] = '当前的小程序不是这个用户的';
+                return json($return);
+            }
             $return['code'] = 10000;
             $return['data'] = $info;
             $return['msg_test'] = 'ok';
@@ -89,7 +94,7 @@ class Loop extends Action{
             $return['msg_test'] = '缺少参数值';
             return json($return);
         }
-        $res = db('loop_img') -> where(['id' => $this->data['loop_id'],'appid' => $this->data['appid']]) -> delete();
+        $res = db('loop_img') -> where(['id' => $this->data['loop_id'],'custom_id' => $this->custom->id]) -> delete();
         if($res){
             $return['code'] = 10000;
             $return['msg_test'] = 'ok';
@@ -103,6 +108,7 @@ class Loop extends Action{
 
     /**
      * 设置轮播图的，接受前台传递过来的参数
+     * appid,info
      */
     public function setLoopImg(){
         if(!isset($this -> data['info'])){
@@ -111,11 +117,31 @@ class Loop extends Action{
             return json($return);
         }
         $info = $_GET['info'];
-        //$info = $this -> data['info'];
-        dump($info);
-        $a = json_decode($info,true);
-        dump($a);
-//        dump(json_encode($a));
+        $info = json_decode($info,true);
+        if(is_null($info)){
+            $return['code'] = 10003;
+            $return['msg_test'] = '数据格式不正确';
+            return json($return);
+        }
+        $res = db('loop_img') -> field('id') -> where(['appid' => $this->data['appid']]) -> find();
+        if($res){
+            $re = db('loop_img') -> where(['id' => $res['id']]) -> setField('content',json($info));
+        }else{
+            $loopInfo['content'] = json($info);
+            $loopInfo['appid'] = $this->data['appid'];
+            $loopInfo['custom_id'] = $this->custom->id;
+            $re = db('loop_img') -> insertGetId($loopInfo);
+        }
+        if($re){
+            $return['code'] = 10000;
+            $return['msg_test'] = '成功';
+            return json($return);
+        }else{
+            $return['code'] = 10004;
+            $return['msg_test'] = '失败';
+            return json($return);
+        }
+
     }
 
 
