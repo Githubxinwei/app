@@ -22,6 +22,12 @@ class Loop extends Action{
             $return['msg_test'] = 'appid格式不正确';
             echo json_encode($return);exit;
         }
+        $custom_id = db('app') -> where("appid",$this->data['appid']) -> value('custom_id');
+        if($custom_id != $this->custom->id){
+            $return['code'] = 100020;
+            $return['msg_test'] = '当前app不是这个用户的';
+            echo json_encode($return);exit;
+        }
     }
 
     /**
@@ -84,27 +90,27 @@ class Loop extends Action{
         return json($return);
     }
 
-    /**
-     * 删除数据
-     * appid,loop_id
-     */
-    public function delLoopInfo(){
-        if(!isset($this->data['loop_id'])){
-            $return['code'] = 10002;
-            $return['msg_test'] = '缺少参数值';
-            return json($return);
-        }
-        $res = db('loop_img') -> where(['id' => $this->data['loop_id'],'custom_id' => $this->custom->id]) -> delete();
-        if($res){
-            $return['code'] = 10000;
-            $return['msg_test'] = 'ok';
-            return json($return);
-        }else{
-            $return['code'] = 10003;
-            $return['msg_test'] = 'appid不对或者loop_id不存在';
-            return json($return);
-        }
-    }
+//    /**
+//     * 删除数据
+//     * appid,loop_id
+//     */
+//    public function delLoopInfo(){
+//        if(!isset($this->data['loop_id'])){
+//            $return['code'] = 10002;
+//            $return['msg_test'] = '缺少参数值';
+//            return json($return);
+//        }
+//        $res = db('loop_img') -> where(['id' => $this->data['loop_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
+//        if($res){
+//            $return['code'] = 10000;
+//            $return['msg_test'] = 'ok';
+//            return json($return);
+//        }else{
+//            $return['code'] = 10003;
+//            $return['msg_test'] = 'appid不对或者loop_id不存在';
+//            return json($return);
+//        }
+//    }
 
     /**
      * 设置轮播图的，接受前台传递过来的参数

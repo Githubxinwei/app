@@ -100,6 +100,7 @@ class Shop extends Action{
         }
     }
 
+
     /**
      * 商品名称
      * appid,name,price,spec,pic
@@ -111,12 +112,13 @@ class Shop extends Action{
             return json($return);
         }
         //商品的名字和价格是必须的
-        if(isset($this -> data['price']) && $this -> data['price'] <= 0){
-            $return['code'] = 10004;
-            $return['msg'] = '请填写正确的商品价格';
-            return json($return);
+        if(isset($this -> data['price'])){
+            if($this -> data['price'] && $this -> data['price'] <= 0){
+                $return['code'] = 10004;
+                $return['msg'] = '请填写正确的商品价格';
+                return json($return);
+            }
         }
-
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10006;
             $return['msg_test'] = 'appid是一个8位数';
@@ -373,6 +375,7 @@ class Shop extends Action{
             return json($return);
         }
     }
+
 
     /**
      * 增加分类信息
