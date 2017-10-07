@@ -153,11 +153,15 @@ class Shop extends Action{
         $this -> data['create_time'] = time();
         $this -> data['custom_id'] = $this -> custom -> id;
         if(isset($this -> data['spec'])){
-            if(!$this -> isJson($this -> data['spec'])){
+            $this -> data['spec'] = $_GET['spec'];
+            $info = json_decode($this -> data['spec'],true);
+            dump($info);
+            if(is_null($info)){
                 $return['code'] = 10009;
-                $return['msg_test'] = '商品的规格是json格式';
+                $return['msg_test'] = '数据格式不正确';
                 return json($return);
             }
+
         }
         $good_id = db('goods') -> insertGetId($this -> data);
         if($good_id){
@@ -172,9 +176,6 @@ class Shop extends Action{
         }
     }
 
-    private function isJson($str){
-         return is_null(json_decode($str)) == true ? true : false;
-    }
 
     /**
      * 获取商品，进行修改

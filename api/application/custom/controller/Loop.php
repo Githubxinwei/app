@@ -117,6 +117,7 @@ class Loop extends Action{
             return json($return);
         }
         $info = $_GET['info'];
+
         $info = json_decode($info,true);
         if(is_null($info)){
             $return['code'] = 10003;
@@ -125,9 +126,9 @@ class Loop extends Action{
         }
         $res = db('loop_img') -> field('id') -> where(['appid' => $this->data['appid']]) -> find();
         if($res){
-            $re = db('loop_img') -> where(['id' => $res['id']]) -> setField('content',json($info));
+            $re = db('loop_img') -> where(['id' => $res['id']]) -> setField('content',$_GET['info']);
         }else{
-            $loopInfo['content'] = json($info);
+            $loopInfo['content'] = $_GET['info'];
             $loopInfo['appid'] = $this->data['appid'];
             $loopInfo['custom_id'] = $this->custom->id;
             $re = db('loop_img') -> insertGetId($loopInfo);
