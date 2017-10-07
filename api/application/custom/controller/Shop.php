@@ -227,10 +227,13 @@ class Shop extends Action{
             return json($return);
         }
 
-        if(isset($this->data['price']) && $this -> data['price'] <= 0){
-            $return['code'] = 10005;
-            $return['msg'] = '请填写正确的商品价格';
-            return json($return);
+        //商品的名字和价格是必须的
+        if(isset($this -> data['price'])){
+            if($this -> data['price'] && $this -> data['price'] <= 0){
+                $return['code'] = 10004;
+                $return['msg'] = '请填写正确的商品价格';
+                return json($return);
+            }
         }
 
         //如果上传图片，判断图片是否是十个
