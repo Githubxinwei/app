@@ -415,6 +415,7 @@ class Own extends Action{
                 $return['msg_test'] = '当前的小程序不是这个用户的';
                 return json($return);
             }
+            unset($info['custom_id']);
             $return['code'] = 10000;
             $return['data'] = $info;
             $return['msg_test'] = 'ok';
@@ -502,17 +503,12 @@ class Own extends Action{
         }
     }
 
-    public function test(){
-        session(array('name'=>'xigua','expire'=>1200));
-        session('xigua',123456);
-    }
 
     /**
      * 验证手机号是否正确
      * code
      */
     public function verifyMsgCode(){
-        halt(session('xigua'));
         if(!isset($this->data['code'])){
             $return['code'] = 10001;
             $return['msg_test'] = '缺少参数';
