@@ -29,10 +29,10 @@ class Loop extends Action{
      * appid
      */
     public function getLoopImgList(){
-        $info = db('loop_img') -> where(['appid' => $this->data['appid']]) -> find();
+        $info = db('loop_img') -> field('content,custom_id') ->  where(['appid' => $this->data['appid']]) -> find();
         if(!$info){
             $return['code'] = 10003;
-            $return['msg_test'] = 'appid不正确或者当前用户没有此小程序,或或者没有创建轮播图';
+            $return['msg_test'] = 'appid不正确或者当前用户没有此小程序,或者没有创建轮播图';
             return json($return);
         }else{
             if($info['custom_id'] != $this->custom->id){
@@ -116,7 +116,7 @@ class Loop extends Action{
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
-        $info = $_GET['info'];
+        $info = $_POST['info'];
 
         $info = json_decode($info,true);
         if(is_null($info)){
@@ -126,9 +126,9 @@ class Loop extends Action{
         }
         $res = db('loop_img') -> field('id') -> where(['appid' => $this->data['appid']]) -> find();
         if($res){
-            $re = db('loop_img') -> where(['id' => $res['id']]) -> setField('content',$_GET['info']);
+            $re = db('loop_img') -> where(['id' => $res['id']]) -> setField('content',$_POST['info']);
         }else{
-            $loopInfo['content'] = $_GET['info'];
+            $loopInfo['content'] = $_POST['info'];
             $loopInfo['appid'] = $this->data['appid'];
             $loopInfo['custom_id'] = $this->custom->id;
             $re = db('loop_img') -> insertGetId($loopInfo);

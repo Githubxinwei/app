@@ -153,15 +153,13 @@ class Shop extends Action{
         $this -> data['create_time'] = time();
         $this -> data['custom_id'] = $this -> custom -> id;
         if(isset($this -> data['spec'])){
-            $this -> data['spec'] = $_GET['spec'];
+            $this -> data['spec'] = $_POST['spec'];
             $info = json_decode($this -> data['spec'],true);
-            dump($info);
             if(is_null($info)){
                 $return['code'] = 10009;
                 $return['msg_test'] = '数据格式不正确';
                 return json($return);
             }
-
         }
         $good_id = db('goods') -> insertGetId($this -> data);
         if($good_id){
@@ -250,9 +248,11 @@ class Shop extends Action{
             }
         }
         if(isset($this -> data['spec'])){
-            if(!$this -> isJson($this -> data['spec'])){
-                $return['code'] = 10008;
-                $return['msg_test'] = '商品的规格是json格式';
+            $this -> data['spec'] = $_POST['spec'];
+            $info = json_decode($this -> data['spec'],true);
+            if(is_null($info)){
+                $return['code'] = 10009;
+                $return['msg_test'] = '数据格式不正确';
                 return json($return);
             }
         }
