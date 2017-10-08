@@ -87,6 +87,7 @@ class Shop extends Action{
             return json($return);
         }
         $res = db('goods') -> where(['id' => $this -> data['good_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
+
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';

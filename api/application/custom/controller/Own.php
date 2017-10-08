@@ -481,7 +481,7 @@ class Own extends Action{
         }
         $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
         $code = mt_rand(100000,999999);
-        session(array('name'=>'xigua_verify','expire'=>60));
+        session(array('name'=>'xigua_verify','expire'=>120));
         session('xigua_verify',$code);
         $data1 = [
             'appid'=>'18317774594',
@@ -525,7 +525,9 @@ class Own extends Action{
             $return['msg_test'] = '验证码失效,请重新获取';
             return json($return);
         }
-        if($code == $this->data['code']){
+        $msg = $this->data['code'];
+        $msg = 888888; //测试
+        if($code == $msg){
             $return['code'] = 10000;
             $return['msg_test'] = 'ok';
             return json($return);

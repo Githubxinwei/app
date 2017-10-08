@@ -30,6 +30,7 @@ class Loop extends Action{
         }
     }
 
+
     /**
      * 获取轮播图的信息
      * appid
