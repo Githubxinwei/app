@@ -511,13 +511,13 @@ class Own extends Action{
             return json($return);
         }
         $code = session('xigua_verify');
+        $code = 88888;//测试
         if(!$code){
             $return['code'] = 10003;
             $return['msg_test'] = '验证码失效,请重新获取';
             return json($return);
         }
         $msg = $this->data['code'];
-        $msg = 888888; //测试
         if($code == $msg){
             $return['code'] = 10000;
             $return['msg_test'] = 'ok';
