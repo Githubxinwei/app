@@ -464,6 +464,7 @@ class Own extends Action{
         }
     }
 
+
     /**
      * 发送手机验证码
      *
@@ -479,26 +480,16 @@ class Own extends Action{
             $return['msg_test'] = '格式不正确';
             return json($return);
         }
-        $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
         $code = mt_rand(100000,999999);
-        session(array('name'=>'xigua_verify','expire'=>120));
-        session('xigua_verify',$code);
-        $data1 = [
-            'appid'=>'18317774594',
-            'appsecret'=>'zaefNsQrp2GJ9F3Y',
-            't_id'=>'TP1709201',
-            'mobile'=>$this->data['tel'],
-            'params'=>'code:' . $code,
-        ];
-        $result = http_request($url,$data1);
-        $result = json_decode($result,true);
-        if($result['return_code'] == 0000){
+        $param = "code:{$code}";
+        $code = sendMsg('18317774594','zaefNsQrp2GJ9F3Y','TP1709201',$this->data['tel'],$param,$code);
+        if($code == 0000){
             $return['code'] = 10000;
             $return['msg'] = '发送成功';
             return json($return);
         }else{
             $return['code'] = 10003;
-            $return['msg_test'] = $result['return_code'];
+            $return['msg_test'] = $code;
             return json($return);
         }
     }

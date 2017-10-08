@@ -164,6 +164,34 @@ function put_qrcode($value,$name,$qr_path,$logo='',$state=false){
     return $last;
 }
 
+/**
+ * @param $appid id
+ * @param $appsecret
+ * @param $t_id 模板id
+ * @param $tel 要向哪个手机发送短信
+ * @param $time 有效期 默认是120秒
+ * @param $params code:888888
+ * @param $code 验证码
+ * @return int 结果码
+ */
+function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
+    if(!isset($appid) || !isset($appsecret) || !isset($t_id) || !isset($tel) || !isset($params)||!isset($code)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+    session(array('name'=>'xigua_verify','expire'=>$time));
+    session('xigua_verify',$code);
+    $data1 = [
+        'appid'=>$appid,
+        'appsecret'=>$appsecret,
+        't_id'=>$t_id,
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
 
 //https请求(支持GET和POST)
 function http_request($url,$data = null){
