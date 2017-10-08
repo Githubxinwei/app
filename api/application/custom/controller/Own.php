@@ -207,7 +207,7 @@ class Own extends Action{
             return json($return);
         }
         //判断当前用户的小程序是否有这个appid
-        $info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish') ->  where(['appid' => $this -> data['appid']]) -> find();
+        $info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id') ->  where(['appid' => $this -> data['appid']]) -> find();
         if($info['custom_id'] != $this->custom->id){
             $return['code'] = 10004;
             $return['msg_test'] = '这个app不是这个用户的';
@@ -335,7 +335,7 @@ class Own extends Action{
             $return['msg_test'] = '商户信息不存在';
             return json($return);
         }
-        $return['code'] = 10006;
+        $return['code'] = 10000;
         unset($info['custom_id']);
         $return['data'] = $info;
         $return['msg_test'] = 'ok';
@@ -528,6 +528,7 @@ class Own extends Action{
             return json($return);
         }
     }
+
 
 }
 
