@@ -193,6 +193,57 @@ function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
     return $result['return_code'];
 }
 
+/**发送邮件方法
+ *@param $to：接收者 $title：标题 $content：邮件内容
+ *@return bool true:发送成功 false:发送失败
+ */
+function sendMail($to,$title,$content,$type='qq'){
+    //引入PHPMailer的核心文件 使用require_once包含避免出现PHPMailer类重复定义的警告
+    import("PHPMailer.PHPMailer",EXTEND_PATH,'.class.php');
+    import("PHPMailer.SMTP",EXTEND_PATH,'.class.php');
+    //实例化PHPMailer核心类
+    $mail = new \PHPMailer();
+    //使用smtp鉴权方式发送邮件
+    $mail->isSMTP();
+    //smtp需要鉴权 这个必须是true
+    if($type == 'qq'){
+        $mail->Host = 'smtp.qq.com';
+        $mail->Username ='741350149@qq.com';
+        //smtp登录的密码 使用生成的授权码
+        $mail->Password = 'ewmwpkaofligbdji';
+        //设置发件人邮箱地址 这里填入上述提到的“发件人邮箱”
+        $mail->From = '741350149@qq.com';
+    }else{
+        $mail->Host = 'smtp.163.com';
+        $mail->Username ='18317774594@163.com';
+        //smtp登录的密码 使用生成的授权码（就刚才叫你保存的最新的授权码）
+        $mail->Password = 'lijiafei7511';
+        //设置发件人邮箱地址 这里填入上述提到的“发件人邮箱”
+        $mail->From = '18317774594@163.com';
+    }
+    $mail->SMTPAuth=true;
+    //设置使用ssl加密方式登录鉴权
+    $mail->SMTPSecure = 'ssl';
+    //设置ssl连接smtp服务器的远程服务器端口号，以前的默认是25，但是现在新的好像已经不可用了 可选465或587
+    $mail->Port = 465;
+    //设置发送的邮件的编码 可选GB2312 我喜欢utf-8 据说utf8在某些客户端收信下会乱码
+    $mail->CharSet = 'UTF-8';
+    //设置发件人姓名（昵称） 任意内容，显示在收件人邮件的发件人邮箱地址前的发件人姓名
+    $mail->FromName = '小程序订单通知';
+    $mail->isHTML(true);
+    $mail->addAddress($to,'小程序');
+    $mail->Subject = $title;
+    $mail->Body = $content;
+    $status = $mail->send();
+//        return $status;
+    //简单的判断与提示信息
+    if($status) {
+        return true;
+    }else{
+        return false;
+    }
+}
+
 //https请求(支持GET和POST)
 function http_request($url,$data = null){
     $curl = curl_init();

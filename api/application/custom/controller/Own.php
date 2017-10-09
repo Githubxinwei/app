@@ -529,7 +529,15 @@ class Own extends Action{
         }
     }
 
+    public function test(){
+        $flag = sendMail('741350149@qq.com','你有新订单','你有新订单，请及时处理','a');
+        halt($flag);
+    }
+
+
+
 
 }
+
 
  ?>
