@@ -47,7 +47,6 @@ class Order extends Action{
         if(isset($this->data['starttime']) && isset($this->data['endtime'])){
             $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
         }
-        dump($where);
         $data = db('goods_order')
             -> field("id,state,username,prepay_time,price,order_sn")
             -> where(['appid' => $this -> data['appid'],'state' => $state])
@@ -72,14 +71,16 @@ class Order extends Action{
         $info = db('goods_order')
             -> alias('a')
             -> field("a.custom_id,a.username,a.tel,a.mail,a.province,a.city,a.dist,a.address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
-            -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)')
+            -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)','LEFT')
             -> where('a.id',$this->data['order_id'])
+            -> group('b.id')
             -> find();
         if($info['custom_id'] != $this->custom->id){
             $return['code'] = 10002;
             $return['msg_test'] = '当前订单的不是这个用户的';
             return json($return);
         }
+        unset($info['custom_id']);
         $return['code'] = 10000;
         $return['data'] = $info;
         $return['msg_test'] = 'ok';
