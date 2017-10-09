@@ -4,7 +4,7 @@
  * User: 李佳飞
  * Date: 2017/9/27 0027
  * Time: 11:40
- * 商品，分类
+ * 商品，分类的相关接口
  */
 namespace app\custom\controller;
 use think\Db;
