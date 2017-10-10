@@ -193,7 +193,7 @@ class Loop extends Action{
         }
         $res = db('app') -> where(['appid' => $this->data['appid']]) -> setField($field,$this->data['value']*1);
         if($res){
-            $this -> setAppType();//预留项
+            $this -> setAppType($this->data['appid']);//预留项
             $return['code'] = 10000;
             $return['msg_test'] = '成功';
             return json($return);
@@ -243,8 +243,78 @@ class Loop extends Action{
 
 
 
-    private function setAppType(){
-        return;
+    private function setAppType($app){
+        if(!isset($app)){return;}
+        //判断是否在auto_info表中有绑定
+        $appid = db("auth_info") -> where(['apps' => $app]) -> value('appid');
+        if(!$appid){
+            return;
+        }
+        $info = db('app') -> field('type,theme,layout,search,on_service') -> where(['appid' => $app]) -> find();
+        $apps = $app;$appid = $appid;//1
+        $weapp = new \app\weixin\controller\Common($apps);
+        $weapp ->domain();//设置request服务器域名
+        $template = get_app($info['type']);//1
+        $template_id = $template['template_id'];//得到小程序模板ID
+        $color = get_theme($info['theme']);//主题色//1
+        $layout_arr = ['grid','table','table_row'];
+        $layout = $layout_arr[$info['layout']];//布局1
+        $search = 1==$info['search'] ? 'true' : 'false';//启用搜索框1
+        $on_service = 1==$info['on_service'] ? 'true' : 'false';//启用客服1
+        $ext_json = '{
+	"extEnable": true,
+	"extAppid": "'.$appid.'",
+	"window":{
+	"navigationBarTitleText": "西瓜科技演示",
+	"navigationBarTextStyle":"white",
+	"navigationBarBackgroundColor": "'.$color['theme'].'",
+	"backgroundTextStyle":"light"
+	},
+	"ext":{
+	 "xgAppId":"'.$apps.'",
+	"appid":"'.$appid.'",
+	 "themeColor":"'.$color['theme'].'",
+	 "themeTextColor":"'.$color['text'].'",
+	 "layoutType":"'.$layout.'",
+	 "showSearching":'.$search.',
+	 "useOnlineService":'.$on_service.',
+	 "host":"https://weapp.xiguawenhua.com"
+	},
+	"tabBar": {
+		"selectedColor": "'.$color['selected'].'",
+		"backgroundColor": "#fff",
+		"color":"#555",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"iconPath": "./img/images/un-home.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
+				"postion": "top",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/cart/cart",
+				"iconPath": "./img/images/un-care.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-care.png",
+				"text": "购物车"
+			},
+			{
+				"pagePath": "pages/order/order",
+				"iconPath": "./img/images/un-order.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
+				"text": "订单"
+			},
+			{
+				"pagePath": "pages/more/more",
+				"iconPath": "./img/images/un-more.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
+				"text": "更多"
+			}
+		]
+	}
+}';
+        $res = $weapp -> commit($template_id,$ext_json);
     }
 
 
