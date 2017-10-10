@@ -74,8 +74,8 @@ class Order extends Action{
             -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> group('b.id')
-            -> find();
-        if($info['custom_id'] != $this->custom->id){
+            -> select();
+        if($info[0]['custom_id'] != $this->custom->id){
             $return['code'] = 10002;
             $return['msg_test'] = '当前订单的不是这个用户的';
             return json($return);
