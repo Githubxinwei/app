@@ -25,8 +25,10 @@ class First{
 			$data['ip'] = $_SERVER["REMOTE_ADDR"];
 			$res = db('custom') -> where('username',$username) -> update($data);
 			if($res){
-				session('custom',$info[0]);
-				$arr['code'] = 10000;$arr['msg'] = '登录成功';$arr['msg_test'] = '登录成功';
+                $session_key = session('custom',$info[0]);
+				$arr['code'] = 10000;$arr['msg'] = '登录成功';
+				$arr['msg_test'] = '登录成功';
+                $arr['data'] = ['session_key'=>$session_key];
 				return json($arr);
 			}else{
 				$arr['code'] = 10004;$arr['msg'] = '网络错误';$arr['msg_test'] = '网络错误';

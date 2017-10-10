@@ -150,6 +150,7 @@ class Session
         } else {
             $_SESSION[$name] = $value;
         }
+        return session_id();
     }
 
     /**
