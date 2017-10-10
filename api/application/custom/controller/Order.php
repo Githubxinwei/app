@@ -31,21 +31,29 @@ class Order extends Action{
     }
 
     public function getOrderList(){
-        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 15;
+        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
         $page = isset($this->data['page']) ? $this->data['page'] : 1;
         $state = isset($this->data['state']) ? $this->data['state'] : 1;
         $where = array();
         if(isset($this->data['username'])){
-            $where['username'] = $this->data['username'];
+            if($this->data['username']){
+                $where['username'] = $this->data['username'];
+            }
         }
         if(isset($this->data['order_sn'])){
-            $where['order_sn'] = $this -> data['order_sn'];
+            if($this->data['order_sn']){
+                $where['order_sn'] = $this -> data['order_sn'];
+            }
         }
         if(isset($this->data['tel'])){
-            $where['tel'] = $this->data['tel'];
+            if($this->data['tel']){
+                $where['tel'] = $this->data['tel'];
+            }
         }
         if(isset($this->data['starttime']) && isset($this->data['endtime'])){
-            $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
+            if($this->data['starttime'] && $this->data['endtime']){
+                $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
+            }
         }
         $data = db('goods_order')
             -> field("id,state,username,prepay_time,price,order_sn")

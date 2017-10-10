@@ -546,11 +546,13 @@ class Own extends Action{
             $return['msg_test'] = '当前的小程序不是这个用户的';
             return json($return);
         }
-        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 15;
+        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
         $page = isset($this->data['page']) ? $this->data['page'] : 1;
         $where = array();
         if(isset($this->data['nickname'])){
-            $where['nickName'] = $this->data['nickname'];
+            if($this->data['nickname']){
+                $where['nickName'] = $this->data['nickname'];
+            }
         }
         $info = db('user')
             -> field("avatarUrl,nickName,gender,country,province,create_time")
