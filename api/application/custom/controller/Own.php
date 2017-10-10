@@ -529,9 +529,39 @@ class Own extends Action{
         }
     }
 
-    public function test(){
-        $flag = sendMail('741350149@qq.com','你有新订单','你有新订单，请及时处理','a');
-        halt($flag);
+    public function getUserList(){
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $app_id = db('app') -> field('id,custom_id') -> where(['appid' => $this->data['appid']]) -> find();
+        if($app_id['custom_id'] != $this->custom->id){
+            $return['code'] = 10003;
+            $return['msg_test'] = '当前的小程序不是这个用户的';
+            return json($return);
+        }
+        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 15;
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+        $where = array();
+        if(isset($this->data['nickname'])){
+            $where['nickName'] = $this->data['nickname'];
+        }
+        $info = db('user')
+            -> field("avatarUrl,nickName,gender,country,province,create_time")
+            -> where("FIND_IN_SET({$app_id['id']},apps)")
+            -> where($where)
+            -> page($page,$num)
+            -> select();
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        $return['msg_test'] = 'ok';
+        return json($return);
     }
 
 
