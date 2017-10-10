@@ -70,7 +70,7 @@ class Order extends Action{
         }
         $info = db('goods_order')
             -> alias('a')
-            -> field("a.custom_id,a.username,a.tel,a.mail,a.province,a.city,a.dist,a.address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
+            -> field("a.id,a.custom_id,a.username,a.tel,a.mail,a.province,a.city,a.dist,a.address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
             -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> group('b.id')
@@ -85,6 +85,63 @@ class Order extends Action{
         $return['data'] = $info;
         $return['msg_test'] = 'ok';
         return json($return);
+    }
+
+    /**
+     * 修改状态
+     */
+    public function updateOrderState(){
+        if(!isset($this->data['state']) || !isset($this->data['order_id'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '请传递参数';
+            return json($return);
+        }
+        $state = db('goods_order') -> getFieldById($this->data['order_id'],'state');
+        if($this->data['state'] == 2){
+            if(!isset($this->data['kd_number'])){
+                $return['code'] = 10002;
+                $return['msg_test'] = '请传递订单号';
+                return json($return);
+            }
+            if($state != 1){
+                $return['code'] = 10003;
+                $return['msg_test'] = '状态不可修改';
+                return json($return);
+            }
+            $info['kd_number'] = $this->data['kd_number'];
+            $info['state'] = 2;
+            $res = db('goods_order') -> where(['id' => $this->data['order_id'] * 1]) -> update($info);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            }else{
+                $return['code'] = 10004;
+                $return['msg_test'] = '失败';
+                return json($return);
+            }
+
+        }else if($this->data['state'] == 4){
+            if($state == 0 || $state == 4){
+                $return['code'] = 10003;
+                $return['msg_test'] = '状态不可修改';
+                return json($return);
+            }
+            $res = db('goods_order') -> where(['id' => $this->data['order_id']]) -> setField('state',4);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            }else{
+                $return['code'] = 10004;
+                $return['msg_test'] = '失败';
+                return json($return);
+            }
+        }
+        $return['code'] = 10005;
+        $return['msg_test'] = '网络错误';
+        return json($return);
+
     }
 
 
