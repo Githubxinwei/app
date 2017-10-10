@@ -5,6 +5,7 @@
  * Date: 2017/9/30 0030
  * Time: 09:13
  * 关于轮播图的接口都在这里定义
+ * 主题色  商品布局 搜索功能 在线客服
  */
 namespace app\custom\controller;
 class Loop extends Action{
@@ -150,6 +151,100 @@ class Loop extends Action{
             return json($return);
         }
 
+    }
+
+    /**
+     * 设置风格
+     */
+    public function setAppStyle(){
+        if(!isset($this->data['style'])||!isset($this->data['value'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '请传递参数';
+            return json($return);
+        }
+        switch ($this->data['style']){
+            case 'theme':
+                $rule = "/^[0-9]{1}$/";
+                $field = 'theme';
+                break;
+            case 'layout':
+                $rule = "/^[0-2]{1}$/";
+                $field = 'layout';
+                break;
+            case 'search':
+                $rule = "/^[0-1]{1}$/";
+                $field = 'search';
+                break;
+            case 'service':
+                $rule = "/^[0-1]{1}$/";
+                $field = 'on_service';
+                break;
+            default:
+        }
+        if(!isset($rule) || !isset($field)){
+            $return['code'] = 10002;
+            $return['msg_test'] = '错误456';
+            return json($return);
+        }
+        if(!preg_match($rule,$this -> data['value'])){
+            $return['code'] = 10003;
+            $return['msg_test'] = '格式不正确';
+            return json($return);
+        }
+        $res = db('app') -> where(['appid' => $this->data['appid']]) -> setField($field,$this->data['value']*1);
+        if($res){
+            $this -> setAppType();//预留项
+            $return['code'] = 10000;
+            $return['msg_test'] = '成功';
+            return json($return);
+        }else{
+            $return['code'] = 10004;
+            $return['msg_test'] = '失败';
+            return json($return);
+        }
+    }
+
+    /**
+     * 获取风格
+     */
+    public function getAppStyle(){
+        if(!isset($this->data['style'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '请传递参数';
+            return json($return);
+        }
+        switch ($this->data['style']){
+            case 'theme':
+                $field = 'theme';
+                break;
+            case 'layout':
+                $field = 'layout';
+                break;
+            case 'search':
+                $field = 'search';
+                break;
+            case 'service':
+                $field = 'on_service';
+                break;
+            default:
+        }
+        if(!isset($field)){
+            $return['code'] = 10003;
+            $return['msg_test'] = '传递错误';
+            return json($return);
+        }
+        $theme = db('app') -> where(['appid' => $this->data['appid']]) -> value($field);
+        $return['code'] = 10000;
+        $return['data'] = $theme;
+        $return['msg_test'] = '成功';
+        return json($return);
+    }
+
+
+
+
+    private function setAppType(){
+        return;
     }
 
 
