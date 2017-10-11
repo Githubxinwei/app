@@ -177,6 +177,7 @@ class Own extends Action{
 		}
 		$res = db('app') -> where(['appid' => $this -> data['appid']]) -> setField('is_del',1);
 		if($res){
+            db('custom') -> where(['id' => $this->custom->id]) -> setDec('app_num',1);
 			$return['code'] = 10000;
 			$return['msg'] = '删除成功';
 			$return['msg_test'] = '删除成功';
