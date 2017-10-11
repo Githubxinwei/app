@@ -292,7 +292,7 @@ class Loop extends Action{
         $res = $weapp -> commit($template_id,$ext_json);
         if($res['errcode'] == 0){
             //代码上传成功，修改app表里面的字段为1
-            db('app') -> where(['appid' => $app]) -> setField('is_publish',1);
+            db('app') -> where(['appid' => $app]) -> setField('is_publish',2);
         }
     }
 
