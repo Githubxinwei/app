@@ -226,6 +226,13 @@ class Loop extends Action{
             case 'service':
                 $field = 'on_service';
                 break;
+            case 'all':
+                $res = db('app') -> field('theme,layout,search,on_service') -> where(['appid' => $this->data['appid']]) -> find();
+                $return['code'] = 10000;
+                $return['data'] = $res;
+                $return['msg_test'] = '成功';
+                return json($return);
+                break;
             default:
         }
         if(!isset($field)){

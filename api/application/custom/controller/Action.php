@@ -12,7 +12,7 @@ class Action extends Controller{
 			$return['msg_test'] = '请登录';
 			echo json_encode($return);exit;
 		}
-		$this->custom = db('custom') -> find($this->custom->id);
+		$this->custom = model('custom') -> find($this->custom->id);
 	}
 }
 
