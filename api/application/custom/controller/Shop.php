@@ -164,10 +164,10 @@ class Shop extends Action{
                 return json($return);
             }
         }
-        $good_id = db('goods') -> insertGetId($this -> data);
-        if($good_id){
+       $res= model('goods') ->allowField(true)-> save($this -> data);
+        if($res){
             $return['code'] = 10000;
-            $return['data'] = ['good_id' => $good_id];
+            $return['data'] = ['good_id' => model('goods')->id];
             $return['msg'] = '添加成功';
             return json($return);
         }else{
