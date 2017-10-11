@@ -21,12 +21,8 @@ class Action extends Controller{
 			$return['msg_test'] = '请登录';
 			echo json_encode($return);exit;
 		}
-<<<<<<< HEAD
 		$this->custom = model('custom') -> where('id',$this->custom['id']) -> find();
-		
-=======
-		$this->custom = model('custom') -> find($this->custom->id);
->>>>>>> 71ac59a9a36575e3703e27abef210ac58644f47d
+
 	}
 }
 

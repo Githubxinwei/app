@@ -567,6 +567,35 @@ class Own extends Action{
     }
 
 
+    public function getAppQr(){
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        //判断是否绑定
+        $res = db('auth_info') -> where(['apps' => $this->data['appid']]) -> select();
+        if($res){
+            $weapp = new \app\weixin\controller\Common($this->data['appid']);
+            $img = $weapp ->get_qrcode();
+            $return['code'] = 10000;
+            $return['data'] = $img;
+            $return['msg_test'] = 'ok';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg_test'] = '未绑定';
+            return json($return);
+        }
+
+    }
+
+
 
 
 }
