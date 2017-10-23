@@ -90,7 +90,7 @@ class First{
            return json($arr);
        }
 
-       $is_user = db('custom') -> where("username",$username) -> select();
+       $is_user = db('custom') -> where("username",$username) -> find();
        if(!$is_user){
            $arr['code'] = 10003;$arr['msg'] = '手机号不存在';$arr['msg_test'] = '手机号不存在';
            return json($arr);
