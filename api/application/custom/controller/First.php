@@ -77,7 +77,7 @@ class First{
 
 // 忘记密码
    public  function  forget(){
-       
+
 	   $username = $username = input('post.username','','htmlspecialchars');
        $password = input('post.password','','htmlspecialchars');
 
@@ -106,7 +106,6 @@ class First{
        }
 
    }
-
 
 }
 
