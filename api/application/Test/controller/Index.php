@@ -9,19 +9,19 @@ class Index {
 	function wx(){
 		$apps = '23542640';$appid = 'wxee74a03b4c01bebc';
 		$weapp = new \app\weixin\controller\Common($apps);
-		$weapp ->domain();//ÉèÖÃrequest·şÎñÆ÷ÓòÃû
+		$weapp ->domain();//è®¾ç½®requestæœåŠ¡å™¨åŸŸå
 		$template = get_app(1);
-		$template_id = $template['template_id'];//µÃµ½Ğ¡³ÌĞòÄ£°åID
-		$color = get_theme(3);//Ö÷ÌâÉ«
+		$template_id = $template['template_id'];//å¾—åˆ°å°ç¨‹åºæ¨¡æ¿ID
+		$color = get_theme(3);//ä¸»é¢˜è‰²
 		$layout_arr = ['grid','table','table_row'];
-		$layout = $layout_arr[1];//²¼¾Ö
-		$search = 1==1 ? 'true' : 'false';//ÆôÓÃËÑË÷¿ò
-		$on_service = 1==1 ? 'true' : 'false';//ÆôÓÃ¿Í·ş
+		$layout = $layout_arr[1];//å¸ƒå±€
+		$search = 1==1 ? 'true' : 'false';//å¯ç”¨æœç´¢æ¡†
+		$on_service = 1==1 ? 'true' : 'false';//å¯ç”¨å®¢æœ
 		$ext_json = '{
 			"extEnable": true,
 			"extAppid": "'.$appid.'",
 			"window":{
-			"navigationBarTitleText": "Î÷¹Ï¿Æ¼¼ÑİÊ¾",
+			"navigationBarTitleText": "è¥¿ç“œç§‘æŠ€æ¼”ç¤º",
 			"navigationBarTextStyle":"white",
 			"navigationBarBackgroundColor": "'.$color['theme'].'",
 			"backgroundTextStyle":"light"
@@ -47,25 +47,25 @@ class Index {
 						"iconPath": "./img/images/un-home.png",
 						"selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
 						"postion": "top",
-						"text": "Ê×Ò³"
+						"text": "é¦–é¡µ"
 					},
 					{
 						"pagePath": "pages/cart/cart",
 						"iconPath": "./img/images/un-care.png",
 						"selectedIconPath": "./img/images/'.$color['icon'].'-care.png",
-						"text": "¹ºÎï³µ"
+						"text": "è´­ç‰©è½¦"
 					},
 					{
 						"pagePath": "pages/order/order",
 						"iconPath": "./img/images/un-order.png",
 						"selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
-						"text": "¶©µ¥"
+						"text": "è®¢å•"
 					},
 					{
 						"pagePath": "pages/more/more",
 						"iconPath": "./img/images/un-more.png",
 						"selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
-						"text": "¸ü¶à"
+						"text": "æ›´å¤š"
 					}
 				]
 			}
@@ -77,9 +77,9 @@ class Index {
 		//$weapp = controller("weixin/Commonsad");
 		$weapp = new \app\weixin\controller\Common('23542640');
 		$this->data = input("post.",'','htmlspecialchars');
-		if(!$this->data){$this->data = $_GET;}//½ö²âÊÔÊ¹ÓÃ£¬´ıÉ¾
+		if(!$this->data){$this->data = $_GET;}//ä»…æµ‹è¯•ä½¿ç”¨ï¼Œå¾…åˆ 
 		if(!isset($this->data['page'])){
-			$return['code']=10002;$return['msg_test']='Íü¼ÇÁË²ÎÊıpage';return json($return);
+			$return['code']=10002;$return['msg_test']='å¿˜è®°äº†å‚æ•°page';return json($return);
 		}
 		$page = ($this->data['page']-1)*20;
 		$res = $weapp -> template_list($page);
