@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>系统提示</title>
+	<script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+	<link rel="stylesheet" href="//at.alicdn.com/t/font_6cbxo7dsfb8lrf6r.css" />
+	<script>
+	$(function(){
+		
+	})
+	</script>
+</head>
+<body style="background: #f0f0f0;padding-top: 100px;">
+	<div style="width: 640px;height:200px;background: #fff;text-align: center;margin:0 auto;padding : 50px 0;">
+		{if condition="$info['type'] eq 0"}
+		<div><i class="iconfont icon-kulian" style="font-size: 70px;"></i></div>
+		<div style="font-size: 20px;font-weight: 700;line-height: 55px;">抱歉，绑定失败了</div>
+		<div>出错信息：{$info.msg}</div>
+		<button style="padding:5px 15px;margin-top: 20px;" onclick="javascript:window.close();">关闭本页</button>
+		{else /}
+		<div><i class="iconfont icon-xiaolian" style="font-size: 70px;"></i></div>
+		<div style="font-size: 20px;font-weight: 700;line-height: 55px;">恭喜您，已经成功绑定</div>
+		<button style="padding:5px 15px;margin-top: 20px;" onclick="javascript:window.close();">关闭本页</button>
+
+		{/if}
+	</div>
+	
+</body>
+</html>

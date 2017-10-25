@@ -79,7 +79,7 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 //返回小程序模板信息
 function get_app($type){
 	$arr = [
-		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>100,'template_id'=>10],
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>100,'template_id'=>16],
 		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>50,'template_id'=>1]
 	];
 	if($type == 'all'){

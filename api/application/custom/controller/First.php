@@ -4,7 +4,6 @@ namespace app\custom\controller;
 /**********客户登录，注册，找回密码等操作***********/
 class First{
 
-//    登录
 	function login(){
 		$username = input('post.username','','htmlspecialchars');
 		$password = input('post.password','','htmlspecialchars');
@@ -41,7 +40,6 @@ class First{
 		}
 	}
 
-//	注册
 	public function register(){
 		$data = input("post.",'','htmlspecialchars');
 		if(!isset($data['username']) || !isset($data['password'])){
@@ -74,38 +72,6 @@ class First{
 		}
 
 	}
-
-// 忘记密码
-   public  function  forget(){
-
-	   $username = $username = input('post.username','','htmlspecialchars');
-       $password = input('post.password','','htmlspecialchars');
-
-       if(!$username || !$password ){
-           $arr['code'] = 10001;$arr['msg'] = '账号或密码为空';$arr['msg_test'] = '账号或密码为空';
-           return json($arr);
-       }
-       if(!preg_match("/^1[34578]{1}\d{9}$/",$username)){
-           $arr['code'] = 10005;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
-           return json($arr);
-       }
-
-       $is_user = db('custom') -> where("username",$username) -> find();
-       if(!$is_user){
-           $arr['code'] = 10003;$arr['msg'] = '手机号不存在';$arr['msg_test'] = '手机号不存在';
-           return json($arr);
-       }else{
-           $data['password'] = $password;
-           $res = db('custom') -> where('username',$username) ->update($data);
-           if($res){
-               $arr['code'] = 10004;$arr['msg'] = '网络错误';$arr['msg_test'] = '网络错误';
-           }else{
-               $arr['code'] = 10000;$arr['msg'] = '修改成功';$arr['msg_test'] = '密码修改成功';
-           }
-           return json($arr);
-       }
-
-   }
 
 }
 

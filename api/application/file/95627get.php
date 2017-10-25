@@ -1,0 +1,1 @@
+{"value":{"\/Weixin\/Api\/index\/appid\/wx8b3d2b12a1eb513f":"","signature":"78bd169cba24bec825cf27a2dc730ec03097b51a","timestamp":"1508393744","nonce":"390242812","openid":"o5NEduHXwzsfKwiYEuYuu-ddbK-I","encrypt_type":"aes","msg_signature":"f82e3640415c3d1186fd36493930b8f668b0ae05"},"last_time":11508393768}

@@ -107,7 +107,6 @@ class Shop extends Action{
 	 * appid,name,price,spec,pic
 	 */
 	public function createGoods(){
-
 		if(!isset($this -> data['name']) || (!isset($this -> data['price']) && !isset($this -> data['spec'])) || !isset($this -> data['appid'])){
 			$return['code'] = 10001;
 			$return['msg_test'] = '请求参数不存在';
@@ -156,7 +155,6 @@ class Shop extends Action{
 		}
 		$this -> data['create_time'] = time();
 		$this -> data['custom_id'] = $this -> custom -> id;
-
 		if(isset($this -> data['spec'])){
 			$this -> data['spec'] = $_POST['spec'];
 			$info = json_decode($this -> data['spec'],true);
@@ -166,43 +164,6 @@ class Shop extends Action{
 				return json($return);
 			}
 		}
-
-		$this->data["site_url"] = $_POST['site_url'];
-        if(isset($this -> data['site_url'])){
-            $info = json_decode($this -> data['site_url'],true);
-            if(preg_match('/^^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+$/',$info)){
-                $return['code'] = 10011;
-                $return['msg_test'] = '网址格式不正确';
-                return json($return);
-            }
-        }
-
-
-        $this->data["start_time"] = $_POST['start_time'];
-        if(!isset($this -> data['start_time'])){
-            $info = json_decode($this -> data['start_time'],true);
-            $this->data["start_time"] =strtotime($this->data["start_time"]);
-            if(is_null($info)){
-                $return['code'] = 100012;
-                $return['msg_test'] = '营业时间不能为空';
-                return json($return);
-            }
-        }
-
-        $this->data["over_time"] = $_POST['over_time'];
-        if(!isset($this -> data['over_time'])){
-            $info = json_decode($this -> data['over_time'],true);
-            $this->data["start_time"] =strtotime($this->data["start_time"]);
-            if(is_null($info)){
-                $return['code'] = 100012;
-                $return['msg_test'] = '营业时间不能为空';
-                return json($return);
-            }
-        }
-
-        $this->data["business"] = $_POST['business']; //周六周天是否营业
-
-
 	   $res= model('goods') ->allowField(true)-> save($this -> data);
 		if($res){
 			$return['code'] = 10000;
@@ -301,56 +262,9 @@ class Shop extends Action{
 				return json($return);
 			}
 		}
-
-        $this->data["site_url"] = $_POST['site_url'];
-        if(isset($this -> data['site_url'])){
-            $info = json_decode($this -> data['site_url'],true);
-            if(preg_match('/^^((https|http|ftp|rtsp|mms)?:\/\/)[^\s]+$/',$info)){
-                $return['code'] = 10011;
-                $return['msg_test'] = '网址格式不正确';
-                return json($return);
-            }
-        }
-
-
-        $this->data["start_time"] = $_POST['start_time'];
-        if(!isset($this -> data['start_time'])){
-            $info = json_decode($this -> data['start_time'],true);
-            $this->data["start_time"] =strtotime($this->data["start_time"]);
-            if(is_null($info)){
-                $return['code'] = 100012;
-                $return['msg_test'] = '营业时间不能为空';
-                return json($return);
-            }
-        }
-
-       $this->data["over_time"] = $_POST['over_time'];
-        if(!isset($this -> data['over_time'])){
-            $info = json_decode($this -> data['over_time'],true);
-            $this->data["start_time"] =strtotime($this->data["start_time"]);
-            if(is_null($info)){
-                $return['code'] = 100012;
-                $return['msg_test'] = '营业时间不能为空';
-                return json($return);
-            }
-        }
-
-        $this->data["business"] = $_POST['business']; //周六周天是否营业
-
-
-		$good_id = $this -> data['good_id'];
-		unset($this -> data['good_id']);
-		$good_id = db('goods') -> where(['id' => $good_id,'custom_id' => $this->custom->id])  -> update($this -> data);
-		if($good_id){
-			$return['code'] = 10000;
-			$return['msg'] = '修改成功';
-			return json($return);
-		}else{
-			$return['code'] = 10009;
-			$return['msg'] = '修改商品失败';
-			$return['msg_test'] = '修改商品失败,appid或good_id不正确';
-			return json($return);
-		}
+		model('goods') -> allowField(true) -> save($this -> data,['id' =>$this -> data['good_id'],'custom_id' => $this->custom->id]);
+		$return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
+		return json($return);
 
 	}
 
@@ -485,7 +399,7 @@ class Shop extends Action{
 			return json($return);
 		}
 		$code = db('goods_cate') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> max('code');
-	    $data['code'] = $code + 1;
+	   $data['code'] = $code + 1;
 		$data['custom_id'] = $custom_id;
 		$data['name'] = $this->data['name'];
 		$data['appid'] = $this->data['appid'];
@@ -504,7 +418,7 @@ class Shop extends Action{
 
 
 	/**
-	 * 商品分类的顺序调整
+	 * 分类的顺序调整
 	 * cate_id1 cate_id2 appid
 	 */
 	public function setCateSort(){
@@ -541,142 +455,6 @@ class Shop extends Action{
 	}
 
 
-   /*预约分类添加
-    appid name
-   */
-    public function  subscribeCate(){
-
-          $custom_id = $this -> custom -> id;
-          if(!isset($this -> data['appid']) || !isset($this -> data['name'])){
-              $return['code'] = 10002;
-              $return['msg_test'] = 'appid不存在或者预约名字不存在';
-              return json($return);
-          }
-          if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-              $return['code'] = 10003;
-              $return['msg_test'] = 'appid是一个8位数';
-              return json($return);
-          }
-          $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
-          if(!$is_true){
-              $return['code'] = 10004;
-              $return['msg_test'] = '当前用户没有此预约程序,也就是appid不对';
-              return json($return);
-          }
-          if($is_true['custom_id'] != $this->custom->id){
-              $return['code'] = 10006;
-              $return['msg_test'] = '当前预约程序不是这个用户的';
-              return json($return);
-          }
-        $code = db('subscribe_cate') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> max('code');
-        $data['code'] = $code + 1;
-        $data['custom_id'] = $custom_id;
-        $data['name'] = $this->data['name'];
-        $data['appid'] = $this->data['appid'];
-        $cate_id = db('subscribe_cate') -> insertGetId($data);
-        if($cate_id){
-            $return['code'] = 10000;
-            $return['data'] = ['cate_id' => $cate_id];
-            $return['msg'] = '添加分类成功';
-            return json($return);
-        }else{
-            $return['code'] = 10005;
-            $return['msg'] = '添加分类信息失败';
-            return json($return);
-        }
-
-    }
-
-    /*预约分类列表
-    */
-    public function  sublistCate(){
-
-        if(!isset($this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg_test'] = 'appid不存在或者预约名字不存在';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10003;
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-
-        $return = db('subscribe_cate') -> where(['appid' =>($this -> data['appid']),'custom_id' => $this->custom->id])->select();
-
-        if($return){
-            return json($return);
-        }else{
-            $return['code'] = 10005;
-            $return['msg'] = '分类加载失败';
-            return json($return);
-        }
-
-    }
-
-
-
-
-    /**
-     * 修改预约分类的名字
-     * cate_id,name
-     */
-    public function updatesubCate(){
-
-        if(!isset($this -> data['cate_id']) || !isset($this -> data['name']) || !isset($this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg_test'] = '参数值缺失';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10001;
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-        $info['id'] = $this -> data['cate_id'];
-        $info['name'] = $this -> data['name'];
-        $res = model('subscribe_cate') -> where(['id' => $this -> data['cate_id'],'custom_id' => $this->custom->id]) -> update($info);
-        if($res){
-            $return['code'] = 10000;
-            $return['msg'] = '修改成功';
-            return json($return);
-        }else{
-            $return['code'] = 10003;
-            $return['msg'] = '修改失败,请稍后重试';
-            $return['msg_test'] = '更新数据库失败，appid或cate_id错了';
-            return json($return);
-        }
-    }
-
-   /*删除预约分类
-    id
-   */
-    public function delsubCateById(){
-
-        if(!$this -> data || !isset($this -> data['appid']) || !isset($this -> data['cate_id'])){
-            $return['code'] = 10001;
-            $return['msg_test'] = '删除数据，传递cate_id和appid';
-            return json($return);
-        }
-        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
-            $return['code'] = 10002;
-            $return['msg_test'] = 'appid是一个8位数';
-            return json($return);
-        }
-        $cate_id = $this -> data['cate_id'];
-
-        $res = db('subscribe_cate') -> where(['id' => $cate_id,'custom_id' => $this->custom->id]) -> delete();
-        if($res){
-            $return['code'] = 10000;
-            $return['msg'] = '删除成功';
-            return json($return);
-        }else{
-            $return['code'] = 10003;
-            $return['msg'] = '删除失败';
-            $return['msg_test'] = '当前的分类id不是这个人的，或者appid传递错误';
-            return json($return);
-        }
-    }
 
 
 }

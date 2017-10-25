@@ -29,8 +29,6 @@ class Loop extends Action{
 			echo json_encode($return);exit;
 		}
 	}
-
-
 	/**
 	 * 获取轮播图的信息
 	 * appid
@@ -301,6 +299,129 @@ class Loop extends Action{
 			db('app') -> where(['appid' => $app]) -> setField('is_publish',2);
 		}
 	}
-
-
+	//获取模板消息列表
+	function template_wx(){
+		if(!isset($this->data['page'])){
+			$return['code']=10002;$return['msg_test']='忘记了参数page';return json($return);
+		}
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$page = ($this->data['page']-1)*20;
+		$res = $weapp -> template_list($page);
+		if($res['errcode'] != 0){
+			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
+		}
+		foreach($res['list'] as $k => $v){
+			$xg = $weapp -> template_get($v['id']);
+			$arr = array_slice($xg['keyword_list'],0,7);
+			$string = '';
+			foreach($arr as $v){
+				$string .= ','.$v['name'];
+			}
+			$res['list'][$k]['keyword_name_list'] =  substr($string, 1);
+		}
+		$return['code'] = 10000;$return['page'] = $this->data['page'];$return['data']['total_count'] = $res['total_count'];$return['data']['list'] = $res['list'];
+		return json($return);
+	}
+	//获取模板的关键词库
+	function template_get(){
+		if(!isset($this->data['id'])){
+			$return['code']=10002;$return['msg_test']='忘记了参数id';return json($return);
+		}
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$res = $weapp -> template_get($this->data['id']);//dump($res);
+		if($res['errcode'] != 0){
+			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
+		}
+		$return['code'] = 10000;$return['data']['id'] = $res['id'];$return['data']['title'] = $res['title'];$return['data']['list'] = $res['keyword_list'];
+		return json($return);
+	}
+	//组合模板并添加至帐号下的个人模板库
+	function template_add(){
+		if(!isset($this->data['id']) || !isset($this->data['title']) || !isset($this->data['keyword_id_list']) || !isset($this->data['keyword_name_list'])){
+			$return['code']=10002;$return['msg_test']='忘记了参数id或title或keyword_id_list或keyword_name_list';return json($return);
+		}
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$res = $weapp -> template_add($this->data['id'],$this->data['keyword_id_list']);
+		if($res['errcode'] != 0){
+			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
+		}
+		//存入数据库
+		$t_data = [
+			'title'=>$this->data['title'],
+			'keyword_name_list'=>$this->data['keyword_name_list'],
+			'template_id'=>$res['template_id'],
+			'appid'=>$this->data['appid'],
+			'custom_id'=> $this->custom->id,
+			'time'=>time(),
+		];
+		model('template') -> save($t_data);
+		$return['code'] = 10000;$return['msg_test'] = 'ok';
+		return json($return);
+		
+	}
+	//获取用户已添加模板列表
+	function template_user(){
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$res = $weapp -> template_user(0);
+		if($res['errcode'] != 0){
+			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
+		}
+		$list = $res['list'];
+		if(count($res['list']) >= 20 ){
+			$ress = $weapp -> template_user(20);
+			$list = array_merge($list,$ress['list']);
+		}
+		$info = db('template') ->field('group_concat(template_id) template_id') -> where('appid',$this->data['appid']) -> find();
+		$new_Datas = [];
+		foreach($list as $val){
+			if(!strstr($info['template_id'],$val['template_id'])){
+				$new_data = [];
+				$new_data = [
+					'template_id'=>$val['template_id'],
+					'title'=>$val['title'],
+					'appid'=>$this->data['appid'],
+					'custom_id'=>$this->custom->id,
+					'time'=>time(),
+				];
+				$new_data['keyword_name_list'] = preg_replace('{{.*}\\n}',',',$val['content']);
+				$new_data['keyword_name_list'] = substr($new_data['keyword_name_list'], 0, -1);
+				$new_Datas[] = $new_data;
+			}
+			$info['template_id'] = str_replace($val['template_id'],"",$info['template_id']);
+		}
+		$res = model('template') -> saveAll($new_Datas);
+		//删除数据库不存在的模板消息
+		$del_template = explode(',',$info['template_id']);
+		foreach ($del_template as  $value) {
+			if($value)
+				model('template') -> where('template_id',$value) -> delete();
+		}
+		$list = model('template') ->  where('appid',$this->data['appid']) -> order('id desc') -> select();
+		$return['code'] = 10000;$return['msg_test'] = 'ok';$return['total_count'] = count($list);$return['data'] = $list;
+		return json($return);
+	}
+	//删除模板
+	function template_del(){
+		if( !isset($this->data['template_id'])){
+			$return['code']=10002;$return['msg_test']='忘记了参数template_id';return json($return);
+		}
+		$info = model('template') -> where('template_id',$this->data['template_id']) -> find();
+		if(!$info || $info['template_id'] != $this->data['template_id'] || $info['custom_id'] != $this->custom->id ){
+			$return['code']=10003;$return['msg_test']='未发现模板';return json($return);
+		}
+		model('template') ->  where('template_id',$this->data['template_id']) -> delete();
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$res = $weapp -> template_del($this->data['template_id']);
+		if($res['errcode'] != 0){
+			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
+		}
+		$return['code'] = 10000;$return['msg'] = 'ok';
+		return json($return);
+	}
+	function template_send(){
+		$openid = 'om2Tu0KIErV-d5naK8zZR15wmIac';
+		$template_id = 'cLF3mZja8WIBSQ6P8xJJnRrEpu0vmXwTA5K_9AHdMsI';
+		$weapp = new \app\weixin\controller\Common($this->data['appid']);
+		$res = $weapp -> template_send($openid,$template_id);dump($res);
+	}
 }

@@ -30,7 +30,7 @@ class Base extends Action{
 		}
 		$name = time().rand(1000,9999);
 		file_put_contents($path.$name.".".$img_type[1], $tmp);
-		$pic_url = '/'.$path.$name.".".$img_type[1];
+		$pic_url = $path.$name.".".$img_type[1];
 		$result['code'] = '10000';
 		$result['msg_test'] = 'ok';
 		$result['data'] = $pic_url;
