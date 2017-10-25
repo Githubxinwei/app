@@ -29,10 +29,7 @@ class Loop extends Action{
 			echo json_encode($return);exit;
 		}
 	}
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
+	
 	/**
 	 * 获取轮播图的信息
 	 * appid
