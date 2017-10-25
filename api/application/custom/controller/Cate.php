@@ -161,6 +161,14 @@ class Cate extends Action{
         }
         $info['id'] = $this -> data['cate_id'];
         $info['name'] = $this -> data['name'];
+
+
+        $return['code'] = 10003;
+        $return['msg'] = '修改失败,请稍后重试';
+        $return['msg_test'] = '更新数据库失败，appid或cate_id错了';
+        return json($return);
+        exit;
+
         $res = model('subscribe_cate') -> where(['id' => $info['id'],'custom_id' => $this->custom->id])->update($info);
 
         if($res){
