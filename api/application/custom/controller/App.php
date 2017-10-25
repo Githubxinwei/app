@@ -328,7 +328,7 @@ class App extends Xiguakeji{
 		$where['appid'] = $this->apps;
 		//->alias('a')->join($join)  -> where($where) 
 		$info = model('goods_order')
-            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts')
+            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts,zipcode')
             -> where($where)
             -> page($page)
             -> limit($limit_num)
