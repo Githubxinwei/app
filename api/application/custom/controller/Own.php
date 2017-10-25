@@ -207,7 +207,7 @@ class Own extends Action{
 			return json($return);
 		}
 		//判断当前用户的小程序是否有这个appid
-		$info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id') ->  where(['appid' => $this -> data['appid']]) -> find();
+		$info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id,start_time,over_time,business') ->  where(['appid' => $this -> data['appid']]) -> find();
 		if($info['custom_id'] != $this->custom->id){
 			$return['code'] = 10004;
 			$return['msg_test'] = '这个app不是这个用户的';
@@ -241,7 +241,12 @@ class Own extends Action{
 			$return['code'] = 10002;$return['msg_test'] = 'appid是一个8位数';
 			return json($return);
 		}
-		model('app') ->allowField(['name','pic','desc','tel','site_url','address']) -> save($this -> data,['appid' => $this -> data['appid']]);
+        // 预约
+		if($this->data["site_url"] = $_POST['site_url']){
+            model('app') ->allowField(['name','pic','desc','tel','site_url','address','start_time','over_time','business']) -> save($this -> data,['appid' => $this -> data['appid']]);
+        }else{
+            model('app') ->allowField(['name','pic','desc','tel','site_url','address']) -> save($this -> data,['appid' => $this -> data['appid']]);
+        }
 		$return['code'] = 10000;
 		return json($return);
 	}
