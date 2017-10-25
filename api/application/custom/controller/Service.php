@@ -10,6 +10,117 @@ class Service extends Action{
 		$this -> data = input('post.','','htmlspecialchars');
 	}
 	
+	/**
+	 * 获取服务项目，进行修改
+	 * appid,good_id
+	 */
+	public function getUserGoodById(){
+	    if(!isset($this -> data['appid']) || !isset($this -> data['service_id'])){
+	        $return['code'] = 10001;
+	        $return['msg_test'] = '参数值缺失';
+	        return json($return);
+	    }
+	    if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+	        $return['code'] = 10002;
+	        $return['msg_test'] = 'appid是一个8位数';
+	        return json($return);
+	    }
+	    $info = db('subscribe_service') -> where(['id' => $this -> data['service_id']*1]) -> find();
+	    if($info){
+	        if($info['custom_id'] != $this->custom->id){
+	            $return['code'] = 10004;
+	            $return['msg_test'] = '不是这个商户的';
+	            return json($return);
+	        }
+	        $return['code'] = 10000;
+	        $return['data'] = $info;
+	        $return['msg'] = '';
+	        $return['msg_test'] = '查询成功';
+	        return json($return);
+	    }else{
+	        $return['code'] = 10003;
+	        $return['msg'] = '查询数据失败';
+	        $return['msg_test'] = 'appid不对或good_id不对';
+	        return json($return);
+	    }
+	}
+	
+	/**
+	 * 修改服务项目
+	 */
+	public function updateServiceItem(){
+	    if(!isset($this -> data['appid']) || !isset($this -> data['service_id']) || !isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
+	        $return['code'] = 10001;
+	        $return['msg_test'] = '参数值缺失';
+	        return json($return);
+	    }
+	    if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+	        $return['code'] = 10002;
+	        $return['msg_test'] = 'appid是一个8位数';
+	        return json($return);
+	    }
+	
+	    //服务项目的名字和价格是必须的
+	    if(isset($this -> data['service_price'])){
+	        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
+	            $return['code'] = 10004;
+	            $return['msg'] = '请填写正确的商品价格';
+	            return json($return);
+	        }
+	    }
+	
+	    //如果上传图片，判断图片是否是十个
+	    if(isset($this -> data['service_pic'])){
+	        $pic_number = count(explode(',',$this -> data['service_pic']));
+	        if($pic_number > 10){
+	            $return['code'] = 10006;
+	            $return['msg'] = '一个商品最多上传10张图片';
+	            return json($return);
+	        }
+	    }
+	    if(isset($this -> data['service_desc'])){
+	        if(mb_strlen($this -> data['service_desc'],'utf8') > 600){
+	            $return['code'] = 10007;
+	            $return['msg'] = '商品的简介最多600字';
+	            return json($return);
+	        }
+	    }
+	    model('subscribe_service') -> allowField(true) -> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
+	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
+	    return json($return);
+	
+	}
+	
+	/**
+	 * 删除用户的服务项目
+	 * service_id,appid
+	 */
+	public function delServiceItems(){
+	    if(!isset($this -> data['service_id']) || !isset($this -> data['appid'])){
+	        $return['code'] = 10001;
+	        $return['msg_test'] = '缺少服务项目id或缺少appid';
+	        return json($return);
+	    }
+	    if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+	        $return['code'] = 10002;
+	        $return['msg_test'] = 'appid是一个8位数';
+	        return json($return);
+	    }
+	    $res = db('subscribe_service') -> where(['id' => $this -> data['service_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
+	
+	    if($res){
+	        $return['code'] = 10000;
+	        $return['msg'] = '删除成功';
+	        $return['msg_test'] = '删除成功';
+	        return json($return);
+	    }else{
+	        $return['code'] = 10003;
+	        $return['msg'] = '删除数据失败';
+	        $return['msg_test'] = 'appid错误，或者service_id错误';
+	        return json($return);
+	    }
+	}
+	
 	//添加服务项目
 	public function createServiceItems(){
 	    if(!isset($this -> data['service_name']) || (!isset($this -> data['service_price'])) || !isset($this -> data['appid'])){
@@ -60,19 +171,10 @@ class Service extends Action{
 	    }
 	    $this -> data['create_time'] = time();
 	    $this -> data['custom_id'] = $this -> custom -> id;
-	    /* if(isset($this -> data['spec'])){
-	        $this -> data['spec'] = $_POST['spec'];
-	        $info = json_decode($this -> data['spec'],true);
-	        if(is_null($info)){
-	            $return['code'] = 10009;
-	            $return['msg_test'] = '数据格式不正确';
-	            return json($return);
-	        }
-	    } */
 	    $res= model('subscribe_service') ->allowField(true)-> save($this -> data);
 	    if($res){
 	        $return['code'] = 10000;
-	        $return['data'] = ['subscribe_service_id' => model('subscribe_service')->id];
+	        $return['data'] = ['service_id' => model('subscribe_service')->id];
 	        $return['msg'] = '添加成功';
 	        return json($return);
 	    }else{
@@ -111,7 +213,7 @@ class Service extends Action{
 	    $where = '';
 	    if(isset($this -> data['cate_id'])){
 	        $cate_id = $this -> data['cate_id'] * 1;
-	        $where = "FIND_IN_SET($cate_id,cid)";
+	        $where = "FIND_IN_SET($cate_id,cate_id)";
 	    }
 	    $number = db('subscribe_service') -> where(['appid' => $this -> data['appid']]) -> count();
 	    $info = db('subscribe_service')

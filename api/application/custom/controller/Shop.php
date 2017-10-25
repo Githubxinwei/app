@@ -453,6 +453,6 @@ class Shop extends Action{
 
 
 	}
-    
+
 
 }
