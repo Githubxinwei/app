@@ -28,9 +28,9 @@ class Service extends Action{
 	
 	/**
 	 * 获取服务项目，进行修改
-	 * appid,good_id
+	 * appid,service_id
 	 */
-	public function getUserGoodById(){
+	public function getServiceById(){
 	    if(!isset($this -> data['appid']) || !isset($this -> data['service_id'])){
 	        $return['code'] = 10001;
 	        $return['msg_test'] = '参数值缺失';
