@@ -29,6 +29,7 @@ class Loop extends Action{
 			echo json_encode($return);exit;
 		}
 	}
+	
 	/**
 	 * 获取轮播图的信息
 	 * appid
