@@ -328,7 +328,7 @@ class App extends Xiguakeji{
 		$where['appid'] = $this->apps;
 		//->alias('a')->join($join)  -> where($where) 
 		$info = model('goods_order')
-            ->field('id,name,num,pic,price,order_sn')
+            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts')
             -> where($where)
             -> page($page)
             -> limit($limit_num)
@@ -339,10 +339,11 @@ class App extends Xiguakeji{
 		    $cart_id = $v['carts'];
 		    $cartid = explode(',',$cart_id);
 		    foreach($cartid as $key =>$value){
-                $cart = model('goods_cart')->field("id,spec_value")->where("id = $value")->find();
+                $cart = model('goods_cart')->Field(['id','spec_value'])->where("id",$value)->find();
                 $info[$k]['spec_value'] = $cart['spec_value'];
             }
         }
+
 
 		$return['code'] = 10000;
 		$return['data'] = $info;
