@@ -1,6 +1,7 @@
 <?php
 namespace app\custom\controller;
 use think\Controller;
+use db;
 class App extends Controller{
 	function _initialize(){
 		parent::_initialize();
@@ -44,6 +45,34 @@ class App extends Controller{
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
 	}
+
+    function  order_close(){
+
+        if(!isset($this->data['id'])){
+            $return['code'] = 10001;$return['msg_test'] = '缺少参数id';return json($return);
+        }
+        $order = model('goods_order') -> where('id',$this->data['id']) -> find();
+        if(empty($order) || $order['appid'] != $this->apps  || $order['user_id'] != $this->user['id'] ){
+            $return['code'] = 10001;$return['msg_test'] = '订单不存在';return json($return);
+        }
+        if($order['state'] != 0 ){
+            $return['code'] = 10001;$return['msg_test'] = '订单不是待付款状态';return json($return);
+        }
+
+        $this->data['state'] = 5 ;
+        $info  = db('goods_order')->where("id = $this->data['id'] ")->save($this->data['state']);
+        if($info){
+            $return['code'] = 10000;
+            $return['msg_test'] = '订单取消成功';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg_test'] = '操作失败';
+            return json($return);
+        }
+
+     }
+
 	
 }
 

@@ -227,7 +227,6 @@ class Own extends Action{
 		}
 	}
 
-
 	/**
 	 * 设置小程序的姓名，标志，简介等信息
 	 * appid
