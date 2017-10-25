@@ -454,7 +454,146 @@ class Shop extends Action{
 
 	}
 
+<<<<<<< Updated upstream
 
+=======
+   /*预约分类添加
+    appid name
+   */
+    public function  subscribeCate(){
+
+          $custom_id = $this -> custom -> id;
+          if(!isset($this -> data['appid']) || !isset($this -> data['name'])){
+              $return['code'] = 10002;
+              $return['msg_test'] = 'appid不存在或者预约名字不存在';
+              return json($return);
+          }
+          if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+              $return['code'] = 10003;
+              $return['msg_test'] = 'appid是一个8位数';
+              return json($return);
+          }
+          $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
+          if(!$is_true){
+              $return['code'] = 10004;
+              $return['msg_test'] = '当前用户没有此预约程序,也就是appid不对';
+              return json($return);
+          }
+          if($is_true['custom_id'] != $this->custom->id){
+              $return['code'] = 10006;
+              $return['msg_test'] = '当前预约程序不是这个用户的';
+              return json($return);
+          }
+        $code = db('subscribe_cate') -> where(['appid' => $this -> data['appid'],'custom_id' => $custom_id]) -> max('code');
+        $data['code'] = $code + 1;
+        $data['custom_id'] = $custom_id;
+        $data['name'] = $this->data['name'];
+        $data['appid'] = $this->data['appid'];
+        $cate_id = db('subscribe_cate') -> insertGetId($data);
+        if($cate_id){
+            $return['code'] = 10000;
+            $return['data'] = ['cate_id' => $cate_id];
+            $return['msg'] = '添加分类成功';
+            return json($return);
+        }else{
+            $return['code'] = 10005;
+            $return['msg'] = '添加分类信息失败';
+            return json($return);
+        }
+
+    }
+
+    /*预约分类列表
+    */
+    public function  sublistCate(){
+
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid不存在或者预约名字不存在';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10003;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+
+        $return = db('subscribe_cate') -> where(['appid' =>($this -> data['appid']),'custom_id' => $this->custom->id])->select();
+
+        if($return){
+            return json($return);
+        }else{
+            $return['code'] = 10005;
+            $return['msg'] = '分类加载失败';
+            return json($return);
+        }
+
+    }
+
+
+
+
+    /**
+     * 修改预约分类的名字
+     * cate_id,name
+     */
+    public function updatesubCate(){
+
+        if(!isset($this -> data['cate_id']) || !isset($this -> data['name']) || !isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $info['id'] = $this -> data['cate_id'];
+        $info['name'] = $this -> data['name'];
+        $res = model('subscribe_cate') -> where(['id' => $this -> data['cate_id'],'custom_id' => $this->custom->id]) -> update($info);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '修改成功';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg'] = '修改失败,请稍后重试';
+            $return['msg_test'] = '更新数据库失败，appid或cate_id错了';
+            return json($return);
+        }
+    }
+
+   /*删除预约分类
+    id
+   */
+    public function delsubCateById(){
+
+        if(!$this -> data || !isset($this -> data['appid']) || !isset($this -> data['cate_id'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '删除数据，传递cate_id和appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $cate_id = $this -> data['cate_id'];
+
+        $res = db('subscribe_cate') -> where(['id' => $cate_id,'custom_id' => $this->custom->id]) -> delete();
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '删除成功';
+            return json($return);
+        }else{
+            $return['code'] = 10003;
+            $return['msg'] = '删除失败';
+            $return['msg_test'] = '当前的分类id不是这个人的，或者appid传递错误';
+            return json($return);
+        }
+    }
+>>>>>>> Stashed changes
 
 
 }
