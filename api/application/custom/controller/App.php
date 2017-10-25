@@ -266,7 +266,6 @@ class App extends Xiguakeji{
 			'address'=>$this->data['address'],
 			'zipcode'=>$this->data['zipcode'],
 			'remark'=>$this->data['remark'],
-            'spec_value'=>$this->data['remark'],
 			'openid'=>$this->user['openid'],
 			'name'=>$name,
 			'pic'=>$pic,

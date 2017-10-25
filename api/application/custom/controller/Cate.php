@@ -104,6 +104,7 @@ class Cate extends Action{
     */
     public function  sublistCate(){
 
+        $custom_id = $this -> custom -> id;
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
             $return['msg_test'] = 'appid不存在或者预约名字不存在';
@@ -114,18 +115,29 @@ class Cate extends Action{
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
+        $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
+        if(!$is_true){
+            $return['code'] = 10003;
+            $return['msg_test'] = '当前用户没有此预约程序,也就是appid不对';
+            return json($return);
+        }
+        if($is_true['custom_id'] != $this -> custom->id){
+            $return['code'] = 10004;
+            $return['msg_test'] = '预约程序不是这个用户的';
+            return json($return);
+        }
         $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
         $limit = isset($this -> data['number']) ? $this -> data['number'] : 15;
-        $number = db('subscribe_cate') -> where(['appid' =>($this -> data['appid']),'custom_id' => $this->custom->id])->count();
-        $info = db("goods_cate")
-            ->where(['appid' =>($this -> data['appid']),'custom_id' => $this->custom->id])
+        $number = db('subscribe_cate') -> where(['appid' =>($this -> data['appid']),'custom_id' => $custom_id])->count();
+        $info = db("subscribe_cate")
+            ->where(['appid' =>($this -> data['appid']),'custom_id' => $custom_id])
             ->page($page,$limit)
             ->order('code desc')
             ->select();
 
         $return['code'] = 10000;
         $return['data'] = ['number' => $number,'info' => $info];
-        $return['msg'] = '';
+
         $return['msg_test'] = '成功了';
         return json($return);
 
