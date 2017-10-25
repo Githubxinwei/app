@@ -161,7 +161,8 @@ class Cate extends Action{
         }
         $info['id'] = $this -> data['cate_id'];
         $info['name'] = $this -> data['name'];
-        $res = model('subscribe_cate') -> where(['id' => $this -> data['cate_id'],'custom_id' => $this->custom->id]) -> update($info);
+        $res = model('subscribe_cate') -> where(['id' => $info['id'],'custom_id' => $this->custom->id])->update($info);
+
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
