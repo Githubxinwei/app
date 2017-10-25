@@ -266,6 +266,7 @@ class App extends Xiguakeji{
 			'address'=>$this->data['address'],
 			'zipcode'=>$this->data['zipcode'],
 			'remark'=>$this->data['remark'],
+            'spec_value'=>$this->data['remark'],
 			'openid'=>$this->user['openid'],
 			'name'=>$name,
 			'pic'=>$pic,
@@ -347,6 +348,7 @@ class App extends Xiguakeji{
 		return json($return);
 	}
 
+//	订单取消
     function  order_close(){
 
         if(!isset($this->data['id'])){
