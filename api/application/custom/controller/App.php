@@ -1,6 +1,7 @@
 <?php
 namespace app\custom\controller;
 use think\Controller;
+
 class App extends Xiguakeji{
 	
 	//获取bannar信息
@@ -326,7 +327,23 @@ class App extends Xiguakeji{
 		$where['state'] = $this->data['type'];
 		$where['appid'] = $this->apps;
 		//->alias('a')->join($join)  -> where($where) 
-		$info = model('goods_order')->field('id,name,num,pic,price,order_sn')-> where($where) ->  page($page)->limit($limit_num) -> order('id desc') -> select();
+		$info = model('goods_order')
+            ->field('id,name,num,pic,price,order_sn')
+            -> where($where)
+            -> page($page)
+            -> limit($limit_num)
+            -> order('id desc')
+            -> select();
+
+		foreach($info as $k=>$v){
+		    $cart_id = $v['carts'];
+		    $cartid = explode(',',$cart_id);
+		    foreach($cartid as $key =>$value){
+                $cart = model('goods_cart')->field("id,spec_value")->where("id = $value")->find();
+                $info[$k]['spec_value'] = $cart['spec_value'];
+            }
+        }
+
 		$return['code'] = 10000;
 		$return['data'] = $info;
 		return json($return);
@@ -347,7 +364,8 @@ class App extends Xiguakeji{
 		return json($return);
 	}
 
-//	订单取消
+
+    //订单取消
     function  order_close(){
 
         if(!isset($this->data['id'])){
@@ -361,8 +379,8 @@ class App extends Xiguakeji{
             $return['code'] = 10001;$return['msg_test'] = '订单不是待付款状态';return json($return);
         }
 
-        $this->data['state'] = 5 ;
-        $info  = db('goods_order')->where("id = $this->data['id'] ")->save($this->data['state']);
+        $info  = model('goods_order')->where('id',$this->data['id'])->update(['state'=>'5']);
+
         if($info){
             $return['code'] = 10000;
             $return['msg_test'] = '订单取消成功';
