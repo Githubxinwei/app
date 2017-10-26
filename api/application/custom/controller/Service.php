@@ -151,11 +151,6 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-            $return['code'] = 10004;
-            $return['msg'] = '请填写正确的商品价格';
-            return json($return);
-        }
 	    //如果上传图片，判断图片是否是十个
 	    if(isset($this -> data['service_pic'])){
 	        $pic_number = count(explode(',',$this -> data['service_pic']));
