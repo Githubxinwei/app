@@ -170,7 +170,7 @@ class Service extends Action{
 	    $this -> data['create_time'] = time();
 	    $this -> data['custom_id'] = $this -> custom -> id;
 	    $res = db('subscribe_service') ->allowField(true)-> save($this -> data);
-	    dump($res);exit;
+	    
 	    if($res){
 	        $return['code'] = 10000;
 	        $return['data'] = ['service_id' => db('subscribe_service')->id];
