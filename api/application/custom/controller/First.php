@@ -73,6 +73,33 @@ class First{
 
 	}
 
+
+	public  function  forget(){
+
+        $data = input("post.",'','htmlspecialchars');
+
+        if(!isset($data['username']) || !isset($data['password'])){
+            $arr['code'] = 10001;$arr['msg'] = '请传递账户或密码';$arr['msg_test'] = '请传递账户或密码';
+            return json($arr);
+        }
+        if(!preg_match("/^1[34578]{1}\d{9}$/",$data['username'])){
+            $arr['code'] = 10002;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
+            return json($arr);
+        }
+        //判断是否手机号已注册
+        $is_register = db('custom') -> where("username",$data['username']) -> select();
+        if(!$is_register){
+            $arr['code'] = 10003;$arr['msg'] = '手机号存在';$arr['msg_test'] = '手机号不存在';
+            return json($arr);
+        }
+
+        $this->data['id'] = $is_register['id'];
+        $res = Db("custom")->where()->save();
+
+
+
+    }
+
 }
 
  ?>
