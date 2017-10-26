@@ -62,18 +62,13 @@ class Service extends Action{
 	 * 修改服务项目
 	 */
 	public function updateServiceItem(){
+	   //服务名称不能为空
 	   if(!isset($this -> data['service_name'])){
 	        $return['code'] = 10001;
 	        $return['msg_test'] = '服务名称不能为空';
-
-	    if(!isset($this -> data['service_id']) || !isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
-	        $return['code'] = 10001;
-	        $return['msg_test'] = '参数值缺失';
-
 	        return json($return);
-	    }
-	
-	    //服务项目的名字和价格是必须的
+	   }
+	    //服务项目的价格不能为空或负值
 	    if(isset($this -> data['service_price'])){
 	        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
 	            $return['code'] = 10002;
@@ -81,12 +76,6 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-
-        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-            $return['code'] = 10004;
-            $return['msg'] = '请填写正确的服务价格';
-            return json($return);
-        }
 	
 	    //如果上传图片，判断图片是否是十个
 	    if(isset($this -> data['service_pic'])){
@@ -117,7 +106,7 @@ class Service extends Action{
 	public function delServiceItems(){
 	    if(!isset($this -> data['service_id'])){
 	        $return['code'] = 10001;
-	        $return['msg_test'] = '缺少服务项目id';
+	        $return['msg_test'] = '缺少服务项目id或缺少appid';
 	        return json($return);
 	    }
 	    $res = db('subscribe_service') -> where(['id' => $this -> data['service_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
@@ -127,7 +116,7 @@ class Service extends Action{
 	        $return['msg_test'] = '删除成功';
 	        return json($return);
 	    }else{
-	        $return['code'] = 10002;
+	        $return['code'] = 10001;
 	        $return['msg'] = '删除数据失败';
 	        $return['msg_test'] = 'appid错误，或者service_id错误';
 	        return json($return);
@@ -137,11 +126,11 @@ class Service extends Action{
 	//添加服务项目
 	public function createServiceItems(){
 	    if(!isset($this -> data['service_name'])){
-
-	    if(!isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
-	        $return['code'] = 10001;
-	        $return['msg_test'] = '服务名称不能为空';
-	        return json($return);
+    	    if(!isset($this -> data['service_name'])){
+    	        $return['code'] = 10001;
+    	        $return['msg_test'] = '服务名称不能为空';
+    	        return json($return);
+    	    }
 	    }
 	    //服务名称和价格是必须的
 	    if(isset($this -> data['service_price'])){
