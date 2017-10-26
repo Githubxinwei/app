@@ -177,6 +177,7 @@ class Loop extends Action{
 				$field = 'on_service';
 				break;
 			default:
+			    return;
 		}
 		if(!isset($rule) || !isset($field)){
 			$return['code'] = 10002;
