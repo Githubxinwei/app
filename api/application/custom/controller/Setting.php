@@ -14,7 +14,7 @@ class Setting extends Action{
             $return['msg'] = '修改成功';
             return json($return);
         }else{
-            $return['code'] = 10002;
+            $return['code'] = 10001;
             $return['msg'] = '修改失败';
             return json($return);
         }
