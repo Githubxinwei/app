@@ -24,6 +24,7 @@ class Cate extends Action{
     public function setCateSort(){
         if(!isset($this->data['cate_id1']) || !isset($this->data['cate_id2'])|| !isset($this->data['appid'])){
             $return['code'] = 10001;
+            $return['msg'] = 'appid不存在或者分类id不存在';
             $return['msg_test'] = 'appid不存在或者分类id不存在';
             return json($return);
         }
@@ -31,6 +32,7 @@ class Cate extends Action{
         $code2 = db('subscribe_cate') -> where(['id' => $this->data['cate_id2'],'custom_id' => $this -> custom->id]) -> value('code');
         if(!isset($code1) || !isset($code2)){
             $return['code'] = 10002;
+            $return['msg'] = '两个id可能传递错误，或者appid不正确';
             $return['msg_test'] = '两个id可能传递错误，或者appid不正确';
             return json($return);
         }
@@ -41,12 +43,14 @@ class Cate extends Action{
             if($res1 && $res2){
                 Db::commit();
                 $return['code'] = 10000;
+                $return['msg'] = '成功';
                 $return['msg_test'] = '成功了';
                 return json($return);
             }
         }catch (\Exception $e){
             Db::rollback();
             $return['code'] = 10003;
+            $return['msg'] = '更新出错';
             $return['msg_test'] = '更新是出错了';
             return json($return);
         }
@@ -62,22 +66,26 @@ class Cate extends Action{
         $custom_id = $this -> custom -> id;
         if(!isset($this -> data['appid']) || !isset($this -> data['name'])){
             $return['code'] = 10002;
+            $return['msg'] = 'appid不存在或者预约名字不存在';
             $return['msg_test'] = 'appid不存在或者预约名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
         $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10004;
-            $return['msg_test'] = '当前用户没有此预约程序,也就是appid不对';
+            $return['msg'] = '当前用户没有此预约程序,appid不对';
+            $return['msg_test'] = '当前用户没有此预约程序,appid不对';
             return json($return);
         }
         if($is_true['custom_id'] != $this->custom->id){
             $return['code'] = 10006;
+            $return['msg'] = '当前预约程序不是这个用户的';
             $return['msg_test'] = '当前预约程序不是这个用户的';
             return json($return);
         }
@@ -91,10 +99,12 @@ class Cate extends Action{
             $return['code'] = 10000;
             $return['data'] = ['cate_id' => $cate_id];
             $return['msg'] = '添加分类成功';
+            $return['msg_test'] = '添加分类成功';
             return json($return);
         }else{
             $return['code'] = 10005;
             $return['msg'] = '添加分类信息失败';
+            $return['msg_test'] = '添加分类信息失败';
             return json($return);
         }
 
@@ -107,22 +117,26 @@ class Cate extends Action{
         $custom_id = $this -> custom -> id;
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
+            $return['msg'] = 'appid不存在或者预约名字不存在';
             $return['msg_test'] = 'appid不存在或者预约名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
         $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10003;
+            $return['msg'] = '当前用户没有此预约程序,也就是appid不对';
             $return['msg_test'] = '当前用户没有此预约程序,也就是appid不对';
             return json($return);
         }
         if($is_true['custom_id'] != $this -> custom->id){
             $return['code'] = 10004;
+            $return['msg'] = '预约程序不是这个用户的';
             $return['msg_test'] = '预约程序不是这个用户的';
             return json($return);
         }
@@ -137,8 +151,8 @@ class Cate extends Action{
 
         $return['code'] = 10000;
         $return['data'] = ['number' => $number,'info' => $info];
-
-        $return['msg_test'] = '成功了';
+        $return['msg'] = '成功';
+        $return['msg_test'] = '成功';
         return json($return);
 
     }
@@ -151,11 +165,13 @@ class Cate extends Action{
 
         if(!isset($this -> data['cate_id']) || !isset($this -> data['name']) || !isset($this -> data['appid'])){
             $return['code'] = 10002;
+            $return['msg'] = '参数值缺失';
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10001;
+            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -167,11 +183,12 @@ class Cate extends Action{
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
+            $return['msg_test'] = '修改成功';
             return json($return);
         }else{
             $return['code'] = 10003;
             $return['msg'] = '修改失败,请稍后重试';
-            $return['msg_test'] = '更新数据库失败，appid或cate_id错了';
+            $return['msg_test'] = '修改失败,请稍后重试';
             return json($return);
         }
     }
@@ -183,11 +200,13 @@ class Cate extends Action{
 
         if(!$this -> data || !isset($this -> data['appid']) || !isset($this -> data['cate_id'])){
             $return['code'] = 10001;
+            $return['msg'] = '删除数据，传递cate_id和appid';
             $return['msg_test'] = '删除数据，传递cate_id和appid';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10002;
+            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -197,11 +216,12 @@ class Cate extends Action{
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
+            $return['msg_test'] = '删除成功';
             return json($return);
         }else{
             $return['code'] = 10003;
             $return['msg'] = '删除失败';
-            $return['msg_test'] = '当前的分类id不是这个人的，或者appid传递错误';
+            $return['msg_test'] = '删除失败';
             return json($return);
         }
     }

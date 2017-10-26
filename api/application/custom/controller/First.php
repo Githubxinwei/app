@@ -1,6 +1,8 @@
 <?php
 namespace app\custom\controller;
 
+use think\db;
+
 /**********客户登录，注册，找回密码等操作***********/
 class First{
 
@@ -77,25 +79,31 @@ class First{
 	public  function  forget(){
 
         $data = input("post.",'','htmlspecialchars');
+        $data['password'] = xgmd5($data['password']);
 
         if(!isset($data['username']) || !isset($data['password'])){
             $arr['code'] = 10001;$arr['msg'] = '请传递账户或密码';$arr['msg_test'] = '请传递账户或密码';
             return json($arr);
         }
         if(!preg_match("/^1[34578]{1}\d{9}$/",$data['username'])){
-            $arr['code'] = 10002;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
+            $arr['code'] = 10005;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
             return json($arr);
         }
-        //判断是否手机号已注册
-        $is_register = db('custom') -> where("username",$data['username']) -> select();
+        //判断是否手机号是否存在
+        $is_register = db('custom') -> where("username",$data['username']) -> find();
         if(!$is_register){
-            $arr['code'] = 10003;$arr['msg'] = '手机号存在';$arr['msg_test'] = '手机号不存在';
+            $arr['code'] = 10003;$arr['msg'] = '手机号不存在';$arr['msg_test'] = '手机号不存在';
             return json($arr);
         }
 
-        $this->data['id'] = $is_register['id'];
-        $res = Db("custom")->where()->save();
-
+        $res = db("custom")->where(['id' => $is_register['id'],'username' => $data['username']])->setField('password',$data['password']);
+        if($res){
+            $arr['code'] = 10000;$arr['msg'] = '密码修改成功';$arr['msg_test'] = '修改成功';
+            return json($arr);
+        }else{
+            $arr['code'] = 10004;$arr['msg'] = '密码修改失败';$arr['msg_test'] = '修改失败';
+            return json($arr);
+        }
 
 
     }
