@@ -132,22 +132,16 @@ class Service extends Action{
 	
 	//添加服务项目
 	public function createServiceItems(){
-
-	    if(!isset($this -> data['service_name'])){
-    	    if(!isset($this -> data['service_name'])){
-    	        $return['code'] = 10001;
-    	        $return['msg_test'] = '服务名称不能为空';
-    	        return json($return);
-    	    }
-	    }
+	    
 	    if(!isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
 	        $return['code'] = 10002;
 	        $return['msg_test'] = '请求参数不存在';
 	        return json($return);
 	    }
 	    //服务名称和价格是必须的
+	    
         if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-            $return['code'] = 10004;
+            $return['code'] = 10003;
             $return['msg'] = '请填写正确的商品价格';
             return json($return);
         }
@@ -155,14 +149,14 @@ class Service extends Action{
 	    if(isset($this -> data['service_pic'])){
 	        $pic_number = count(explode(',',$this -> data['service_pic']));
 	        if($pic_number > 10){
-	            $return['code'] = 10007;
+	            $return['code'] = 10004;
 	            $return['msg'] = '一个商品最多上传10张图片';
 	            return json($return);
 	        }
 	    }
 	    if(isset($this -> data['service_desc'])){
 	        if(mb_strlen($this -> data['service_desc'],'utf8') > 600){
-	            $return['code'] = 10008;
+	            $return['code'] = 10005;
 	            $return['msg'] = '商品的简介最多600字';
 	            return json($return);
 	        }
