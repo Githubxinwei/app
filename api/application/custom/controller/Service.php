@@ -87,10 +87,10 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-	    //$data = array_splice($data,1);
-	    $res = db('subscribe_service')-> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
+	    
+	    $res = db('subscribe_service') -> allowField(true) -> where(['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id])->save($this->data);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
-	    //dump($res);
+	   
 	    return json($return);
 	
 	}
