@@ -98,7 +98,7 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-	    model('subscribe_service') -> allowField(true) -> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
+	    db('subscribe_service') -> allowField(true) -> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
 	    return json($return);
 	
@@ -141,7 +141,7 @@ class Service extends Action{
     	    }
 	    }
 	    if(!isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
-	        $return['code'] = 10001;
+	        $return['code'] = 10002;
 	        $return['msg_test'] = '请求参数不存在';
 	        return json($return);
 	    }
@@ -169,10 +169,11 @@ class Service extends Action{
 	    }
 	    $this -> data['create_time'] = time();
 	    $this -> data['custom_id'] = $this -> custom -> id;
-	    $res= model('subscribe_service') ->allowField(true)-> save($this -> data);
+	    $res = db('subscribe_service') ->allowField(true)-> save($this -> data);
+	    dump($res);exit;
 	    if($res){
 	        $return['code'] = 10000;
-	        $return['data'] = ['service_id' => model('subscribe_service')->id];
+	        $return['data'] = ['service_id' => db('subscribe_service')->id];
 	        $return['msg'] = '添加成功';
 	        return json($return);
 	    }else{
