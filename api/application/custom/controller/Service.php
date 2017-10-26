@@ -133,23 +133,18 @@ class Service extends Action{
 	//添加服务项目
 	public function createServiceItems(){
 
-	    if(!isset($this -> data['service_name'])){
-    	    if(!isset($this -> data['service_name'])){
-    	        $return['code'] = 10001;
-    	        $return['msg_test'] = '服务名称不能为空';
-    	        return json($return);
-    	    }
-	    }
 	    if(!isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
 	        $return['code'] = 10002;
 	        $return['msg_test'] = '请求参数不存在';
 	        return json($return);
 	    }
 	    //服务名称和价格是必须的
-        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-            $return['code'] = 10004;
-            $return['msg'] = '请填写正确的商品价格';
-            return json($return);
+        if(isset($this -> data['service_price'])) {
+            if ($this->data['service_price'] && $this->data['service_price'] <= 0) {
+                $return['code'] = 10004;
+                $return['msg'] = '请填写正确的商品价格';
+                return json($return);
+            }
         }
 	    //如果上传图片，判断图片是否是十个
 	    if(isset($this -> data['service_pic'])){
@@ -167,20 +162,25 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
+
 	    $this -> data['create_time'] = time();
 	    $this -> data['custom_id'] = $this -> custom -> id;
-	    $res = db('subscribe_service') ->allowField(true)-> save($this -> data);
-	    
-	    if($res){
-	        $return['code'] = 10000;
-	        $return['data'] = ['service_id' => db('subscribe_service')->id];
-	        $return['msg'] = '添加成功';
-	        return json($return);
-	    }else{
-	        $return['code'] = 10010;
-	        $return['msg'] = '添加失败';
-	        return json($return);
-	    }
+        $data = $this -> data;
+        $data = array_splice($data,1);
+        $service_id = db('subscribe_service')-> insertGetId($data);
+        if($service_id){
+            $return['code'] = 10000;
+            $return['data'] = ['id' => $service_id];
+            $return['msg'] = '添加成功';
+            $return['msg_test'] = '添加成功';
+            return json($return);
+        }else{
+            $return['code'] = 10005;
+            $return['msg'] = '添加失败';
+            $return['msg_test'] = '添加失败';
+            return json($return);
+        }
+
 	}
 	
 	//获取服务项目列表
