@@ -172,7 +172,7 @@ class Service extends Action{
 //      $arr = db('subscribe_service')->where(['appid' => $this->data['appid'],'custom_id' => $this -> custom->id])->select();
         if($id){
             $return['code'] = 10000;
-//          $return['data'] = $arr;
+            $return['data'] = ['service_id'=>$id];
             $return['msg'] = '添加成功';
             $return['msg_test'] = '添加成功';
             return json($return);
