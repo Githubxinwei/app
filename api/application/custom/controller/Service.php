@@ -55,20 +55,7 @@ class Service extends Action{
 	 * 修改服务项目
 	 */
 	public function updateServiceItem(){
-	   //服务名称不能为空
-	   if(!isset($this -> data['service_name'])){
-	        $return['code'] = 10001;
-	        $return['msg_test'] = '服务名称不能为空';
-	        return json($return);
-	   }
-	    //服务项目的价格不能为空或负值
-	    if(isset($this -> data['service_price'])){
-	        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-	            $return['code'] = 10002;
-	            $return['msg'] = '请填写正确的价格';
-	            return json($return);
-	        }
-	    }
+	  
 	    if(!isset($this -> data['service_id']) || !isset($this -> data['service_name']) || (!isset($this -> data['service_price']))){
 	        $return['code'] = 10001;
 	        $return['msg_test'] = '参数值缺失';
@@ -76,28 +63,31 @@ class Service extends Action{
 	    }
 	
 	    //服务项目的名字和价格是必须的
-        if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
-            $return['code'] = 10004;
-            $return['msg'] = '请填写正确的服务价格';
-            return json($return);
-        }
-	
+	    if(isset($this -> data['service_price'])) {
+            if($this -> data['service_price'] && $this -> data['service_price'] <= 0){
+                $return['code'] = 10002;
+                $return['msg'] = '请填写正确的服务价格';
+                return json($return);
+            }
+	    }
+	    
 	    //如果上传图片，判断图片是否是十个
 	    if(isset($this -> data['service_pic'])){
 	        $pic_number = count(explode(',',$this -> data['service_pic']));
 	        if($pic_number > 10){
-	            $return['code'] = 10006;
+	            $return['code'] = 10003;
 	            $return['msg'] = '一个商品最多上传10张图片';
 	            return json($return);
 	        }
 	    }
 	    if(isset($this -> data['service_desc'])){
 	        if(mb_strlen($this -> data['service_desc'],'utf8') > 600){
-	            $return['code'] = 10007;
+	            $return['code'] = 10004;
 	            $return['msg'] = '商品的简介最多600字';
 	            return json($return);
 	        }
 	    }
+	    $data = array_splice($data,1);
 	    db('subscribe_service') -> allowField(true) -> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
 	    return json($return);
