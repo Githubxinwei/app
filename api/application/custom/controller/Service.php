@@ -158,12 +158,14 @@ class Service extends Action{
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
+
         $info['name'] = $this->data['name'];
         $info['pic'] = $this->data['pic'];
         $info['desc'] = $this->data['desc'];
         $info['service_id'] = $this->data['service_id'];
         $info['appid'] = $this->data['appid'] * 1;
         $info['custom_id'] = $this->custom->id;
+        $info['service_name'] = $this->data['service_name'];
         $res = db('subscribe_service_user') -> insert($info);
         if($res){
             $return['code'] = 10000;
@@ -207,7 +209,7 @@ class Service extends Action{
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
-        $res = model('subscribe_service_user') -> allowField(['name','pic','desc','service_id']) -> where(['id' => $this->data['service_user_id']]) -> save($this->data);
+        $res = model('subscribe_service_user') -> allowField(['name','pic','desc','service_id','service_name']) -> where(['id' => $this->data['service_user_id']]) -> save($this->data);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
@@ -228,8 +230,7 @@ class Service extends Action{
         $count = db('subscribe_service_user') -> where(['appid' => $this->data['appid']]) -> count();
         $info = db('subscribe_service_user')
             -> alias('a')
-            -> field('a.name,a.pic,a.desc,b.service_name,a.service_id')
-            -> join("__SUBSCRIBE_SERVICE__ b",'FIND_IN_SET(b.id,a.service_id)','LEFT')
+            -> field('a.id,a.name,a.pic,a.desc,a.service_id,a.service_name')
             -> where(['a.appid' => $this->data['appid']])
             -> page($page,$limit)
             -> select();
