@@ -374,20 +374,28 @@ class App extends Xiguakeji{
         }
         $order = model('goods_order') -> where('id',$this->data['id']) -> find();
         if(empty($order) || $order['appid'] != $this->apps  || $order['user_id'] != $this->user['id'] ){
-            $return['code'] = 10001;$return['msg_test'] = '订单不存在';return json($return);
+            $return['code'] = 10001;
+            $return['msg'] = '订单不存在';
+            $return['msg_test'] = '订单不存在';
+            return json($return);
         }
         if($order['state'] != 0 ){
-            $return['code'] = 10001;$return['msg_test'] = '订单不是待付款状态';return json($return);
+            $return['code'] = 10001;
+            $return['msg'] = '订单不是待付款状态';
+            $return['msg_test'] = '订单不是待付款状态';
+            return json($return);
         }
 
         $info  = model('goods_order')->where('id',$this->data['id'])->update(['state'=>'5']);
 
         if($info){
             $return['code'] = 10000;
+            $return['msg'] = '订单取消成功';
             $return['msg_test'] = '订单取消成功';
             return json($return);
         }else{
             $return['code'] = 10003;
+            $return['msg'] = '操作失败';
             $return['msg_test'] = '操作失败';
             return json($return);
         }
