@@ -117,7 +117,7 @@ class Service extends Action{
 	public function delServiceItems(){
 	    if(!isset($this -> data['service_id'])){
 	        $return['code'] = 10001;
-	        $return['msg_test'] = '缺少服务项目id或缺少appid';
+	        $return['msg_test'] = '缺少服务项目id';
 	        return json($return);
 	    }
 	    $res = db('subscribe_service') -> where(['id' => $this -> data['service_id'] * 1,'custom_id' => $this->custom->id]) -> delete();
@@ -127,7 +127,7 @@ class Service extends Action{
 	        $return['msg_test'] = '删除成功';
 	        return json($return);
 	    }else{
-	        $return['code'] = 10001;
+	        $return['code'] = 10002;
 	        $return['msg'] = '删除数据失败';
 	        $return['msg_test'] = 'appid错误，或者service_id错误';
 	        return json($return);
