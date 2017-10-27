@@ -358,20 +358,20 @@ class App extends Xiguakeji{
 
 	}
 
+	//获取更多信息
+	function info(){
+		$info['nickName'] = $this->user->nickName;
+		$info['avatarUrl'] = $this->user->avatarUrl;
+		$res = model('app') -> where('appid',$this->apps) -> find();
+		$info['desc'] = $res->desc;
+		$info['tel'] = $res->tel;
+		$info['site_url'] = $res->site_url;
+		$info['address'] = $res->address;
+		$return['code'] = 10000;
+		$return['data'] = $info;
+		return json($return);
+	}
 
-    //获取更多信息
-    function info(){
-        $info['nickName'] = $this->user->nickName;
-        $info['avatarUrl'] = $this->user->avatarUrl;
-        $res = model('app') -> where('appid',$this->apps) -> find();
-        $info['desc'] = $res->desc;
-        $info['tel'] = $res->tel;
-        $info['site_url'] = $res->site_url;
-        $info['address'] = $res->address;
-        $return['code'] = 10000;
-        $return['data'] = $info;
-        return json($return);
-    }
     //订单取消
     function  order_close(){
 
