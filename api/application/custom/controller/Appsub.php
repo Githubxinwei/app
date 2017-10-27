@@ -35,7 +35,7 @@ class Appsub  extends Xiguakeji
     function lists(){
 
         $keyword = isset($this->data['keyword']) ? $this->data['keyword'] : '';
-        if($keyword){$where['name'] = array('like','%'.$keyword.'%');}
+        if($keyword){$where['service_name'] = array('like','%'.$keyword.'%');}
         if(isset($this->data['cate_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cate_id'].",cate_id)"];
         $where['appid'] = $this->apps;
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
@@ -53,13 +53,11 @@ class Appsub  extends Xiguakeji
     }
 
    /*预约获取分类 appid*/
-   public  function  subcate(){
+   public  function  subCate(){
 
        $info = db('subscribe_cate')-> field('id,name') -> where('appid',$this->apps) -> order('code desc') -> select();
        $return['code'] = 10000;$return['data'] = $info;
        return json($return);
-
-
    }
 
    /*服务人员列表  appid */
