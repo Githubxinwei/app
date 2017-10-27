@@ -87,8 +87,8 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-	    
-	    $res = db('subscribe_service') -> allowField(true) -> where(['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id])->save($this->data);
+
+	    $res = model('subscribe_service') -> allowField(true) -> save($this->data,['id' => $this->data['service_id'],'custom_id' => $this->custom->id]);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
 	   
 	    return json($return);
