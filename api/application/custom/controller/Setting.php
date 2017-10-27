@@ -8,7 +8,7 @@ class Setting extends Action{
      * 修改预约设置信息
      */
     public function updateSettingInfo(){
-        $res = db('subscribe_service_setting')-> where(['appid' => $this->data['appid'],'custom_id' => $this->custom->id]) -> save($this->data);
+        $res = model('subscribe_service_setting') -> allowField(true)-> save(['appid' => $this->data['appid'],'custom_id' => $this->custom->id]);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
