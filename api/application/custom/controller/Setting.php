@@ -25,6 +25,7 @@ class Setting extends Action{
             echo json_encode($return);exit;
         }
     }
+
     /**
      * 修改预约设置信息
      */

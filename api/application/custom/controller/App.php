@@ -6,6 +6,7 @@ class App extends Xiguakeji{
 	
 	//获取bannar信息
 	function get_bannar(){
+
 		$info = model('loop_img') -> where('appid',$this->apps) -> find();
 		$return['code'] = 10000;
 		if($info){
@@ -19,6 +20,7 @@ class App extends Xiguakeji{
 
 		return json($return);
 	}
+
 	//获取商品分类
 	function cate_lists(){
 		$info = model('goods_cate')-> field('id,name') -> where('appid',$this->apps) -> order('code desc') -> select();
@@ -53,6 +55,7 @@ class App extends Xiguakeji{
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
 	}
+
 	//获取单个商品信息
 	function get_one(){
 		// if($this->data['session_key'] == 'n7sm42gn80h9e6cpill8fh2q37' ){
@@ -87,6 +90,7 @@ class App extends Xiguakeji{
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
 	}
+
 	//加入购物车
 	function add_cart(){
 		//传入id，num，spec
@@ -153,11 +157,13 @@ class App extends Xiguakeji{
 		 	$return['code'] = 10000;$return['data'] = ['num'=>$this->data['num']];return json($return);
 		 }	
 	}
+
 	//获取购物车商品
 	function get_cart(){
 		$info = model('goods_cart') -> field('pic,name,spec_value,price,num,id') -> where(['appid'=>$this->apps,'is_cart'=>1,'user_id'=>$this->user['id']]) -> order('id desc') -> select();
 		return json($info);
 	}
+
 	//移除购物车商品
 	function remove_cart(){
 		if(!isset($this->data['id'])){
@@ -170,6 +176,7 @@ class App extends Xiguakeji{
 		 	$return['code'] = 10000;return json($return);
 		 }	
 	}
+
 	//购买商品
 	function buy(){
 		//先检测商家是否已配置微信支付参数
@@ -364,7 +371,6 @@ class App extends Xiguakeji{
 		$return['data'] = $info;
 		return json($return);
 	}
-
 
     //订单取消
     function  order_close(){
