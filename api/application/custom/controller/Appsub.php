@@ -1,7 +1,11 @@
 <?php
 /**
  * Created by PhpStorm.
+<<<<<<< HEAD
+ * User: Administrator
+=======
  * User: 宋妍妍
+>>>>>>> be93a5e607cf4ce40839d9279fce0f12d3cb56fe
  * Date: 2017/10/27 0027
  * Time: 09:16
  */
@@ -25,6 +29,7 @@ class Appsub  extends Xiguakeji
         }
         return json($return);
     }
+
 
     /*获取预约列表 appid*/
     function lists(){
@@ -59,12 +64,10 @@ class Appsub  extends Xiguakeji
 
    /*服务人员列表  appid */
     public  function  getuser(){
-
         $info = db('subscribe_service_user')-> field('id,name,desc,pic') -> where('appid',$this->apps) -> order('id desc') -> select();
         $return['code'] = 10000;
         $return['data'] = $info;
         return json($return);
-
     }
 
 
