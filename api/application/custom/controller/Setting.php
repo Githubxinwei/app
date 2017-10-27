@@ -46,7 +46,7 @@ class Setting extends Action{
      * 获取预约设置信息
      */
     public function getSettingInfo(){
-        $info = db('subscribe_service_setting') -> where(['appid' => $this->data['appid']]) -> select();
+        $info = db('subscribe_service_setting') -> where(['appid' => $this->data['appid']]) -> find();
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';
         $return['data'] = $info;
