@@ -1,4 +1,5 @@
 <?php
+
 namespace app\custom\model;
 use think\Model;
 
