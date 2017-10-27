@@ -12,7 +12,7 @@ use think\Controller;
 class Appsub  extends Xiguakeji
 {
 
-//获取bannar信息
+///*获取bannar信息  appid*/
     function get_bannar(){
 
         $info = db('loop_img') -> where('appid',$this->apps) -> find();
@@ -31,7 +31,7 @@ class Appsub  extends Xiguakeji
 
         $keyword = isset($this->data['keyword']) ? $this->data['keyword'] : '';
         if($keyword){$where['name'] = array('like','%'.$keyword.'%');}
-        if(isset($this->data['cid'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cid'].",cid)"];
+        if(isset($this->data['cate_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cate_id'].",cate_id)"];
         $where['appid'] = $this->apps;
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
         if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
@@ -67,10 +67,50 @@ class Appsub  extends Xiguakeji
 
     }
 
-    /*分类下的服务列表*/
+
+    /*单个服务项目信息*/
+    //获取单个商品信息
+    function get_one(){
+        if(!isset($this->data['id'])){
+            $return['code'] = 10002;$return['msg_test'] = '商品不存在';
+            return json($return);
+        }
+        $info = model('goods') -> field('id,name,pic,price,stock,spec,desc,content_show,content,appid') -> where('id',$this->data['id'])->find();
+        if($info['appid'] != $this->apps){
+            $return['code'] = 10003;$return['msg_test'] = '商品不属于该商户';
+            return json($return);
+        }
+        // foreach($info as $k=>$v){
+        // 	$info[$k]['pic'] = '/uploads/18595906710/20170929/15066512347389.gif';
+        // }
+        if($info['spec']){
+            $info['spec'] = json_decode($info['spec'],true);
+            $spec = $info['spec'];
+            foreach($spec as $k=>$v){
+                $spec[$k]=array(
+                    'name'=>$v['name'],
+                    'price'=>$v['price'],
+                    'lastNum'=>$v['lastNum']
+                );
+            }
+            $info['spec'] = $spec;
+        }
+        $info['pic'] = explode(',',$info['pic']);
+        unset($info['appid']);
+        $return['code'] = 10000;$return['data'] = $info;
+        return json($return);
+    }
 
 
 
+
+
+
+
+
+
+
+    
 
 
 }
