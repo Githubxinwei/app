@@ -13,7 +13,7 @@ class Action extends Controller{
 			$return['msg_test'] = '请登录';
 			echo json_encode($return);exit;
 		}
-
+		
 		session_id($this->data['session_key']);
 		$this->custom = session('custom');
 		if(!$this->custom){

@@ -87,9 +87,9 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-	    $data = array_splice($data,1);
-	    db('subscribe_service') -> allowField(true) -> save($this -> data,['id' =>$this -> data['service_id'],'custom_id' => $this->custom->id]);
+	    $res = model('subscribe_service') -> allowField(true) -> save($this->data,['id' => $this->data['service_id'],'custom_id' => $this->custom->id]);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
+	   
 	    return json($return);
 	
 	}
@@ -162,7 +162,7 @@ class Service extends Action{
 //      $arr = db('subscribe_service')->where(['appid' => $this->data['appid'],'custom_id' => $this -> custom->id])->select();
         if($id){
             $return['code'] = 10000;
-            $return['data'] = ['service_id'=>$id];
+//          $return['data'] = $arr;
             $return['msg'] = '添加成功';
             $return['msg_test'] = '添加成功';
             return json($return);
@@ -197,7 +197,7 @@ class Service extends Action{
 	        $return['msg_test'] = '成功了';
 	        return json($return);
 	    }else{
-	        $return['code'] = 10004;
+	        $return['code'] = 10001;
 	        $return['msg'] = '查询失败,请稍后重试';
 	        return json($return);
 	    }

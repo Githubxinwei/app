@@ -12,7 +12,7 @@ use think\Controller;
 class Appsub  extends Xiguakeji
 {
 
-   /*获取bannar信息 appid*/
+//获取bannar信息
     function get_bannar(){
 
         $info = db('loop_img') -> where('appid',$this->apps) -> find();
