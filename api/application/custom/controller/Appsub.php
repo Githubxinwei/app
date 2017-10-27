@@ -1,11 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
-<<<<<<< HEAD
- * User: Administrator
-=======
  * User: 宋妍妍
->>>>>>> be93a5e607cf4ce40839d9279fce0f12d3cb56fe
  * Date: 2017/10/27 0027
  * Time: 09:16
  */
@@ -145,9 +141,9 @@ class Appsub  extends Xiguakeji
         }
         $info = db('subscribe_service') -> where('id',$this->data['id'])->find();
         if($info['appid'] != $this->apps){
-            $return['code'] = 10003;
-            $return['msg'] = '商品不属于该商户';
-            $return['msg_test'] = '商品不属于该商户';
+            $return['code'] = 10004;
+            $return['msg'] = '预约服务不属于该商户';
+            $return['msg_test'] = '预约服务不属于该商户';
             return json($return);
         }
         if($info['service_particulars']){
@@ -192,6 +188,9 @@ class Appsub  extends Xiguakeji
         }
         $data = $this->data;
         $data["create_time"] = time();
+        $goods = db('subscribe_service')->where("id",$data['subscribe_id'])->find();
+        $data['subscribe_name'] = $goods['service_name'];
+        $data['price'] = $goods['service_price'];
         $res = db('subscribe_order') ->allowField(true) -> save($data);
 
         if($res){
@@ -208,17 +207,76 @@ class Appsub  extends Xiguakeji
     }
 
 
+   /*获取订单列表*/
+    function order_list(){
+        if( !isset($this->data['state']) || !in_array($this->data['state'], [0,1,2,3]) ){
+            $return['code'] = 10001;
+            $return['msg'] = '缺少订单类型state';
+            $return['msg_test'] = '缺少订单类型state';
+            return json($return);
+        }
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid不存在';
+            $return['msg_test'] = 'appid不存在';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $page = isset($this->data['page']) ? $this->data['page'] : 1 ;
+        $limit_num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10 ;
+        $where['custom_id'] = $this->user['custom_id'];
+        $where['state'] = $this->data['state'];
+        $where['appid'] = $this->apps;
+        $info = db('subscribe_order')
+            ->field('id,price,subscribe_name,subscribe_day,subscribe_time,username,tell,remark,create_time')
+            -> where($where)
+            -> page($page)
+            -> limit($limit_num)
+            -> order('id desc')
+            -> select();
 
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        return json($return);
 
+    }
 
+    /*获取订单详情信息*/
+    function order_detail(){
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid不存在';
+            $return['msg_test'] = 'appid不存在';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $where['appid'] = $this->apps;
+        $where['id'] = $this->data['id'];
+        $where['custom_id'] = $this->user['custom_id'];
+        $info = db('subscribe_order') -> where($where) -> find();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            return json($return);
+        }else{
+            $return['code'] = 10004;
+            $return['msg'] = '获取订单失败';
+            $return['msg_test'] = '获取订单失败';
+            return json($return);
+        }
 
+    }
 
-
-
-
-
-
-    
 
 
 }
