@@ -33,7 +33,8 @@ class Appsub  extends Xiguakeji
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $info = db('loop_img') -> where('appid',$this->apps) -> find();
+        $where['appid'] = $this->data['appid'];
+        $info = db('loop_img') -> where($where) -> find();
         $return['code'] = 10000;
         if($info){
             $info['content'] = json_decode($info['content'],true);
@@ -61,7 +62,7 @@ class Appsub  extends Xiguakeji
         $keyword = isset($this->data['keyword']) ? $this->data['keyword'] : '';
         if($keyword){$where['service_name'] = array('like','%'.$keyword.'%');}
         if(isset($this->data['cate_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cate_id'].",cate_id)"];
-        $where['appid'] = $this->apps;
+        $where['appid'] = $this->data['appid'];
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
         if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
         $info = db('subscribe_service')
@@ -90,7 +91,8 @@ class Appsub  extends Xiguakeji
            $return['msg_test'] = 'appid是一个8位数';
            return json($return);
        }
-       $info = db('subscribe_cate')-> field('id,name') -> where('appid',$this->apps) -> order('code desc') -> select();
+        $where['appid'] = $this->data['appid'];
+       $info = db('subscribe_cate')-> field('id,name') -> where($where) -> order('code desc') -> select();
        $return['code'] = 10000;$return['data'] = $info;
        return json($return);
 
@@ -111,8 +113,8 @@ class Appsub  extends Xiguakeji
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-
-        $info = db('subscribe_service_user')-> field('id,name,desc,pic') -> where('appid',$this->apps) -> order('id desc') -> select();
+        $where['appid'] = $this->data['appid'];
+        $info = db('subscribe_service_user')-> field('id,name,desc,pic') -> where($where) -> order('id desc') -> select();
         $return['code'] = 10000;
         $return['data'] = $info;
         return json($return);
@@ -137,8 +139,10 @@ class Appsub  extends Xiguakeji
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
+
+
         $info = db('subscribe_service') -> where('id',$this->data['id'])->find();
-        if($info['appid'] != $this->apps){
+        if($info['appid'] != $this-> data['appid']){
             $return['code'] = 10004;
             $return['msg'] = '预约服务不属于该商户';
             $return['msg_test'] = '预约服务不属于该商户';
@@ -156,14 +160,20 @@ class Appsub  extends Xiguakeji
             }
             $info['service_particulars'] = $spec;
         }
+        /*基本设置*/
+        $setting = db('subscribe_service_setting')
+            ->field("id,is_show_address,is_show_tel,button_name,appid")
+            -> where('appid',$this->data['appid'])
+            ->find();
         unset($info['appid']);
         $return['code'] = 10000;
+        $return['setting'] = $setting;
         $return['data'] = $info;
         return json($return);
     }
 
     /*生成预约订单
-       appid  custom_id  subscribe_id  user_id  subscribe_day
+      appid  custom_id  subscribe_id  user_id  subscribe_day
       subscribe_time   username  tell  remark
     */
     function  create_order(){
@@ -230,7 +240,7 @@ class Appsub  extends Xiguakeji
         $limit_num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10 ;
         $where['custom_id'] = $this->user['custom_id'];
         $where['state'] = $this->data['state'];
-        $where['appid'] = $this->apps;
+        $where['appid'] = $this->data['appid'];
         $info = db('subscribe_order')
             ->field('id,price,subscribe_name,subscribe_day,subscribe_time,username,tell,remark,create_time')
             -> where($where)
@@ -259,7 +269,7 @@ class Appsub  extends Xiguakeji
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $where['appid'] = $this->apps;
+        $where['appid'] = $this->data['appid'];
         $where['id'] = $this->data['id'];
         $where['custom_id'] = $this->user['custom_id'];
         $info = db('subscribe_order') -> where($where) -> find();
@@ -276,6 +286,42 @@ class Appsub  extends Xiguakeji
 
     }
 
+    /*预约取消   id:预约订单ID   appid    */
+    function order_close(){
+        
+    }
 
+    /*获取小程序的基本信息*/
+    function get_message(){
+
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid不存在';
+            $return['msg_test'] = 'appid不存在';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $where['appid'] = $this->data['appid'];
+        $info = db('subscribe_service')
+            -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id,start_time,over_time,business')
+            -> where($where)
+            -> find();
+
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            return json($return);
+        }else{
+            $return['code'] = 10004;
+            $return['msg'] = '基本信息获取失败';
+            $return['msg_test'] = '基本信息获取失败';
+            return json($return);
+        }
+    }
 
 }
