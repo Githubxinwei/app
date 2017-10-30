@@ -79,7 +79,7 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 //返回小程序模板信息
 function get_app($type){
 	$arr = [
-		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>100,'template_id'=>16],
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>100,'template_id'=>17],
 		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>50,'template_id'=>1]
 	];
 	if($type == 'all'){
@@ -264,6 +264,39 @@ function sendMail($to,$title,$content,$type='qq'){
 		return false;
 	}
 }
+
+/**
+ * @param $appid 八位唯一标志
+ * @param $msg 信息
+ * @param $type 1审核成功，2失败
+ * 代码审核成功或失败是发送给人员的电话和邮件
+ */
+function sendAuditMsg($appid,$msg,$type){
+    $info = db('app') -> field('name,notifytel,notifyemail') -> where(['appid' => $appid]) -> find();
+    if(!$info){
+        return;
+    }
+    return;
+    if($type == 1){
+        $msg = "恭喜你,你的小程序[{$info['name']}]审核成功";
+    }else if($type == 2){
+        $msg = "很遗憾,你的小程序[{$info['name']}]审核失败,失败原因:{$msg}";
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+    $data1 = [
+        'appid'=>'18317774594',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>'18317774594',
+        'params'=>"code:12345",
+    ];
+
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    dump($result);dump($data1);
+//    sendMail($info['notifyemail'],'小程序审核结果',$msg,'163');
+}
+
 
 //https请求(支持GET和POST)
 function http_request($url,$data = null){

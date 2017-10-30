@@ -11,10 +11,9 @@ use think\Controller;
 
 class Info extends Controller{
 
-    public function __construct()
+    function _initialize()
     {
-        parent::__construct();
-        $this -> data = input('get','','htmlspecialchars');
+        $this -> data = input('post.','','htmlspecialchars');
         $this -> user = session('admin');
         if($this->user == null){
             $return['code'] = 99999;
@@ -187,7 +186,7 @@ class Info extends Controller{
             -> count();
         $info = db('app')
             -> alias('a')
-            -> field('a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.is_publish,b.name as username')
+            -> field('a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.is_publish,b.nickname as username')
             -> join("__CUSTOM__ b",'a.custom_id = b.id','LEFT')
             -> where($where)
             -> page($page,$limit)
@@ -195,7 +194,8 @@ class Info extends Controller{
             -> select();
         foreach ($info as $k => $v){
             $appType = get_app($v['type']);
-            $info[$k]['type'] = isset($appType['name']) ? isset($appType['name']) : '无';
+//            $info[$k]['type'] = isset($appType['name']) ? isset($appType['name']) : '无';
+            $info[$k]['type'] = $appType['name'];
         }
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';

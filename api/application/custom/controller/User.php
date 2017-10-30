@@ -15,13 +15,18 @@ class User{
 		if(!isset($this->data['code'])){
 			$return['code'] = 10001;$return['msg_test'] = 'code不能为空';return json($return);
 		}
+		
+
 		$common = new \app\weixin\controller\Component();
-		$info = $common -> get_session($this->data['apps'],$this->data['appid'],$this->data['code']);
+
+		$info = $common->get_session($this->data['apps'],$this->data['appid'],$this->data['code']);
 		if(!isset($info['session_key'])){
 			$return['code'] = 10003;$return['msg_test'] = $info['errmsg'];return json($return);
 		}else{
 			//判断用户是否存在
-			$user_info =  db('user') -> where('openid',$info['openid']) -> find();
+            $where['apps'] = $this->data['apps'];
+            $where['openid'] = $info['openid'];
+			$user_info =  db('user') -> where($where) -> find();
 			if(!$user_info){
 				model('user') ->isUpdate(false)-> save(['openid'=>$info['openid'],'create_time'=>time(),'apps'=>$this->data['apps']]);
 				$user_info['id'] = model('user')->id;
@@ -35,6 +40,7 @@ class User{
 			return json($return);
 		}
 	}
+	
 	function info(){
 		//session_id($this->data['session_key']);
 		session_start();

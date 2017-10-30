@@ -1,4 +1,7 @@
 <?php
+/**
+ * 预约后台设置
+ */
 namespace app\custom\controller;
 use think\Db;
 
@@ -25,7 +28,6 @@ class Setting extends Action{
             echo json_encode($return);exit;
         }
     }
-
     /**
      * 修改预约设置信息
      */
