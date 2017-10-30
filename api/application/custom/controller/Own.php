@@ -241,11 +241,7 @@ class Own extends Action{
 			return json($return);
 		}
         // 预约
-		if($this->data["site_url"] = $_POST['site_url']){
-            model('app') ->allowField(['name','pic','desc','tel','site_url','address','start_time','over_time','business']) -> save($this -> data,['appid' => $this -> data['appid']]);
-        }else{
-            model('app') ->allowField(['name','pic','desc','tel','site_url','address']) -> save($this -> data,['appid' => $this -> data['appid']]);
-        }
+		model('app') ->allowField(['name','pic','desc','tel','site_url','address','start_time','over_time','business']) -> save($this -> data,['appid' => $this -> data['appid']]);
 		$return['code'] = 10000;
 		return json($return);
 	}

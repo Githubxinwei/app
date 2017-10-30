@@ -19,7 +19,7 @@ class Appsub  extends Xiguakeji
         $this -> data = input('post.','','htmlspecialchars');
     }
 
-///*获取bannar信息  appid*/
+    /*获取bannar信息  appid*/
     function get_bannar(){
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
@@ -43,7 +43,6 @@ class Appsub  extends Xiguakeji
         }
         return json($return);
     }
-
 
     /*获取预约列表 appid*/
     function lists(){
@@ -118,8 +117,7 @@ class Appsub  extends Xiguakeji
         return json($return);
     }
 
-
-    /*单个服务项目信息*/
+    /*单个服务项目信息 appid  id*/
     function get_subscribe(){
 
         if(!isset($this->data['id'])){
@@ -163,8 +161,10 @@ class Appsub  extends Xiguakeji
         return json($return);
     }
 
-
-    /*生成预约订单*/
+    /*生成预约订单
+       appid  custom_id  subscribe_id  user_id  subscribe_day
+      subscribe_time   username  tell  remark
+    */
     function  create_order(){
 
         if(!isset($this -> data['username']) || !isset($this -> data['tell']) || !isset($this -> data['subscribe_time']) || !isset($this -> data['subscribe_day'])){
@@ -205,8 +205,7 @@ class Appsub  extends Xiguakeji
 
     }
 
-
-   /*获取订单列表*/
+   /*获取订单列表   appid  state  custom_id */
     function order_list(){
         if( !isset($this->data['state']) || !in_array($this->data['state'], [0,1,2,3]) ){
             $return['code'] = 10001;
@@ -245,7 +244,7 @@ class Appsub  extends Xiguakeji
 
     }
 
-    /*获取订单详情信息*/
+    /*获取订单详情信息 appid  id  custom_id */
     function order_detail(){
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
