@@ -15,6 +15,8 @@ class User{
 		if(!isset($this->data['code'])){
 			$return['code'] = 10001;$return['msg_test'] = 'code不能为空';return json($return);
 		}
+		
+
 		$common = new \app\weixin\controller\Component();
 
 		$info = $common->get_session($this->data['apps'],$this->data['appid'],$this->data['code']);

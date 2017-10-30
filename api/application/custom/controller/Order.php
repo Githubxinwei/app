@@ -153,6 +153,122 @@ class Order extends Action{
     }
 
 
+    public function getSubscribeOrderList(){
+        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+        $where = array();
+        $where['state'] = isset($this->data['state']) ? $this->data['state'] : 1;
+        $where['appid'] = $this->data['appid'];
+        if(isset($this->data['username'])){
+            if($this->data['username']){
+                $where['username'] = $this->data['username'];
+            }
+        }
+        if(isset($this->data['order_sn'])){
+            if($this->data['order_sn']){
+                $where['order_sn'] = $this -> data['order_sn'];
+            }
+        }
+        if(isset($this->data['tel'])){
+            if($this->data['tel']){
+                $where['tel'] = $this->data['tel'];
+            }
+        }
+        if(isset($this->data['starttime']) && isset($this->data['endtime'])){
+            if($this->data['starttime'] && $this->data['endtime']){
+                $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
+            }
+        }
+        $data = db('subscribe_order')
+            -> field("id,subscribe_name,username,create_time,price,order_sn")
+            -> where($where)
+            -> page($page,$num)
+            -> select();
+        $return['code'] = 10000;
+        $return['data'] = $data;
+        $return['msg_test'] = 'ok';
+        return json($return);
+    }
+
+    /**
+     * 获取订单详细的信息
+     */
+    public function getSubscribeOrderById(){
+        if(!isset($this->data['order_id'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '传递订单id,也就是订单列表返回去的id';
+            return json($return);
+        }
+        $info = db('subscribe_order')
+            -> alias('a')
+            -> field("a.id,a.appid,a.price,a.subscribe_name,a.subscribe_day,a.subscribe_time,a.username,a.tel,a.remark,a.state,a.create_time,a.order_sn,a.end_time,b.name,b.pic")
+            -> join("__SUBSCRIBE_SERVICE_USER__ b",'a.service_user_id = b.id','LEFT')
+            -> where('a.id',$this->data['order_id'])
+            -> find();
+        if($info['appid'] != $this->data['appid']){
+            $return['code'] = 10002;
+            $return['msg_test'] = '当前订单的不是这个用户的';
+            return json($return);
+        }
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        $return['msg_test'] = 'ok';
+        return json($return);
+    }
+
+    /**
+     * 修改状态
+     * 状态0(预约成功，待处理)1（预约已确定）2（预约取消待处理）3（预约取消）4 已完成
+     */
+    public function updateSubscribeOrderState(){
+        if(!isset($this->data['state']) || !isset($this->data['order_id'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '请传递参数';
+            return json($return);
+        }
+        $state = db('subscribe_order') -> getFieldById($this->data['order_id'],'state');
+        if($this->data['state'] == 1){
+            if($state != 0){
+                $return['code'] = 10003;
+                $return['msg_test'] = '状态不可修改';
+                return json($return);
+            }
+            $info['state'] = 1;
+            $res = db('subscribe_order') -> where(['id' => $this->data['order_id'] * 1]) -> update($info);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            }else{
+                $return['code'] = 10004;
+                $return['msg_test'] = '失败';
+                return json($return);
+            }
+
+        }else if($this->data['state'] == 3){
+            if($state != 2){
+                $return['code'] = 10003;
+                $return['msg_test'] = '状态不可修改';
+                return json($return);
+            }
+            $res = db('subscribe_order') -> where(['id' => $this->data['order_id']]) -> setField('state',3);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            }else{
+                $return['code'] = 10004;
+                $return['msg_test'] = '失败';
+                return json($return);
+            }
+        }
+        $return['code'] = 10005;
+        $return['msg_test'] = '网络错误';
+        return json($return);
+
+    }
+
+
 
 
 

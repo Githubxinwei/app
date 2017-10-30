@@ -11,7 +11,7 @@ class Config{
             $return['code'] = 99999;
             $return['msg'] = '请登录';
             $return['msg_test'] = '请登录';
-            halt($return);
+            json_encode($return);
         }
     }
 

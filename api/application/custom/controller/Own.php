@@ -464,7 +464,7 @@ class Own extends Action{
 		}
 		$code = mt_rand(100000,999999);
 		$param = "code:{$code}";
-		$code = sendMsg('18317774594','zaefNsQrp2GJ9F3Y','TP1709201',$this->data['tel'],$param,$code);
+		$code = sendMsg('183177745941','zaefNsQrp2GJ9F3Y','TP1709201',$this->data['tel'],$param,$code);
 		if($code == 0000){
 			$return['code'] = 10000;
 			$return['msg'] = '发送成功';

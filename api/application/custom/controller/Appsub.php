@@ -4,6 +4,7 @@
  * User: 宋妍妍
  * Date: 2017/10/27 0027
  * Time: 09:16
+ * 预约小程序的前台接口
  */
 
 namespace app\custom\controller;
