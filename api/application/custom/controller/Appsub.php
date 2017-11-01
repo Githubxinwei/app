@@ -123,7 +123,6 @@ class Appsub  extends Xiguakeji
 
     /*单个服务项目信息 appid  id*/
     function get_subscribe(){
-
         if(!isset($this->data['id'])){
             $return['code'] = 10002;$return['msg_test'] = '商品不存在';
             return json($return);
@@ -151,15 +150,6 @@ class Appsub  extends Xiguakeji
         }
         if($info['service_particulars']){
             $info['service_particulars'] = json_decode($info['service_particulars'],true);
-            $spec = $info['service_particulars'];
-            foreach($spec as $k=>$v){
-                $spec[$k]=array(
-                    'service_name'=>$v['service_name'],
-                    'service_price'=>$v['service_price'],
-                    'lastNum'=>$v['lastNum']
-                );
-            }
-            $info['service_particulars'] = $spec;
         }
         /*基本设置*/
         $setting = db('subscribe_service_setting')
@@ -199,6 +189,7 @@ class Appsub  extends Xiguakeji
         }
         $data = $this->data;
         $data["create_time"] = time();
+        $data["kd_number"] = date("YmdHis").rand(100,999);
         $goods = db('subscribe_service')->where("id",$data['subscribe_id'])->find();
         $data['subscribe_name'] = $goods['service_name'];
         $data['price'] = $goods['service_price'];
@@ -308,7 +299,7 @@ class Appsub  extends Xiguakeji
             return json($return);
         }
         $where['appid'] = $this->data['appid'];
-        $info = db('subscribe_service')
+        $info = db('app')
             -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id,start_time,over_time,business')
             -> where($where)
             -> find();
@@ -325,4 +316,36 @@ class Appsub  extends Xiguakeji
         }
     }
 
+    /*获取小程序的服务时间*/
+    function get_time(){
+
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid不存在';
+            $return['msg_test'] = 'appid不存在';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10003;
+            $return['msg'] = 'appid是一个8位数';
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $where['appid'] = $this->data['appid'];
+        $info = db('app')
+            -> field('start_time,over_time,business')
+            -> where($where)
+            -> find();
+
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            return json($return);
+        }else{
+            $return['code'] = 10004;
+            $return['msg'] = '基本信息获取失败';
+            $return['msg_test'] = '基本信息获取失败';
+            return json($return);
+        }
+    }
 }
