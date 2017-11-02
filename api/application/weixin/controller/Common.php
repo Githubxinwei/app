@@ -211,7 +211,7 @@ class common extends Controller{
 			$item_list[$k]['tag'] = '学习 生活';
 			$item_list[$k]['title'] = '首页';
 		}
-		//dump($item_list);
+		//halt($item_list);
 		//$item_list = json_encode($item_list);
 		$data = ['item_list'=>$item_list];
 		$data = json_encode( $data, JSON_UNESCAPED_UNICODE );

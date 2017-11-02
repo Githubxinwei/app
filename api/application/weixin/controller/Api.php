@@ -93,7 +93,8 @@ class Api{
 							$weapp = new \app\weixin\controller\Common($auth_info['apps']);
 							$weapp->release();
 							model('app') -> where('appid',$auth_info['apps']) ->update(['is_publish'=>4]);//标注已发布
-							//通知到短信，邮箱，app内有notifytel,notifyemail
+							//通知到短信，邮箱，app内有notifytel,notifyemail $object -> SuccTime成功时间
+                            sendAuditMsg($auth_info['apps'],'',1);
 							
 						break;
 						case "weapp_audit_fail":
@@ -103,7 +104,9 @@ class Api{
 							file_cache('9Reason',$object->Reason,'');
 							$auth_info = model('auth_info') -> where('appid',$_GET['appid'])->find();
 							model('app') -> where('appid',$auth_info['apps']) ->update(['is_publish'=>2]);//标注已上传代码
-							//通知到短信，邮箱，app内有notifytel,notifyemail
+							//通知到短信，邮箱，app内有notifytel,notifyemail Reason 失败原因 FailTime 时间
+                            sendAuditMsg($auth_info['apps'],$object -> Reason,2);
+
 						break;
 						case "MASSSENDJOBFINISH":
 				//$content = "消息ID：".$object->MsgID."，结果：".$object->Status."，粉丝数：".$object->TotalCount."，过滤：".$object->FilterCount."，发送成功：".$object->SentCount."，发送失败：".$object->ErrorCount;

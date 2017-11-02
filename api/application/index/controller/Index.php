@@ -3,7 +3,7 @@ namespace app\index\controller;
 
 class Index{
 	function index(){
-		echo 1;
+		sendAuditMsg(74337019,'呵呵',1);
 	}
 }
 
