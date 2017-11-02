@@ -49,7 +49,6 @@ class Notify{
 		//$user_info = M('user') -> find($info['user_id']);
 		// 这个分成的层数不可预期，为了防止出错后未成功添加支付记录，导致重复执行，所以放在最后面
 		//if($type != 3)expense($user_info,$money,$type);
-		
 		die('SUCCESS');
 	}
 	function alipay(){
