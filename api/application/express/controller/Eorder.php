@@ -3,7 +3,7 @@ namespace app\express\controller;
 use think\Controller;
 
 //构造电子面单提交信息
-$eorder = [];
+/* $eorder = [];
 $eorder["ShipperCode"] = "SF";
 $eorder["OrderCode"] = "012657700387";
 $eorder["PayType"] = 1;
@@ -52,7 +52,7 @@ if($result["ResultCode"] == "100") {
 }
 else {
     echo "<br/>电子面单下单失败";
-}
+} */
 //-------------------------------------------------------------
 
 class Eorder extends Controller{
