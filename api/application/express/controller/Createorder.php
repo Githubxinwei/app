@@ -2,7 +2,7 @@
 namespace app\express\controller;
 use think\Controller;
 
-echo "在线下单";
+/* echo "在线下单";
 
 //构造在线下单提交信息
 $eorder = [];
@@ -49,14 +49,14 @@ if($result["ResultCode"] == "100") {
 }
 else {
     echo "<br/>在线下单失败";
-}
+} */
 //-------------------------------------------------------------
 
 class Createorder extends Controller{
 	
 
 	/**
-	 * Json方式 提交在线下单
+	 * Json方式 提交在线下单   预约取件
 	 */
 	function submitOOrder($requestData){
 		$datas = array(
