@@ -31,9 +31,19 @@ class App extends Xiguakeji{
 		if($keyword){$where['name'] = array('like','%'.$keyword.'%');}
 		if(isset($this->data['cid'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cid'].",cid)"];
 		$where['appid'] = $this->apps;
-		if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
-		if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
-		$info = model('goods') -> field('id,name,pic,price,stock,spec') -> where($where)->page($page) ->limit($limit_num) -> order('code desc')->select();
+
+        if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
+        if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
+
+		$info = model('goods')
+            -> field('id,name,pic,price,stock,spec')
+            -> where($where)
+            ->page($page)
+            ->limit($limit_num)
+            -> order('code desc')
+            ->select();
+
+
 		foreach($info as $k=>$v){
 			if(!$v['pic']){
 				$info[$k]['pic'] = '/uploads/18595906710/20170929/15066512347389.gif';
@@ -45,10 +55,10 @@ class App extends Xiguakeji{
 				foreach($spec as $kk=>$vv){
 					$price[$kk]=$vv['price'];
 				}
-				$pos=array_search(min($price),$price);
-				$info[$k]['price'] = $price[$pos];
+                asort($price);
+				$pos=reset($price);
+				$info[$k]['price'] = $pos;
 			}
-			
 		}
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
