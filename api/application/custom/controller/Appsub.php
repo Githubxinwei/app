@@ -60,8 +60,7 @@ class Appsub  extends Xiguakeji
         if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
         $info = db('subscribe_service')
             -> field('id,service_name,service_pic,service_price')
-            -> where($where)->page($page)
-            -> limit($limit_num)
+            -> where($where)->page($page)->limit($limit_num)
             -> order('id desc')
             -> select();
         $return['code'] = 10000;
@@ -87,13 +86,24 @@ class Appsub  extends Xiguakeji
 
    }
 
-   /*服务人员列表  appid */
+   /*服务人员列表  appid  service_id*/
     function  get_user(){
 
-        $where['appid'] = $this->data['appid'];
-        $info = db('subscribe_service_user')-> field('id,name,desc,pic') -> where($where) -> order('id desc') -> select();
+        $info = db('subscribe_service_user')
+            -> where(['appid'=>$this->data['appid']])
+            -> order('id desc')
+            -> select();
+
+        $arr = [];
+        foreach($info as $k=>$v){
+            $v['service_id'] = explode(',',$v['service_id']);      
+            if(in_array($this->data['service_id'], $v['service_id'])){
+
+	       array_push($arr,$v);
+            }
+        }
         $return['code'] = 10000;
-        $return['data'] = $info;
+        $return['data'] = $arr;
         return json($return);
     }
 
@@ -126,10 +136,11 @@ class Appsub  extends Xiguakeji
         return json($return);
     }
 
-    /*生成预约订单
+    /*生成预约订单*/
+    /*
       appid  custom_id  subscribe_id  user_id  subscribe_day
       subscribe_time   username  tell  remark
-    */
+   */
     function  create_order(){
 
         if(!isset($this -> data['username']) || !isset($this -> data['tel']) || !isset($this -> data['subscribe_time'])){
@@ -200,6 +211,7 @@ class Appsub  extends Xiguakeji
         return json($return);
 
     }
+
     /*获取订单详情信息 appid  id  custom_id */
     function order_detail(){
 
@@ -254,7 +266,7 @@ class Appsub  extends Xiguakeji
         }
     }
 
-    /*获取小程序的服务时间*/
+    /*获取预约程序的服务时间*/
     function get_time(){
 
         $where['appid'] = $this->data['appid'];
@@ -274,4 +286,7 @@ class Appsub  extends Xiguakeji
             return json($return);
         }
     }
+
+
+
 }

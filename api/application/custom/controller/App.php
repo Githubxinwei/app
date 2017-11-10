@@ -31,9 +31,19 @@ class App extends Xiguakeji{
 		if($keyword){$where['name'] = array('like','%'.$keyword.'%');}
 		if(isset($this->data['cid'])) $where[]=['exp',"FIND_IN_SET(".$this->data['cid'].",cid)"];
 		$where['appid'] = $this->apps;
-		if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
-		if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
-		$info = model('goods') -> field('id,name,pic,price,stock,spec') -> where($where)->page($page) ->limit($limit_num) -> order('code desc')->select();
+
+        if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
+        if(isset($this->data['limit_num'])){$limit_num = $this->data['limit_num'];}else{$limit_num = 20;}
+
+		$info = model('goods')
+            -> field('id,name,pic,price,stock,spec')
+            -> where($where)
+            ->page($page)
+            ->limit($limit_num)
+            -> order('code desc')
+            ->select();
+
+
 		foreach($info as $k=>$v){
 			if(!$v['pic']){
 				$info[$k]['pic'] = '/uploads/18595906710/20170929/15066512347389.gif';
@@ -45,10 +55,10 @@ class App extends Xiguakeji{
 				foreach($spec as $kk=>$vv){
 					$price[$kk]=$vv['price'];
 				}
-				$pos=array_search(min($price),$price);
-				$info[$k]['price'] = $price[$pos];
+                asort($price);
+				$pos=reset($price);
+				$info[$k]['price'] = $pos;
 			}
-			
 		}
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
@@ -177,6 +187,7 @@ class App extends Xiguakeji{
 		if( !$auth_info['mchid'] || !$auth_info['mchid'] ){
 			$return['code'] = 20000;$return['msg'] = '商户未配置支付参数，暂无法购买';return json($return);
 		}
+
 		// $arr = ['username'=>3, 'tel'=>2, 'dist'=>3, 'city'=>3, 'province'=>3, 'address'=>3, 'zipcode'=>3, 'remark'=>3 ];
 		// $this->data = array_merge($arr,$this->data);
 		if( !isset($this->data['username']) || !isset($this->data['tel'])  || !isset($this->data['dist'])  || !isset($this->data['city'])  || !isset($this->data['address'])  || !isset($this->data['zipcode'])  || !isset($this->data['province']) ){
@@ -236,17 +247,24 @@ class App extends Xiguakeji{
 			$total_fee = $cart_data['price']*$this->data['num'];
 			$name = $info['name'];$num = $this->data['num'];
 		}else{
+
 			if(  !isset($this->data['ids']) ){
 				$return['code'] = 10001;$return['msg_test'] = '缺少商品信息,其中内含ids';return json($return);
 			}
 			//从数据库取出商品
-			$carts = model('goods_cart') ->field('group_concat(id) id,name,pic,sum(num) num') -> where(['user_id'=>$this->user['id'],'appid'=>$this->apps,'is_cart'=>1,'id'=>['exp','in ('.$this->data['ids'].')']]) -> find();
+			$carts = model('goods_cart') ->field('group_concat(id) id,name,pic,sum(num) num')
+                -> where(['user_id'=>$this->user['id'],'appid'=>$this->apps,'is_cart'=>1,'id'=>['exp','in ('.$this->data['ids'].')']])
+                -> find();
+
 			if(!$carts['id']){
 				$return['code'] = 10004;$return['msg_test'] = '购物车是空的';return json($return);
 			}
 			$name = $carts['name'];$pic = $carts['pic'];$num = $carts['num'];
-			$total_fee = model('goods_cart') -> where(['user_id'=>$this->user['id'],'appid'=>$this->apps,'is_cart'=>1]) -> sum('num*price');
+			$total_fee = model('goods_cart')
+                -> where(['user_id'=>$this->user['id'],'appid'=>$this->apps,'is_cart'=>1,'id'=>['exp','in ('.$this->data['ids'].')']])
+                -> sum('num*price');
 		}
+
 		//  ``, `carts`, ``, ``, ``, ``, ``, ``, ``, ``, ``, ``, `` 
 		//创建订单信息
 		$time = time();
@@ -272,6 +290,8 @@ class App extends Xiguakeji{
 			'pic'=>$pic,
 			'num'=>$num
 		];
+
+
 		model('goods_cart') -> save(['is_cart'=>0],['id'=>['exp','in ('.$carts['id'].')']]);//将cart表内数据标注为不在购物车
 		model('goods_order') ->allowField(true) -> save($order_data);
 		$weapp = new \app\weixin\controller\Common($this->apps);
@@ -344,7 +364,6 @@ class App extends Xiguakeji{
             }
         }
 
-
 		$return['code'] = 10000;
 		$return['data'] = $info;
 		return json($return);
@@ -364,7 +383,6 @@ class App extends Xiguakeji{
 		$return['data'] = $info;
 		return json($return);
 	}
-
 
     //订单取消
     function  order_close(){
@@ -402,6 +420,28 @@ class App extends Xiguakeji{
 
      }
 
+    public function saveFormId(){
+        if(!isset($this->data['form_id'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '错误';
+            return json($return);
+        }
+        $data['user_id'] = $this->user['id'];
+        $data['openid'] = $this->user['openid'];
+        $data['form_id'] = $this->data['form_id'];
+        $data['create_time'] = time();
+        $data['appid'] = $this->user['apps'];
+        $res = db('form_list') -> insertGetId($data);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg_test'] = 'ok';
+            return json($return);
+        }else{
+            $return['code'] = 10002;
+            $return['msg_test'] = '失败失败';
+            return json($return);
+        }
+    }
 	
 }
 
