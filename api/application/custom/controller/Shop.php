@@ -307,6 +307,7 @@ class Shop extends Action{
 			-> order('a.code desc')
 			-> group('a.id')
 			-> select();
+
 		$return['code'] = 10000;
 		$return['data'] = ['number' => $number,'info' => $info];
 		$return['msg'] = '';
