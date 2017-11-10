@@ -43,13 +43,14 @@ class App extends Xiguakeji{
             -> order('code desc')
             ->select();
 
-
 		foreach($info as $k=>$v){
 			if(!$v['pic']){
 				$info[$k]['pic'] = '/uploads/18595906710/20170929/15066512347389.gif';
 			}
 			$spec_list =$v->getData();
-			if($spec_list['spec']){
+
+			if(count($spec_list['spec']) > 0){
+
 				$spec = json_decode($spec_list['spec'],true);
 				$price = [];
 				foreach($spec as $kk=>$vv){
@@ -57,8 +58,9 @@ class App extends Xiguakeji{
 				}
                 asort($price);
 				$pos=reset($price);
-				$info[$k]['price'] = $pos;
+				$info[$k]['prices'] = $pos;
 			}
+
 		}
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
