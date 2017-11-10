@@ -83,19 +83,6 @@ class Kuaidi extends Controller{
         return urlencode(base64_encode(md5($data.$appkey)));
     }
 
-
-    //使用快递网获取物流信息
-    public function getData($kd_number,$order_sn){
-		$kd_number = 'tiantian';
-        $pageURL="http://m.kuaidi.com/mindex-ajaxselectcourierinfo-{$order_sn}-{$kd_number}.html";
-        $contents=$this -> _url($pageURL);
-        $data = json_decode($contents);
-        $data = $this -> objectToArray($data);
-        $data = $this -> dataToArray($data);
-        return $data;
-//        file_put_contents('a.txt',$contents);
-    }
-
     public function dataToArray($data){
         $res = array();
         $res[0]['ddh'] = $data['nu'];
@@ -119,7 +106,6 @@ class Kuaidi extends Controller{
         curl_close($ch);
         return $contents;
     }
-
 
     //转换成数组
     function objectToArray($e){
