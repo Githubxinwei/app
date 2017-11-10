@@ -1,10 +1,4 @@
 <?php
-//电商ID
-defined('EBusinessID') or define('EBusinessID', '请到快递鸟官网申请http://kdniao.com/reg');
-//电商加密私钥，快递鸟提供，注意保管，不要泄漏
-defined('AppKey') or define('AppKey', '请到快递鸟官网申请http://kdniao.com/reg');
-//请求url
-defined('ReqURL') or define('ReqURL', 'http://api.kdniao.cc/Ebusiness/EbusinessOrderHandle.aspx');
 
 /**
  *  post提交数据
