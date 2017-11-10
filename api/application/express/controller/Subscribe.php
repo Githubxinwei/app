@@ -37,9 +37,8 @@ class Subscribe extends Controller{
 			'DataType' => '2',
 		);
 		$datas['DataSign'] = encrypt($requestData, '22c789e1-81ab-4a49-a9b6-5fa6ed8bd77d');
-		$result=sendPost(ReqURL, $datas);	
-		
-		//根据公司业务处理返回的信息......
+		$url = 'http://api.kdniao.cc/api/dist';
+		$result=sendPost($url, $datas);	
 		
 		return $result;
 	}

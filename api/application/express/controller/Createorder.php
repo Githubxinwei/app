@@ -56,7 +56,7 @@ class Createorder extends Controller{
 	
 
 	/**
-	 * Json方式 提交在线下单   预约取件
+	 * Json方式 提交在线下单  预约取件
 	 */
 	function submitOOrder($requestData){
 		$datas = array(
