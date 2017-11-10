@@ -111,7 +111,7 @@ class Order extends Action{
                 $return['msg_test'] = '请传递订单号';
                 return json($return);
             }
-            if($state != 1){
+            if($state == 4){
                 $return['code'] = 10003;
                 $return['msg_test'] = '状态不可修改';
                 return json($return);
@@ -157,7 +157,7 @@ class Order extends Action{
         $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
         $page = isset($this->data['page']) ? $this->data['page'] : 1;
         $where = array();
-        $where['state'] = isset($this->data['state']) ? $this->data['state'] : 1;
+        $where['state'] = isset($this->data['state']) ? $this->data['state'] : 0;
         $where['appid'] = $this->data['appid'];
         if(isset($this->data['username'])){
             if($this->data['username']){
@@ -180,7 +180,7 @@ class Order extends Action{
             }
         }
         $data = db('subscribe_order')
-            -> field("id,subscribe_name,username,create_time,price,order_sn")
+            -> field("id,subscribe_name,username,create_time,price,state,order_sn")
             -> where($where)
             -> page($page,$num)
             -> select();
@@ -201,7 +201,7 @@ class Order extends Action{
         }
         $info = db('subscribe_order')
             -> alias('a')
-            -> field("a.id,a.appid,a.price,a.subscribe_name,a.subscribe_day,a.subscribe_time,a.username,a.tel,a.remark,a.state,a.create_time,a.order_sn,a.end_time,b.name,b.pic")
+            -> field("a.id,a.appid,a.price,a.subscribe_name,a.subscribe_time,a.subscribe_time,a.username,a.tel,a.remark,a.state,a.create_time,a.order_sn,a.end_time,b.name,b.pic")
             -> join("__SUBSCRIBE_SERVICE_USER__ b",'a.service_user_id = b.id','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> find();
@@ -245,6 +245,22 @@ class Order extends Action{
                 return json($return);
             }
 
+        }else if($this->data['state'] == 2){
+            if($state != 0){
+                $return['code'] = 10003;
+                $return['msg_test'] = '状态不可修改';
+                return json($return);
+            }
+            $res = db('subscribe_order') -> where(['id' => $this->data['order_id']]) -> setField('state',2);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            }else{
+                $return['code'] = 10004;
+                $return['msg_test'] = '失败';
+                return json($return);
+            }
         }else if($this->data['state'] == 3){
             if($state != 2){
                 $return['code'] = 10003;

@@ -5,14 +5,16 @@ namespace app\custom\controller;
 class Notify{
 	/*微信支付异步通知处理*/
 	function index(){
+
 		$postStr = $GLOBALS["HTTP_RAW_POST_DATA"];file_put_contents('notify.txt',$postStr);
+        $data = $this->xml2arr($postStr);
 		$postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
 		$sign_info = $this->sign($postObj);
 		if(!$sign_info){
 			file_put_contents('wxpay.log',PHP_EOL.json_encode($data)." 签名验证失败".PHP_EOL,FILE_APPEND);
 			return;//签名失败
 		}
-		$data = $this->xml2arr($postStr);
+
 		if($data['return_code'] != 'SUCCESS' || $data['result_code'] != 'SUCCESS'){
 			file_put_contents('wxpay.log',PHP_EOL.json_encode($data)." RETURN CODE FAIL".PHP_EOL,FILE_APPEND);
 			die('FAIL');
