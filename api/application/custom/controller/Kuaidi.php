@@ -1,9 +1,6 @@
 <?php
 /**
  * 使用快递鸟api进行查询
- * User: Administrator
- * Date: 2017/4/22 0022
- * Time: 09:09
  */
 namespace app\custom\controller;
 use think\Controller;

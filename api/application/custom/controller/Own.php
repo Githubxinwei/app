@@ -2,6 +2,8 @@
 namespace app\custom\controller;
 
 /*客户个人信息相关操作*/
+use think\Exception;
+
 class Own extends Action{
 	//返回拥有的小程序列表
 	public function _initialize()
@@ -107,7 +109,7 @@ class Own extends Action{
 			$return['msg_test'] = '这个客户没有创建这个小程序';
 			return json($return);
 		}
-		$app_type = $is_true[0]['type'];
+		$app_type = $is_true['type'];
 		$app_info = get_app($app_type);
 		if(!$app_info){
 			$return['code'] = 10007;
@@ -127,36 +129,48 @@ class Own extends Action{
 			$return['msg'] = '用户余额不足';
 			return json($return);
 		}
+        $model = db();
+		$model -> startTrans();
 
-		$res = db('custom') -> where(['id' => $this -> data['custom_id']]) -> setDec('wallet',$fee);
-		if($res){
-			$info['update_time'] = time();
+		try{
+            $res = db('custom') -> where(['id' => $this -> data['custom_id']]) -> setDec('wallet',$fee);
+            if($res){
+                $buyData['custom_id'] = $this->custom->id;
+                $buyData['appid'] = $this->data['appid'];
+                $buyData['money'] = $fee;
+                $buyData['order_sn'] = $this->custom->id . time() . mt_rand(1,9999);;
+                $buyData['create_time'] = time();
+                $buyData['pay_time'] = time();
+                $buyData['type'] = 0;
+                $buyData['state'] = 1;
+                db('buy_app_log') -> insertGetId($buyData);
+                $info['update_time'] = time();
+                //判断当前购买的时间是否在过期
+                $app_info = db('app') -> field("use_time,fee") ->  where(['appid' => $this -> data['appid']]) -> find();
+                $year_time = strtotime('1 year');
+                if($app_info['use_time'] > time()){
+                    //还没过，应该在原来的基础上添加
+                    $info['use_time'] = $app_info['use_time'] + $year_time - time();
+                }else{
+                    //过期了，在现在的时间上添加
+                    $info['use_time'] = $year_time;
+                }
+                $info['fee'] = $app_info['fee'] + $fee;
+                db('app') -> where(['appid' => $this -> data['appid']]) -> update($info);
+                db('custom') -> where(['id' => $this -> data['custom_id']]) -> setInc('expense',$fee);
+                $return['code'] = 10000;
+                $return['data'] = ['use_time' => $info['use_time']];
+                $return['msg'] = '购买成功';
+            }else{
+                $return['code'] = 10010;
+                $return['msg'] = '更新数据失败';
+            }
+            $model -> commit();
+            return json($return);
+        }catch (Exception $e){
+		    $model -> rollback();
+        }
 
-			db('app') -> where(['appid' => $this -> data['appid']]) -> update($info);
-			//判断当前购买的时间是否在过期
-			$use_time = db('app') -> where(['appid' => $this -> data['appid']]) -> value('use_time');
-			$year_time = strtotime('1 year');
-			if($use_time > time()){
-				//还没过，应该在原来的基础上添加
-				db('app') -> where(['appid' => $this -> data['appid']*1]) -> setInc('use_time',$year_time - time());
-			}else{
-				//过期了，在现在的时间上添加
-				db('app') -> where(['appid' => $this -> data['appid']]) -> setField('use_time',$year_time);
-			}
-
-			db('app') -> where(['appid' => $this -> data['appid']]) -> setInc('fee',$fee);
-
-			db('custom') -> where(['id' => $this -> data['custom_id']]) -> setInc('expense',$fee);
-			$use_time = db('app') -> where(['appid' => $this -> data['appid']]) -> value('use_time');
-			$return['code'] = 10000;
-			$return['data'] = ['use_time' => $use_time];
-			$return['msg'] = '购买成功';
-			return json($return);
-		}else{
-			$return['code'] = 10010;
-			$return['msg'] = '更新数据失败';
-			return json($return);
-		}
 
 	}
 
@@ -548,6 +562,35 @@ class Own extends Action{
 		return json($return);
 	}
 
+	public function getCustomInfo(){
+	    $info = db('custom') -> field("nickname,username,wallet,expense,app_num,register_time") -> where("id",$this->custom->id) -> find();
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        $return['msg_test'] = 'ok';
+        return json($return);
+    }
+
+    /**
+     * 获取小程序的价格
+     */
+    public function getAppMoney(){
+        if(!isset($this -> data['appid'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '缺少app的唯一标识,获取列表的时候传递过去的appid';
+            return json($return);
+        }
+        if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = 'appid是一个8位数';
+            return json($return);
+        }
+        $type = db("app") -> getFieldByAppid($this->data['appid'],'type');
+        $type = get_app($type);
+        $return['code'] = 10000;
+        $return['data'] = $type['fee'];
+        $return['msg_test'] = 'ok';
+        return json($return);
+    }
 
 
 

@@ -155,7 +155,7 @@ class Appsub  extends Xiguakeji
         $data = $this->data;
         $data["user_id"] = $this->user['id'];
         $data["create_time"] = time();
-        $data["kd_number"] = date("YmdHis").rand(100,999);
+        $data["order_sn"] = date("YmdHis").rand(100,999);
         $goods = db('subscribe_service')
             ->field("id,service_name,service_price")
             ->where("id",$data['subscribe_id'])
