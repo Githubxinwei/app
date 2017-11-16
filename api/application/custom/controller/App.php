@@ -182,6 +182,36 @@ class App extends Xiguakeji{
 		 	$return['code'] = 10000;return json($return);
 		 }	
 	}
+	//修改购物车商品数量
+	function alter_cnum(){
+	    if(!isset($this->data['id'])){
+	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
+	    }
+	    if($this->data['num_type'] == '+'){
+	        $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setInc('num');
+	        if($res){
+	            $return['code'] = 10000;
+	            $return['msg_test'] = 'ok';
+	            return json($return);
+	        }else{
+	            $return['code'] = 10002;
+	            $return['msg_test'] = '缺少appid或者缺少用户id';
+	            return json($return);
+	        }
+	    }else{
+	        $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setDec('num');
+	        if($res){
+	            $return['code'] = 10000;
+	            $return['msg_test'] = 'ok';
+	            return json($return);
+	        }else{
+	            $return['code'] = 10002;
+	            $return['msg_test'] = '缺少appid或者缺少用户id';
+	            return json($return);
+	        }
+	    }
+	    
+	}
 	//购买商品
 	function buy(){
 		//先检测商家是否已配置微信支付参数

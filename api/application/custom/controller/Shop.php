@@ -58,6 +58,20 @@ class Shop extends Action{
 			-> page($page,$limit)
 			-> order('id desc')
 			-> select();
+		/*默认价格显示*/
+	        foreach($info as $k=>$v){
+	            if(count($v['spec']) > 0){
+
+	                $spec = json_decode($v['spec'],true);
+	                $price = [];
+	                foreach($spec as $kk=>$vv){
+	                    $price[$kk]=$vv['price'];
+	                }
+	                asort($price);
+	                $pos=reset($price);
+	                $info[$k]['prices'] = $pos;
+	            }
+	        }
 		if($info){
 			$return['code'] = 10000;
 			$return['data'] = ['number' => $number,'info' => $info];
@@ -70,6 +84,10 @@ class Shop extends Action{
 		}
 
 	}
+
+	/**
+     * @param $stdclassobject
+     */
 
 	/**
 	 * 删除用户的商品
@@ -164,6 +182,7 @@ class Shop extends Action{
 				return json($return);
 			}
 		}
+	   $this -> data['content'] = $_POST['content'];
 	   $res= model('goods') ->allowField(true)-> save($this -> data);
 		if($res){
 			$return['code'] = 10000;

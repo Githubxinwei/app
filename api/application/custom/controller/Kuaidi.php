@@ -1,14 +1,11 @@
 <?php
 /**
  * 使用快递鸟api进行查询
- * User: Administrator
- * Date: 2017/4/22 0022
- * Time: 09:09
  */
 namespace app\custom\controller;
 use think\Controller;
 
-class Kuaidi extends Controller{
+class Kuaidi extends Xiguakeji{
 
     public function __construct()
     {
@@ -19,11 +16,25 @@ class Kuaidi extends Controller{
     }
 
     /**
-     * @param $ShipperCode 快递公司编号
-     * @param $order_sn 运单号
+     * @param $kd_code 快递公司编码
+     * @param $kd_number 快递单号
      */
-    public function getMessage($ShipperCode,$order_sn){
-        $requestData= "{'OrderCode':'','ShipperCode':'".$ShipperCode."','LogisticCode':'".$order_sn."'}";
+    public function getMessage(){
+    	if(!isset($this->data['kd_code'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '缺少快递公司编码kd_code';
+            return json($return);
+        }else{
+            $kd_code = $this->data['kd_code'];
+        }
+    	if(!isset($this->data['kd_number'])){
+            $return['code'] = 10002;
+            $return['msg_test'] = '缺少快递单号kd_number';
+            return json($return);
+        }else{
+            $kd_number = $this->data['kd_number'];
+        }
+        $requestData= "{'OrderCode':'','ShipperCode':'".$kd_code."','LogisticCode':'".$kd_number."'}";
         $datas = array(
             'EBusinessID' => $this -> EBusinessID,
             'RequestType' => '1002',
@@ -32,7 +43,13 @@ class Kuaidi extends Controller{
         );
         $datas['DataSign'] = $this -> encrypt($requestData, $this -> AppKey);
         $result = $this -> sendPost($this -> ReqURL, $datas);
-        return $result;
+	if($result){
+            return $result;
+        }else{
+            $return['code'] = 10003;
+            $return['msg_test'] = '快递鸟接口账户已过期';
+            return json($return);
+        }
     }
 
     /**
@@ -41,7 +58,7 @@ class Kuaidi extends Controller{
      * @param  array $datas 提交的数据
      * @return url响应返回的html
      */
-    function sendPost($url, $datas) {
+    private function sendPost($url, $datas) {
         $temps = array();
         foreach ($datas as $key => $value) {
             $temps[] = sprintf('%s=%s', $key, $value);
@@ -79,10 +96,9 @@ class Kuaidi extends Controller{
     /*
      * 进行加密
      */
-    function encrypt($data, $appkey) {
+    private function encrypt($data, $appkey) {
         return urlencode(base64_encode(md5($data.$appkey)));
     }
-
     public function dataToArray($data){
         $res = array();
         $res[0]['ddh'] = $data['nu'];
@@ -106,6 +122,7 @@ class Kuaidi extends Controller{
         curl_close($ch);
         return $contents;
     }
+
 
     //转换成数组
     function objectToArray($e){
