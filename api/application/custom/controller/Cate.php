@@ -4,7 +4,7 @@
  * User: 宋妍妍
  * Date: 2017/10/25
  * Time: 09:50
- * * 预约，分类的相关接口
+ * * 预约，后台管理分类的相关接口
  */
 namespace app\custom\controller;
 use think\Db;

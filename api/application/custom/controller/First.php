@@ -17,17 +17,21 @@ class First{
 			$arr['code'] = 10005;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
 			return json($arr);
 		}
-		$info = db('custom') -> where('username',$username) -> select();
+		$info = db('custom') -> where('username',$username) -> find();
 		if(!$info){
 			$arr['code'] = 10002;$arr['msg'] = '账号或密码错误';$arr['msg_test'] = '账号错误';
 			return json($arr);
 		}
-		if($info[0]['password'] == xgmd5($password)){
+		if($info['password'] == xgmd5($password)){
+		    if($info['is_forbidden'] == 1){
+                $arr['code'] = 10003;$arr['msg'] = '当前账户已禁用';$arr['msg_test'] = '当前账户已禁用';
+                return json($arr);
+            }
 			$data['last_time'] = time();
 			$data['ip'] = $_SERVER["REMOTE_ADDR"];
 			$res = db('custom') -> where('username',$username) -> update($data);
 			if($res){
-                $session_key = session('custom',$info[0]);
+                $session_key = session('custom',$info);
 				$arr['code'] = 10000;$arr['msg'] = '登录成功';
 				$arr['msg_test'] = '登录成功';
                 $arr['data'] = ['session_key'=>$session_key];

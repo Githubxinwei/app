@@ -79,7 +79,6 @@ class Kuaidi extends Controller{
     function encrypt($data, $appkey) {
         return urlencode(base64_encode(md5($data.$appkey)));
     }
-
     public function dataToArray($data){
         $res = array();
         $res[0]['ddh'] = $data['nu'];
@@ -103,6 +102,7 @@ class Kuaidi extends Controller{
         curl_close($ch);
         return $contents;
     }
+
 
     //转换成数组
     function objectToArray($e){
