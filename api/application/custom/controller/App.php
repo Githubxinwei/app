@@ -154,7 +154,7 @@ class App extends Xiguakeji{
 			$cart_data['num'] = $this->data['num'];
 			if($cart_data['pic']){
 				$pic_arr = explode(',',$cart_data['pic']);
-				$cart_data['pic'] = $pic_arr[0];
+			 	$cart_data['pic'] = $pic_arr[0];
 			}
 			$res = model('goods_cart') ->allowField(true) -> save($cart_data);
 		}
@@ -167,7 +167,7 @@ class App extends Xiguakeji{
 	}
 	//获取购物车商品
 	function get_cart(){
-		$info = model('goods_cart') -> field('pic,name,spec_value,price,num,id') -> where(['appid'=>$this->apps,'is_cart'=>1,'user_id'=>$this->user['id']]) -> order('id desc') -> select();
+		$info = model('goods_cart') -> field('pic,name,spec_value,price,num,good_id,id') -> where(['appid'=>$this->apps,'is_cart'=>1,'user_id'=>$this->user['id']]) -> order('id desc') -> select();
 		return json($info);
 	}
 	//移除购物车商品
@@ -280,7 +280,7 @@ class App extends Xiguakeji{
 			$name = $info['name'];$num = $this->data['num'];
 		}else{
 
-			if(  !isset($this->data['ids']) ){
+			if( !isset($this->data['ids']) ){
 				$return['code'] = 10001;$return['msg_test'] = '缺少商品信息,其中内含ids';return json($return);
 			}
 			//从数据库取出商品
@@ -380,7 +380,7 @@ class App extends Xiguakeji{
 		$where['appid'] = $this->apps;
 		//->alias('a')->join($join)  -> where($where) 
 		$info = model('goods_order')
-            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts,zipcode')
+            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts,zipcode,kd_code,kd_number')
             -> where($where)
             -> page($page)
             -> limit($limit_num)
