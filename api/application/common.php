@@ -23,7 +23,7 @@ function flog($user_id,$action,$money,$type,$remark){
 	));
 }
 //缓存文件方法，默认有效时间7200秒
-function file_cache($name,$value,$time){
+function file_cache($name,$value = '',$time = '7200'){
 	if(empty($name)){return __FUNCTION__.'()方法传参$name文件名不能为空';}
 	$name = dirname(__file__).'/file/'.$name.'.php';
 	if(empty($value)){
@@ -79,15 +79,45 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 //返回小程序模板信息
 function get_app($type){
 	$arr = [
-		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>100,'template_id'=>17],
-		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>50,'template_id'=>1]
-	];
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.02,'template_id'=>22],
+		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>26],
+        3=>['code'=>3,'name'=>'酒店小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>1]
+
+    ];
 	if($type == 'all'){
 		return $arr;
 	}else{
 		return isset($arr[$type]) ? $arr[$type] : false;
 	}
 }
+
+/**
+ * 轮播图设置的时候选择，当前图片设置的路径。
+ */
+function get_app_page($type){
+    $arr = [
+        1=>array(
+            '/order/order' => '订单页',
+            '/more/more' => '更多页',
+            '/cart/cart' => '购物车页',
+            '/inputview/inputview' => '搜索页',
+            '/classify/classify' => '分类页',
+        ),
+        2=>array(
+            '/orderlist/orderlist' => '订单列表页',
+            '/goodsdetail/goodsdetail' => '服务详情页',
+            '/cate/cate' => '分类页',
+        ),
+
+    ];
+    if($type == 'all'){
+        return $arr;
+    }else{
+        return isset($arr[$type]) ? $arr[$type] : false;
+    }
+}
+
+
 //返回小程序的主题配置
 function get_theme($key){
 	$color_arr = [
@@ -214,6 +244,35 @@ function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
 	return $result['return_code'];
 }
 
+/**
+ * @param $appid id
+ * @param $appsecret
+ * @param $t_id 模板id
+ * @param $tel 要向哪个手机发送短信
+ * @param $time 有效期 默认是120秒
+ * @param $params code:888888
+ * @param $code 验证码
+ * @return int 结果码
+ */
+function sendMsgInfo($tel,$params,$code,$time = 120){
+    if(!isset($tel) || !isset($params)||!isset($code)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+    session(array('name'=>'xigua_verify','expire'=>$time));
+    session('xigua_verify',$code);
+    $data1 = [
+        'appid'=>'183177745941',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
+
 /**发送邮件方法
  *@param $to：接收者 $title：标题 $content：邮件内容
  *@return bool true:发送成功 false:发送失败
@@ -273,10 +332,10 @@ function sendMail($to,$title,$content,$type='qq'){
  */
 function sendAuditMsg($appid,$msg,$type){
     $info = db('app') -> field('name,notifytel,notifyemail') -> where(['appid' => $appid]) -> find();
-    if(!$info){
+    if(!$info || $info['notifytel'] || $info['notifyemail']){
+        file_cache('notifytel.php',$appid . $info . '.....',FILE_APPEND);
         return;
     }
-    return;
     if($type == 1){
         $msg = "恭喜你,你的小程序[{$info['name']}]审核成功";
     }else if($type == 2){
@@ -287,15 +346,143 @@ function sendAuditMsg($appid,$msg,$type){
         'appid'=>'18317774594',
         'appsecret'=>'zaefNsQrp2GJ9F3Y',
         't_id'=>'TP1709201',
-        'mobile'=>'18317774594',
-        'params'=>"code:12345",
+        'mobile'=>$info['notifytel'],
+        'params'=>"code:" . $type,
     ];
 
     $result = http_request($url,$data1);
     $result = json_decode($result,true);
-    dump($result);dump($data1);
-//    sendMail($info['notifyemail'],'小程序审核结果',$msg,'163');
+    sendMail($info['notifyemail'],'小程序审核结果',$msg,'163');
 }
+
+/**
+ * @param $app唯一八位数字的值
+ * @return int|string
+ */
+function getAppExtJson($app){
+    if(!isset($app)){return 0;}
+    //判断是否在auto_info表中有绑定
+    $appid = db("auth_info") -> where(['apps' => $app]) -> value('appid');
+    if(!$appid){
+        return 0;
+    }
+    $info = db('app') -> field('type,theme,layout,search,on_service') -> where(['appid' => $app]) -> find();
+    $apps = $app;//1
+    $color = get_theme($info['theme']);//主题色//1
+    $layout_arr = ['grid','table','table_row'];
+    $layout = $layout_arr[$info['layout']];//布局1
+    $search = 1==$info['search'] ? 'true' : 'false';//启用搜索框1
+    $on_service = 1==$info['on_service'] ? 'true' : 'false';//启用客服1
+    switch($info['type']){
+        case 1:
+            $ext_json = '{
+	"extEnable": true,
+	"extAppid": "'.$appid.'",
+	"window":{
+	"navigationBarTitleText": "西瓜科技演示",
+	"navigationBarTextStyle":"white",
+	"navigationBarBackgroundColor": "'.$color['theme'].'",
+	"backgroundTextStyle":"light"
+	},
+	"ext":{
+	 "xgAppId":"'.$apps.'",
+	"appid":"'.$appid.'",
+	 "themeColor":"'.$color['theme'].'",
+	 "themeTextColor":"'.$color['text'].'",
+	 "layoutType":"'.$layout.'",
+	 "showSearching":'.$search.',
+	 "useOnlineService":'.$on_service.',
+	 "host":"https://weapp.xiguawenhua.com"
+	},
+	"tabBar": {
+		"selectedColor": "'.$color['selected'].'",
+		"backgroundColor": "#fff",
+		"color":"#555",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"iconPath": "./img/images/un-home.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
+				"postion": "top",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/cart/cart",
+				"iconPath": "./img/images/un-care.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-care.png",
+				"text": "购物车"
+			},
+			{
+				"pagePath": "pages/order/order",
+				"iconPath": "./img/images/un-order.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
+				"text": "订单"
+			},
+			{
+				"pagePath": "pages/more/more",
+				"iconPath": "./img/images/un-more.png",
+				"selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
+				"text": "更多"
+			}
+		]
+	}
+}';
+            break;
+        case 2:
+            //待定
+            $ext_json = '{
+                "extEnable": true,
+                "extAppid": "'.$appid.'",
+                "window":{
+                    "navigationBarTitleText": "西瓜科技演示",
+                    "navigationBarTextStyle":"white",
+                    "navigationBarBackgroundColor": "'.$color['theme'].'",
+                    "backgroundTextStyle":"light"
+                },
+                "ext":{
+                    "xgAppId":"'.$apps.'",
+                    "appid":"'.$appid.'",
+                    "themeColor":"'.$color['theme'].'",
+                    "themeTextColor":"'.$color['text'].'",
+                    "layoutType":"'.$layout.'",
+                    "host":"https://weapp.xiguawenhua.com/"
+                },
+                "tabBar": {
+                    "selectedColor": "'.$color['selected'].'",
+                    "backgroundColor": "#fff",
+                    "color":"#555",
+                    "borderStyle": "black",
+                    "list": [
+                        {
+                            "pagePath": "pages/index/index",
+                            "text": "预定",
+                            "iconPath": "images/icon_book.png",
+                            "selectedIconPath": "images/icon_book_selected.png"
+                            },
+                            {
+                            "pagePath": "pages/orderlist/orderlist",
+                            "text": "订单",
+                            "iconPath": "images/icon_order.png",
+                            "selectedIconPath": "images/icon_order_selected.png"
+                            },
+                            {
+                            "pagePath": "pages/mine/mine",
+                            "text": "我的",
+                            "iconPath": "images/icon_member.png",
+                            "selectedIconPath": "images/icon_member_selected.png"
+                        }
+                    ]
+                }
+            }';
+            break;
+        default:
+            $ext_json = 0;
+    }
+    return $ext_json;
+
+}
+
 
 
 //https请求(支持GET和POST)
@@ -313,4 +500,24 @@ function http_request($url,$data = null){
 	//var_dump(curl_error($curl));
 	curl_close($curl);
 	return $output;
+}
+
+
+
+/*
+ * $path 路径
+ * 获取文件夹下所有文件以及子文件下所有的文件*/
+function scanFile($path) {
+    global $result;
+    $files = scandir($path);
+    foreach ($files as $file) {
+        if ($file != '.' && $file != '..') {
+            if (is_dir($path . '/' . $file)) {
+                scanFile($path . '/' . $file);
+            } else {
+                $result[] = basename($file);
+            }
+        }
+    }
+    return $result;
 }

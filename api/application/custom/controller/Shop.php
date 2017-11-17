@@ -58,6 +58,7 @@ class Shop extends Action{
 			-> page($page,$limit)
 			-> order('id desc')
 			-> select();
+<<<<<<< HEAD
 		/*默认价格显示*/
 	        foreach($info as $k=>$v){
 	            if(count($v['spec']) > 0){
@@ -72,6 +73,24 @@ class Shop extends Action{
 	                $info[$k]['prices'] = $pos;
 	            }
 	        }
+=======
+
+		 /*默认价格显示*/
+        foreach($info as $k=>$v){
+            if(count($v['spec']) > 0){
+
+                $spec = json_decode($v['spec'],true);
+                $price = [];
+                foreach($spec as $kk=>$vv){
+                    $price[$kk]=$vv['price'];
+                }
+                asort($price);
+                $pos=reset($price);
+                $info[$k]['prices'] = $pos;
+            }
+        }
+
+>>>>>>> e8079d2f141c5c44d3afb8cccf71aa04effa88d7
 		if($info){
 			$return['code'] = 10000;
 			$return['data'] = ['number' => $number,'info' => $info];
@@ -84,6 +103,11 @@ class Shop extends Action{
 		}
 
 	}
+
+
+    /**
+     * @param $stdclassobject
+     */
 
 	/**
      * @param $stdclassobject

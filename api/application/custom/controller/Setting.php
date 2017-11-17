@@ -21,7 +21,7 @@ class Setting extends Action{
             $return['msg_test'] = 'appid格式不正确';
             echo json_encode($return);exit;
         }
-        $custom_id = db('app') -> where("appid",$this->data['appid']) -> value('custom_id');
+        $custom_id = db('app') -> where(['appid' => $this->data['appid']]) -> value('custom_id');
         if($custom_id != $this->custom->id){
             $return['code'] = 10300;
             $return['msg_test'] = '当前app不是这个用户的';
@@ -32,17 +32,53 @@ class Setting extends Action{
      * 修改预约设置信息
      */
     public function updateSettingInfo(){
-        $res = model('subscribe_service_setting') -> allowField(true)-> save($this->data,['appid' => $this->data['appid'],'custom_id' => $this->custom->id]);
-        if($res){
-            $return['code'] = 10000;
-            $return['msg'] = '修改成功';
-            return json($return);
-        }else{
-            $return['code'] = 10001;
-            $return['msg'] = '修改失败';
-            return json($return);
+
+
+        //  $res = model('subscribe_service_setting') -> allowField(true)-> save($this->data,['appid' => $this->data['appid'],'custom_id' => $this->custom->id]);
+
+            $where['appid'] =  $this->data['appid'];
+            $where['custom_id'] =   $this->custom->id;
+
+            $info = db('subscribe_service_setting')->where($where)->find();
+
+            /*判断当前小程序是否有预约设置信息*/
+            if(!$info){
+                $data = $this->data;
+                $data['custom_id'] = $where['custom_id'] ;
+                unset($data['session_key']);
+                $res = db('subscribe_service_setting')->insert($data);
+                if($res){
+                    $return['code'] = 10000;
+                    $return['msg'] = '设置成功';
+                    return json($return);
+                }else{
+                    $return['code'] = 10001;
+                    $return['msg'] = '设置失败';
+                    return json($return);
+                }
+            }else{
+                $data['is_show_address'] = $this->data['is_show_address'];
+                $data['is_show_tel'] = $this->data['is_show_tel'];
+                $data['button_name'] = $this->data['button_name'];
+                $res = model('subscribe_service_setting')
+                    ->allowField(true)
+                    ->where($where)
+                    ->update($data);
+                if($res){
+                    $return['code'] = 10000;
+                    $return['msg'] = '修改成功';
+                    return json($return);
+                }else{
+                    $return['code'] = 10001;
+                    $return['msg'] = '修改失败';
+                    return json($return);
+                }
+            }
+
+
         }
-    }
+
+
     
     /**
      * 获取预约设置信息

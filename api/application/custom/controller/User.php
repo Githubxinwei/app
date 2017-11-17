@@ -134,6 +134,9 @@ class User{
 			case '1':
 			$this->dianshang_pay($data,$pay_type);
 			break;
+            case '3':
+                $this->hotel_pay($data,$pay_type);
+                break;
 			default:
 			file_put_contents('wxpay.log',"\r\n".json_encode($data)." 未知attach类型\r\n",FILE_APPEND);
 			break;
@@ -161,10 +164,25 @@ class User{
 		model('goods_cart') -> save(['is_pay'=>1],['id'=>['exp','in ('.$order['carts'].')']]);
 		model('goods_order') -> save(['state'=>1],['id'=>$order_id]);
 
-
-
-		
 	}
+
+    /*酒店小程序商品购买付款*/
+    private function hotel_pay($data,$pay_type){
+        $order_id = $pay_type['id'];//订单表的ID，在生成prepay_id时追加在attach中
+        $order = model('rooms_order') -> where('id',$order_id) -> find();
+        if(empty($order) || $order['order_sn'] != $data['out_trade_no'] ){
+            //订单数据不符，记录后不处理
+            file_put_contents('wxpay.log',PHP_EOL.json_encode($data)." 订单不存在或订单号不一致，已拦截未处理".PHP_EOL,FILE_APPEND);
+            return;
+        }
+        if($order['state'] != 0 ){
+            return;//订单不是待处理状态，已确认收款
+        }
+        //更改订单状态，下发模板消息，下发商户通知
+        model('rooms_order') -> save(['state'=>1],['id'=>$order_id]);
+    }
+
+
 }
 
 

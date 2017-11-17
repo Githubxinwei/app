@@ -4,26 +4,28 @@ use think\Controller;
 class common extends Controller{
 	// public $apps='23542640';
 	// public $access_token ;
-	public function __construct($apps){
+	public function __construct($apps = 0){
 		parent::__construct();
-		$this->apps = $apps;
-		$auth_info = model('auth_info') -> where("apps = '$this->apps' ") -> find();
-		if(!$auth_info){
-			$return['code'] = 10001;
-			$return['msg'] = '您还没有绑定小程序，还不能进行相关操作';
-			echo json_encode($return);die();
-		}
-		$time = $auth_info['upd_time'] + 7200;
-		$this->appid = $auth_info['appid'];
-		$this->mch_id = $auth_info['mchid'];
-		$this->mkey = $auth_info['mkey'];
-		if($time < time() ){
-			$component = controller('Weixin/Component');
-			$this->access_token = $component ->  get_new_access_token($this->appid,$auth_info['refresh_token'],$apps);
-		}else{
-			$this->access_token = $auth_info['access_token'];
-		}
-		
+		if($apps != 0){
+            $this->apps = $apps;
+            $auth_info = model('auth_info') -> where("apps = '$this->apps' ") -> find();
+            if(!$auth_info){
+                $return['code'] = 10001;
+                $return['msg'] = '您还没有绑定小程序，还不能进行相关操作';
+                echo json_encode($return);die();
+            }
+            $time = $auth_info['upd_time'] + 7200;
+            $this->appid = $auth_info['appid'];
+            $this->mch_id = $auth_info['mchid'];
+            $this->mkey = $auth_info['mkey'];
+            if($time < time() ){
+                $component = controller('Weixin/Component');
+                $this->access_token = $component ->  get_new_access_token($this->appid,$auth_info['refresh_token'],$apps);
+            }else{
+                $this->access_token = $auth_info['access_token'];
+            }
+        }
+
 	}
 	//获取模板消息列表
 	function template_list($offset){
@@ -72,35 +74,49 @@ class common extends Controller{
 		return(json_decode($res,true));
 	}
 	//发送模板消息
-	function template_send($openid,$template_id){
+	function template_send($openid,$template_id,$form_id,$data){
 		$url = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token='.$this->access_token;
 		$data = '{
 			"touser": "'.$openid.'",  
-			"template_id": "'.$template_id.'", 
-			"page": "index",          
-			"form_id": "wx20171013191925b8398c74650610201555",         
+			"template_id": "'.$template_id.'",         
+			"form_id": "'.$form_id.'",         
 			"data": {
 			  "keyword1": {
-			      "value": "339208499", 
+			      "value": "'.$data['keyword1'].'", 
 			      "color": "#173177"
 			  }, 
 			  "keyword2": {
-			      "value": "2015年01月05日 12:30", 
+			      "value": "'.$data['keyword2'].'", 
+			      "color": "#173177"
+			  },
+			  "keyword3": {
+			      "value": "'.$data['keyword3'].'", 
 			      "color": "#173177"
 			  }, 
-			  "keyword3": {
-			      "value": "粤海喜来登酒店", 
-			      "color": "#173177"
-			  } , 
 			  "keyword4": {
-			      "value": "广州市天河区天河路208号", 
+			      "value": "'.$data['keyword4'].'", 
 			      "color": "#173177"
-			  } 
+			  },
+			  "keyword5": {
+			      "value": "'.$data['keyword5'].'", 
+			      "color": "#173177"
+			  },
+			  "keyword6": {
+			      "value": "'.$data['keyword6'].'", 
+			      "color": "#173177"
+			  },
+			  "keyword7": {
+			      "value": "'.$data['keyword7'].'", 
+			      "color": "#173177"
+			  }
 			},
 			"emphasis_keyword": "keyword1.DATA" 
 		}';
 		$res = http_request($url,$data);
-		return(json_decode($res,true));
+		$res = json_decode($res,true);
+        //发送成功。form_id 已经失效，删除掉
+        db('form_list') -> where("form_id",$form_id) -> delete();
+		return($res);
 	}
 	//微信支付加密字符串
 	public function paysign($prepay_id){
@@ -141,14 +157,119 @@ class common extends Controller{
 		</xml>";
 		$result = http_request($url,$data);
 		$postObj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
-        		$prepay_id = trim($postObj->prepay_id);
+         $prepay_id = trim($postObj->prepay_id);
 		return $prepay_id;
 	}
+
+
+	/*加密*/
 	private function signjiami($openid,$nonce_str,$total_fee,$out_trade_no,$notify_url,$attach,$good_name,$ip){
 		$string1 = "appid=".$this->appid."&attach=".$attach."&body=".$good_name."&mch_id=".$this->mch_id."&nonce_str=".$nonce_str."&notify_url=".$notify_url."&openid=".$openid."&out_trade_no=".$out_trade_no."&spbill_create_ip=".$ip."&total_fee=".$total_fee."&trade_type=JSAPI";
 		$result = md5($string1."&key=".$this->mkey);
 		return strtoupper($result);
 	}
+
+    //微信扫码支付的调用
+    function get_qr_prepay_id($total_fee,$out_trade_no,$attach,$good_name,$payInfo,$notify_url){
+        $nonce_str = createNonceStr();
+        $ip = $_SERVER['SERVER_ADDR'];
+        $sign = $this->signjiami1($nonce_str,$total_fee,$out_trade_no,$notify_url,$attach,$good_name,$ip,$payInfo);
+        $url = "https://api.mch.weixin.qq.com/pay/unifiedorder";
+        $data = "<xml>
+		   <appid>".$payInfo['appid']."</appid>
+		   <attach>".$attach."</attach>
+		   <body>".$good_name."</body>
+		   <mch_id>".$payInfo['mch_id']."</mch_id>
+		   <nonce_str>".$nonce_str."</nonce_str>
+		   <notify_url>".$notify_url."</notify_url>
+		   <out_trade_no>".$out_trade_no."</out_trade_no>
+		   <sign>".$sign."</sign>
+		   <spbill_create_ip>".$ip."</spbill_create_ip>
+		   <total_fee>".$total_fee."</total_fee>
+		   <trade_type>NATIVE</trade_type>
+		</xml>";
+        $result = http_request($url,$data);
+        $postObj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $code_url = trim($postObj->code_url);
+        return $code_url;
+    }
+
+    private function signjiami1($nonce_str,$total_fee,$out_trade_no,$notify_url,$pay_id,$good_name,$ip,$payInfo){
+        //$key = "qazwsxedcrfvtgbyhnujmikolpqazwsx";
+        $string1 = "appid=".$payInfo['appid']."&attach=".$pay_id."&body=".$good_name."&mch_id=".$payInfo['mch_id']."&nonce_str=".$nonce_str."&notify_url=".$notify_url."&out_trade_no=".$out_trade_no."&spbill_create_ip=".$ip."&total_fee=".$total_fee."&trade_type=NATIVE";
+        $result = md5($string1."&key=".$payInfo['mch_key']);
+        return strtoupper($result);
+    }
+
+
+
+    /*退款接口*/
+    function pay_refund($order_sn,$refund_no,$fee){
+
+        $nonce_str = createNonceStr();
+        $sign = $this->pay_refund_sign($nonce_str,$fee,$order_sn,$refund_no);
+        $url = "https://api.mch.weixin.qq.com/secapi/pay/refund";
+        $data = "<xml>
+          <appid>".$this->appid."</appid>
+          <mch_id>".$this->mch_id."</mch_id>
+          <nonce_str>".$nonce_str."</nonce_str>
+         <op_user_id>".$this->mch_id."</op_user_id>
+           <out_refund_no>".$refund_no."</out_refund_no>
+           <out_trade_no>".$order_sn."</out_trade_no>
+           <refund_fee>".$fee."</refund_fee>
+           <total_fee>".$fee."</total_fee>
+          <sign>".$sign."</sign>
+       </xml>";
+        $result = $this->curl_post_ssl($url,$data);
+        $postObj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $result_code = trim($postObj->result_code);
+        return $result_code;
+    }
+
+
+    public function pay_refund_sign($nonce_str,$total_fee,$out_trade_no,$refund_no){
+        //$key = "qazwsxedcrfvtgbyhnujmikolpqazwsx";
+        $string1 = "appid=".$this->appid."&mch_id=".$this->mch_id."&nonce_str=".$nonce_str."&op_user_id=".$this->mch_id."&out_refund_no=".$refund_no."&out_trade_no=".$out_trade_no."&refund_fee=".$total_fee."&total_fee=".$total_fee;
+
+        $result = md5($string1."&key=".$this->mkey);
+        return strtoupper($result);
+    }
+
+
+    function curl_post_ssl($url, $vars,$token = '', $second=30,$aHeader=array())
+    {
+        $ch = curl_init();
+        //超时时间
+        curl_setopt($ch,CURLOPT_TIMEOUT,$second);
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER, 1);
+        //这里设置代理，如果有的话
+        curl_setopt($ch,CURLOPT_URL,$url);
+        curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,false);
+        curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,false);
+        curl_setopt($ch,CURLOPT_SSLCERT,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'apiclient_cert.pem');
+        curl_setopt($ch,CURLOPT_SSLKEY,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'apiclient_key.pem');
+        curl_setopt($ch,CURLOPT_CAINFO,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'rootca.pem');
+
+
+        if( count($aHeader) >= 1 ){
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $aHeader);
+        }
+
+        curl_setopt($ch,CURLOPT_POST, 1);
+        curl_setopt($ch,CURLOPT_POSTFIELDS,$vars);
+        $data = curl_exec($ch);
+        if($data){
+            curl_close($ch);
+            return $data;
+        }
+        else {
+            $error = curl_errno($ch);
+            curl_close($ch);
+            return false;
+        }
+    }
+
+
 	//设置服务器域名
 	function domain(){
 		$url = 'https://api.weixin.qq.com/wxa/modify_domain?access_token='.$this->access_token;
@@ -211,8 +332,7 @@ class common extends Controller{
 			$item_list[$k]['tag'] = '学习 生活';
 			$item_list[$k]['title'] = '首页';
 		}
-		//halt($item_list);
-		//$item_list = json_encode($item_list);
+        //$item_list = json_encode($item_list);
 		$data = ['item_list'=>$item_list];
 		$data = json_encode( $data, JSON_UNESCAPED_UNICODE );
 		//dump($data);
@@ -222,7 +342,7 @@ class common extends Controller{
 	function get_auditstatus(){
 		$url = 'https://api.weixin.qq.com/wxa/get_auditstatus?access_token='.$this->access_token;
 		$data = '{
-		"auditid":415914177
+		"auditid":513821887
 		}';
 		$res = http_request($url,$data);dump($res);
 	}
@@ -253,6 +373,9 @@ class common extends Controller{
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
+
+
+
 }
 
 

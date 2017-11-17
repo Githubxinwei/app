@@ -4,7 +4,7 @@
  * User: 宋妍妍
  * Date: 2017/10/25
  * Time: 09:50
- * * 预约，分类的相关接口
+ * * 预约，后台管理分类的相关接口
  */
 namespace app\custom\controller;
 use think\Db;
@@ -143,12 +143,16 @@ class Cate extends Action{
         $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
         $limit = isset($this -> data['number']) ? $this -> data['number'] : 15;
         $number = db('subscribe_cate') -> where(['appid' =>($this -> data['appid']),'custom_id' => $custom_id])->count();
-        $info = db("subscribe_cate")
-            ->where(['appid' =>($this -> data['appid']),'custom_id' => $custom_id])
-            ->page($page,$limit)
-            ->order('code desc')
-            ->select();
 
+        $info = db("subscribe_cate")
+            -> alias('a')
+            -> field('a.id,a.code,a.name,count(b.id) as cate_number')
+            -> join("__SUBSCRIBE_SERVICE__ b",'FIND_IN_SET(a.id,b.cate_id)','LEFT')
+            -> where(['a.appid' => $this -> data['appid'],'a.custom_id' => $custom_id])
+            -> page($page,$limit)
+            -> order('a.code desc')
+            -> group('a.id')
+            -> select();
         $return['code'] = 10000;
         $return['data'] = ['number' => $number,'info' => $info];
         $return['msg'] = '成功';

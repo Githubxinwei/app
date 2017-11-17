@@ -50,7 +50,7 @@ class App extends Xiguakeji{
 			$spec_list =$v->getData();
 
 			if(count($spec_list['spec']) > 0){
-
+                $return['code'] = 10000;$return['data'] = '111';
 				$spec = json_decode($spec_list['spec'],true);
 				$price = [];
 				foreach($spec as $kk=>$vv){
@@ -116,7 +116,7 @@ class App extends Xiguakeji{
 		$cart_data =$info->getData();
 		unset($cart_data['id']);
 		$spec_array = json_decode($info['spec'],true);
-		if( is_array($spec_array) ){
+        if(count($spec_array) != 0){
 			if( !isset($this->data['spec']) ){
 				$return['code'] = 10002;$return['msg_test'] = '请选择商品属性';return json($return);
 			}elseif(  !isset($spec_array[$this->data['spec']]) ){
@@ -182,6 +182,7 @@ class App extends Xiguakeji{
 		 	$return['code'] = 10000;return json($return);
 		 }	
 	}
+
 	//修改购物车商品数量
 	function alter_cnum(){
 	    if(!isset($this->data['id'])){
@@ -211,6 +212,39 @@ class App extends Xiguakeji{
 	        }
 	    }
 	    
+	}
+	//修改购物车商品数量(自减)
+	function dec_cart(){
+	    if(!isset($this->data['id'])){
+	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
+	    }
+	    $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setDec('num');
+	    if($res){
+	        $return['code'] = 10000;
+	        $return['msg_test'] = 'ok';
+	        return json($return);
+	    }else{
+	        $return['code'] = 100001;
+	        $return['msg_test'] = '缺少appid或者缺少用户id';
+	        return json($return);
+	    }
+	}
+	//修改购物车商品数量(自增)
+	function inc_cart(){
+	    if(!isset($this->data['id'])){
+	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
+	    }
+	    $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setInc('num');
+	    if($res){
+	        $return['code'] = 10000;
+	        $return['msg_test'] = 'ok';
+	        return json($return);
+	    }else{
+	        $return['code'] = 100001;
+	        $return['msg_test'] = '缺少appid或者缺少用户id';
+	        return json($return);
+	    }
+
 	}
 	//购买商品
 	function buy(){
@@ -242,7 +276,8 @@ class App extends Xiguakeji{
 			$cart_data['is_cart'] = 0;
 			unset($cart_data['id']);
 			$spec_array = json_decode($info['spec'],true);
-			if( is_array($spec_array) ){
+
+			if(count($spec_array) != 0){
 				if( !isset($this->data['spec']) ){
 					$return['code'] = 10002;$return['msg_test'] = '缺少商品属性';return json($return);
 				}elseif(  !isset($spec_array[$this->data['spec']]) ){

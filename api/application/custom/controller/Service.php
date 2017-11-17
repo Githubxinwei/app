@@ -21,7 +21,7 @@ class Service extends Action{
             $return['msg_test'] = 'appid格式不正确';
             echo json_encode($return);exit;
         }
-        $custom_id = db('app') -> where("appid",$this->data['appid']) -> value('custom_id');
+        $custom_id = db('app') -> where(['appid' => $this->data['appid']]) -> value('custom_id');
         if($custom_id != $this->custom->id){
             $return['code'] = 10300;
             $return['msg_test'] = '当前app不是这个用户的';
@@ -267,7 +267,7 @@ class Service extends Action{
             $return['msg_test'] = '参数值缺失';
             return json($return);
         }
-        $res = model('subscribe_service_user') -> allowField(['name','pic','desc','service_id','service_name']) -> where(['id' => $this->data['service_user_id']]) -> save($this->data);
+        $res = model('subscribe_service_user') -> allowField(true) -> save($this->data,['id' => $this -> data['service_user_id']]);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';

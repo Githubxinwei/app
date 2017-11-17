@@ -4,7 +4,7 @@
  * User: 宋妍妍
  * Date: 2017/10/27 0027
  * Time: 09:16
- * 预约小程序的前台接口
+ * 预约小程序的手机端接口
  */
 
 namespace app\custom\controller;
@@ -155,7 +155,7 @@ class Appsub  extends Xiguakeji
         $data = $this->data;
         $data["user_id"] = $this->user['id'];
         $data["create_time"] = time();
-        $data["kd_number"] = date("YmdHis").rand(100,999);
+        $data["order_sn"] = date("YmdHis").rand(100,999);
         $goods = db('subscribe_service')
             ->field("id,service_name,service_price")
             ->where("id",$data['subscribe_id'])
@@ -211,7 +211,6 @@ class Appsub  extends Xiguakeji
         return json($return);
 
     }
-
     /*获取订单详情信息 appid  id  custom_id */
     function order_detail(){
 
@@ -239,12 +238,6 @@ class Appsub  extends Xiguakeji
 
     }
 
-    /*预约取消   id:预约订单ID   appid    */
-    function order_close(){
-
-
-        
-    }
 
     /*获取小程序的基本信息*/
     function get_message(){
@@ -286,7 +279,4 @@ class Appsub  extends Xiguakeji
             return json($return);
         }
     }
-
-
-
 }
