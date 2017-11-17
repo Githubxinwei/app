@@ -373,6 +373,9 @@ class common extends Controller{
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
+
+
+
 }
 
 

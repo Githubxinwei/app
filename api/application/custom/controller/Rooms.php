@@ -31,25 +31,49 @@ class Rooms extends Xiguakeji
             return json($return);
         }
     }
+
+    /*品牌信息*/
+    public  function brands(){
+        $where['appid'] = $this->data['appid'];
+        $info = db('app')->field('id,site_url,start_time,over_time,address,tel,desc,name,pic')->where($where)->find();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info ;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '获取失败';
+            $return['msg_test'] = '获取失败';
+            return json($return);
+        }
+    }
+
     /*获取门店列表*/
     public function  stores(){
 
         $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
         $limit = isset($this -> data['number']) ? $this -> data['number'] : 15;
         $stores = db("stores")
-            -> alias('a')
-            -> field('a.*,count(b.id) as number')
-            -> join("__ROOMS__ b",'FIND_IN_SET(a.id,b.stores_id)','LEFT')
-            -> where(['a.appid' => $this -> data['appid'],'a.state' => 1])
-            -> page($page,$limit)
-            -> order('a.id desc')
-            -> group('a.id')
-            -> select();
+            ->where(['appid' => $this -> data['appid'],'state' => 1])
+            ->page($page)
+            ->limit($limit)
+            ->order('id desc')
+            ->select();
+
 
         foreach($stores as $k=>$v){
+
             $res = db('rooms')->where(['appid' => $v['appid']])->Min("price");
             $stores[$k]['price'] =$res;
+            unset($wheres);
+
+            $wheres[]=['exp',"FIND_IN_SET(".$v['id'].",stores_id)"];
+            $wheres['appid'] = $v['appid'];
+
+            $room = db('rooms')->where($wheres)->Sum('number_in');
+            $stores[$k]['number'] = $room;
         }
+
         if($stores){
             $return['code'] = 10000;
             $return['data'] = $stores ;
@@ -74,7 +98,6 @@ class Rooms extends Xiguakeji
         $stores = db('stores')->where($where)->find();
         if($stores){
             $return['code'] = 10000;
-            $return['msg'] = '获取成功';
             $return['data'] = $stores ;
             return json($return);
         }else{
@@ -89,9 +112,13 @@ class Rooms extends Xiguakeji
     /*获取门店下的房间*/
     public  function  get_rooms(){
         $where['appid'] = $this -> data['appid'];
-        $where['stores_id'] = $this -> data['stores_id'];
-        $rooms = db('rooms')->field('id,photo,price,bed_type,room_type')->where($where)->select();
-        if($rooms){
+        if(isset($this->data['stores_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
+        $rooms = db('rooms')->field('id,photo,price,bed_type,room_type,number_in')->where($where)->select();
+        foreach($rooms as $k=>$v){
+            $pic = explode(',',$v['photo']);
+            $rooms[$k]['photo'] = $pic[0];
+        }
+        if($rooms || empty($rooms)){
             $return['code'] = 10000;
             $return['data'] = $rooms ;
             return json($return);
@@ -103,14 +130,15 @@ class Rooms extends Xiguakeji
         }
 
     }
+
     /*获取房间详细信息*/
     public  function get_rooms_detail(){
         $where['appid'] = $this -> data['appid'];
         $where['id'] = $this -> data['id'];
         $rooms = db('rooms')->where($where)->find();
+        $rooms['photo'] = explode(',',$rooms['photo']);
         if($rooms){
             $return['code'] = 10000;
-            $return['msg'] = '获取成功';
             $return['data'] = $rooms ;
             return json($return);
         }else{
@@ -122,10 +150,31 @@ class Rooms extends Xiguakeji
 
     }
 
+
+    /*酒店风格内容获取*/
+    public function style_detail(){
+
+        $where['appid'] = $this->data['appid'];
+        $info = db('stores_style')->where($where)->find();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info ;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '获取失败';
+            $return['msg_test'] = '获取失败';
+            return json($return);
+        }
+
+    }
+
+
     /*生成酒店预约订单*/
     public  function create_order(){
 
-        if(!isset($this -> data['total_price'])  || !isset($this -> data['start_time'])  || !isset($this -> data['end_time'])  || !isset($this -> data['username'])  || !isset($this -> data['user_tell'])  || !isset($this -> data['address'])){
+
+        if(!isset($this -> data['start_time'])  || !isset($this -> data['end_time'])  || !isset($this -> data['username'])  || !isset($this -> data['user_tel'])){
             $return['code'] = 10007;
             $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
@@ -141,10 +190,18 @@ class Rooms extends Xiguakeji
 
        $time = time();
        $order_sn = date('Y').$time.rand(1000,9999);
-       $total_fee = $this->data['total_price'];
-       $name = $this->data['room_type'];
 
-       $info = db("rooms")->field("room_type,price,bed_type")->where(['id' => $this->data['rooms_id']])->find();
+       $info = db("rooms")->field("room_type,price,bed_type,number_in")->where(['id' => $this->data['rooms_id']])->find();
+        $name =$info['room_type'];
+       $total_fee = $this->data['num'] * $info['price'];
+
+       if($info['number_in'] <= 0){
+           $return['code'] = 10008;
+           $return['msg'] = '房间已满';
+           $return['msg_test'] = '房间已满';
+           return json($return);
+       }
+
        $address = db("stores")->field('stores_address')->where(['id' => $this->data['stores_id']])->find();
        $data = $this->data;
        $data['user_id'] = $this->user['id'];
@@ -153,19 +210,17 @@ class Rooms extends Xiguakeji
        $data['openid'] = $this->user['openid'];
        $data['room_type'] = $info['room_type'];
        $data['price'] = $info['price'];
+       $data['total_price'] = $total_fee;
        $data['bed_type'] =$info['bed_type'];
        $data['address'] =$address['stores_address'];
-
-        if(isset($this -> data['remark'])){
-            $data['remark'] = $this->user['remark'];
-        }else{
-            $data['remark'] = '';
-        }
+       $data['end_time'] =strtotime($this->data['end_time']);
+       $data['start_time'] =strtotime($this->data['start_time']);
 
         unset($data['session_key']);
+        unset($data['apps']);
         $id = db('rooms_order')->insertGetId($data);
 
-        $weapp = new \app\weixin\controller\Common($this->apps);
+        $weapp = new \app\weixin\controller\Common($this->data['appid']);
         $order_id = $id;
         $attach = json_encode(['type'=>3,'id'=>$order_id]);//type值为3时，是酒店小程序的支付请求
         $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
@@ -180,8 +235,29 @@ class Rooms extends Xiguakeji
 
     }
 
+    /*订单详情页*/
+    public function get_order_detail(){
+
+        $where['id'] = $this->data['id'];
+        $where['appid'] = $this->data['appid'];
+        $where['user_id'] = $this->user['id'];
+        $info = model('rooms_order')->where($where)->find();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '订单错误';
+            $return['msg_test'] = '订单错误';
+            return json($return);
+        }
+
+    }
+
     //付款页核对订单，调起支付
     function pay(){
+
         if(!isset($this->data['id'])){
             $return['code'] = 10001;$return['msg_test'] = '缺少参数id';return json($return);
         }
@@ -225,7 +301,6 @@ class Rooms extends Xiguakeji
             -> select();
 
         $return['code'] = 10000;
-        $return['msg'] = '加载成功';
         $return['msg_test'] = '加载成功';
         $return['data'] = $info;
         return json($return);
@@ -243,7 +318,6 @@ class Rooms extends Xiguakeji
 
        if($info){
            $return['code'] = 10000;
-           $return['msg'] = '加载成功';
            $return['data'] = $info;
            return json($return);
        }else{

@@ -103,7 +103,7 @@ class Hotel extends Action{
         if($keyword){$where['stores_name'] = array('like','%'.$keyword.'%');}
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
         if(isset($this->data['limit'])){$limit = $this->data['limit'];}else{$limit = 20;}
-        $info = db('stores')->where($where)->page($page,$limit)->select();
+        $info = db('stores')->where($where)->page($page)->limit($limit)->select();
         $num =  db('stores_setmeal')->where(['appid' => $where['appid']])->find(); //门店套餐信息
 
 
@@ -216,7 +216,7 @@ class Hotel extends Action{
         }
         $where['appid'] = $this->data['appid'];
         $data = $this->data;
-            $num =db('stores')->where($where)->count(); //计算已有门店
+            $num =db('stores')->where(['appid'=> $where['appid']])->count(); //计算已有门店
             $number = $this->data['number'];
         $data['number'] = $number ;
         $data['surplus_number'] = $number - $num  ;
@@ -240,6 +240,7 @@ class Hotel extends Action{
     /*添加房间 appid  房间信息字段*/
     public function  rooms_add(){
 
+
           if(!isset($this -> data['room_type'])     ||  !isset($this -> data['number']) || !isset($this -> data['price']) || !isset($this -> data['man']) || !isset($this -> data['area']) || !isset($this -> data['bed_type']) || !isset($this -> data['facilities']) || !isset($this -> data['photo']) || !isset($this -> data['stores_id'])){
               $return['code'] = 10007;
               $return['msg'] = '房间参数必须完整';
@@ -257,13 +258,20 @@ class Hotel extends Action{
             }
         }
 
+
          $where['appid'] = $this->data['appid'];
          $data = $this->data;
+         $data['facilities'] = $_POST['facilities'];
+         $data['detail'] = $_POST['detail'];
          $data['number_in'] = $data['number'];
 
               if(isset($this -> data['stores_type']) && $this->data['stores_type'] == 2){
                   $stores = db('stores')->field("id")->where($where)->select();
-                  $data['stores_id'] = implode(',',$stores);
+                  $id = [];
+                  foreach($stores as $k=>$v){
+                      array_push($id,$v['id']);
+                  }
+                  $data['stores_id'] = implode(',',$id);
               }
 
          $data['custom_id'] = $this -> custom -> id;
@@ -288,20 +296,13 @@ class Hotel extends Action{
 
         $where['appid'] = $this->data['appid'];
 
+        if(isset($this->data['stores_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
         if(isset($this->data['limit'])){$limit = $this->data['limit'];}else{$limit = 20;}
 
 
-        if(isset($this->data['stores_id'])){
-            $where['stores_id']=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
-            $stores =  db('stores')->field('id,stores_name')->where(['appid' =>  $where['appid'],'id'=>$where['stores_id']])->order('id ASC')->find();
-        }else{
-            $stores =  db('stores')->field('id,stores_name')->where(['appid' =>  $where['appid']])->order('id ASC')->find();
-            $where['stores_id'] = $stores['id'];
-        }
+        $info = model('rooms') -> where($where)->page($page)->limit($limit)->select();
 
-        $info = db('rooms')->where($where)->page($page,$limit)->select();
-        $info['stores_default'] = $stores;
           if($info){
               $return['code'] = 10000;
               $return['data'] = $info;
@@ -341,11 +342,23 @@ class Hotel extends Action{
         $where['appid'] = $this->data['appid'];
         $where['id'] = $this->data['id'];
         $data = $this->data;
+        $data['facilities'] = $_POST['facilities'];
+        $data['detail'] = $_POST['detail'];
+
+        /*更新房间剩余数量*/
+        $num = db("rooms")->field('number,number_in')->where($where)->find();
+        $num = $num['number'] - $num['number_in'];
+        $data['number_in']   =   $data['number'] - $num;
 
         if(isset($this -> data['stores_type']) && $this->data['stores_type'] == 2){
-            $stores = db('stores')->field("id")->where("$where")->select();
-            $data['stores_id'] = implode(',',$stores);
+            $stores = db('stores')->field("id")->where(['appid'=>$where['appid']])->select();
+            $id = [];
+            foreach($stores as $k=>$v){
+                array_push($id,$v['id']);
+            }
+            $data['stores_id'] = implode(',',$id);
         }
+
         $info = db('rooms')->where($where)->update($data);
 
         if($info){
@@ -476,12 +489,20 @@ class Hotel extends Action{
             return json($return);
         }
         if(isset($this->data['stores_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
-        $rooms =  $info = db('rooms')->field('room_type')->where($where)->select();
-        $info = array_unique($rooms);
-        if($info){
+
+        $rooms =  db('rooms')->field('room_type')->where($where)->select();
+
+        $room = [];
+        foreach($rooms as $k=>$v){
+            if($v['room_type'] != ''){
+                array_push($room,$v['room_type']);
+            }
+        }
+        $room = array_unique($room);
+
+        if($room || empty($info)){
             $return['code'] = 10000;
-            $return['msg'] = '修改成功';
-            $return['data'] = $info;
+            $return['data'] = $room;
             return json($return);
         }else{
             $return['code'] = 10001;
@@ -499,11 +520,11 @@ class Hotel extends Action{
     public  function rules_add(){
         if(!isset($this -> data['name'])  ||  !isset($this -> data['start_time']) || !isset($this -> data['over_time']) || !isset($this -> data['rules']) || !isset($this -> data['rules_detail']) || !isset($this -> data['rules_range'])){
             $return['code'] = 10008;
-            $return['msg'] = '房间参数必须完整';
-            $return['msg_test'] = '房间参数必须完整';
+            $return['msg'] = '参数必须完整';
+            $return['msg_test'] = '参数必须完整';
             return json($return);
         }
-        if(!isset($this->data['stores_id'])){
+        if(!isset($this->data['stores_id']) || $this->data['stores_id'] == ''){
             $return['code'] = 10007;
             $return['msg'] = '请选择门店';
             $return['msg_test'] = '请选择门店';
@@ -529,26 +550,27 @@ class Hotel extends Action{
 
     /*价格调整列表*/
     public function rules_list(){
+
+
         $where['appid'] = $this->data['appid'];
         $where['custom_id'] = $this -> custom -> id;
-        if(isset($this->data['stores_id'])){
-            $where['stores_id']=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
-            $str = db('stores')->field("id,stores_name")->where(['appid' =>$where['appid'],'id'=>$where['stores_id']])->find();
-        }else{
-            $str = db('stores')->field("id,stores_name")->where(['appid' =>$where['appid'] ])->order("id ASC")->find();
-            $where['stores_id'] =$str['id'];
-        }
+
+        if(isset($this->data['stores_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
         if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
         if(isset($this->data['limit'])){$limit = $this->data['limit'];}else{$limit = 20;}
-        $info  = db('rooms_rules')->where($where)->page($page,$limit)->select();
-        $info['stores_default'] = $str;
+        $info  = db('rooms_rules')->where($where)->page($page)->limit($limit)->select();
 
         if($info){
             $return['code'] = 10000;
-            $return['msg'] = '修改成功';
             $return['data'] = $info;
             return json($return);
-        }else{
+        }elseif(empty($info)){
+            $return['code'] = 10000;
+            $return['msg_test'] = '暂无数据';
+            $return['data'] = $info;
+            return json($return);
+        }
+        else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
             $return['msg_test'] = '网络错误';
@@ -566,7 +588,6 @@ class Hotel extends Action{
         $info = db('rooms_rules')->where($where)->find();
         if($info){
             $return['code'] = 10000;
-            $return['msg'] = '删除成功';
             $return['data'] = $info ;
             return json($return);
         }else{
@@ -596,6 +617,71 @@ class Hotel extends Action{
         }
     }
 
+    /*酒店风格*/
+    public  function style_hotel(){
+
+        if(!isset($this -> data['slogan'])  ||  !isset($this -> data['pic'])){
+            $return['code'] = 10008;
+            $return['msg'] = '标语或者封面图必须填写';
+            $return['msg_test'] = '标语或者封面图必须填写';
+            return json($return);
+        }
+        $data = $this->data;
+        $data['custom_id'] = $this -> custom -> id;
+
+        $where['appid'] = $this->data['appid'];
+        $where['custom_id'] = $this -> custom -> id;
+        $info = db('stores_style')->where($where)->find();
+
+        if(!$info){
+            $res = db('stores_style')->insert($data);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg'] = '添加成功';
+                $return['msg_test'] = '添加成功';
+                return json($return);
+            }else{
+                $return['code'] = 10001;
+                $return['msg'] = '网络错误';
+                $return['msg_test'] = '网络错误';
+                return json($return);
+            }
+        }else{
+            $res = db('stores_style')->where($where)->update($data);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg'] = '修改成功';
+                $return['msg_test'] = '修改成功';
+                return json($return);
+            }else{
+                $return['code'] = 10001;
+                $return['msg'] = '网络错误';
+                $return['msg_test'] = '网络错误';
+                return json($return);
+            }
+        }
+    }
+
+    /*酒店风格内容获取*/
+    public function style_detail(){
+
+        $where['appid'] = $this->data['appid'];
+        $where['custom_id'] = $this -> custom -> id;
+        $info = db('stores_style')->where($where)->find();
+
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info ;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '获取失败';
+            $return['msg_test'] = '获取失败';
+            return json($return);
+        }
+
+    }
+
     /*退款接口*/
     public  function refunds(){
         $weapp = new \app\weixin\controller\Common($this->apps);
@@ -607,6 +693,81 @@ class Hotel extends Action{
         $res = $weapp->pay_refund($order_info['order_sn'],$refund_no,$order_info['fee']*100);
         if($res){
 
+        }
+
+    }
+
+
+    /*风格封面图片调取*/
+    public function get_pic(){
+
+        $path = $_SERVER['SERVER_ADDR'].'/__PUBLIC__/Uploads/style';
+        $result = scanFile($path);
+        if($result){
+            $return['code'] = 10000;
+            $return['data'] = $result ;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '获取失败';
+            $return['msg_test'] = '获取失败';
+            return json($return);
+        }
+    }
+
+
+    /*获取订单列表*/
+    public function get_order_list(){
+        $limit = isset($this->data['limit']) ? $this->data['limit'] : 10;
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+        $where['state'] = isset($this->data['state']) ? $this->data['state'] : 0;
+        $where['appid'] = $this->data['appid'];
+        if(isset($this->data['username'])){
+            if($this->data['username']){
+                $where['username'] = $this->data['username'];
+            }
+        }
+        if(isset($this->data['order_sn'])){
+            if($this->data['order_sn']){
+                $where['order_sn'] = $this -> data['order_sn'];
+            }
+        }
+        if(isset($this->data['user_tel'])){
+            if($this->data['user_tel']){
+                $where['user_tel'] = $this->data['user_tel'];
+            }
+        }
+        if(isset($this->data['start_time']) && isset($this->data['end_time'])){
+            if($this->data['start_time'] && $this->data['end_time']){
+                $where['create_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
+            }
+        }
+        $data = db('roods_order')
+            ->field('id,state,username,order_sn,prepay_time,total_price')
+            -> where($where)
+            -> page($page,$limit)
+            -> select();
+        $return['code'] = 10000;
+        $return['data'] = $data;
+        $return['msg_test'] = 'ok';
+        return json($return);
+    }
+
+    /*获取订单详细信息*/
+    public  function get_order_detail(){
+        $where['appid'] = $this->data['appid'];
+        $where['id'] = $this->data['id'];
+
+        $info = model('rooms_order')->where($where)->find();
+        if($info){
+            $return['code'] = 10000;
+            $return['data'] = $info;
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '订单错误';
+            $return['msg_test'] = '订单错误';
+            return json($return);
         }
 
     }
