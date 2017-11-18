@@ -186,10 +186,24 @@ class App extends Xiguakeji{
 	//修改购物车商品数量
 	function alter_cnum(){
 	    if(!isset($this->data['id'])){
-	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
+	        $return['code'] = 10001;$return['缺少购物车id'];return json($return);
 	    }
+	    //点击'+'号
 	    if($this->data['num_type'] == '+'){
-	        $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setInc('num');
+	        $res = db('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setInc('num');
+	        if($res){
+	            $return['code'] = 10000;
+	            $return['msg_test'] = 'ok';                                                                                                                             
+	            return json($return);
+	        }else{
+	            $return['code'] = 10002;
+	            $return['msg_test'] = '缺少appid或者缺少用户id';
+	            return json($return);
+	        }
+	    }
+	    //点击'-'号
+	    if($this->data['num_type'] == '-'){
+	        $res = db('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setDec('num');
 	        if($res){
 	            $return['code'] = 10000;
 	            $return['msg_test'] = 'ok';
@@ -199,52 +213,7 @@ class App extends Xiguakeji{
 	            $return['msg_test'] = '缺少appid或者缺少用户id';
 	            return json($return);
 	        }
-	    }else{
-	        $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setDec('num');
-	        if($res){
-	            $return['code'] = 10000;
-	            $return['msg_test'] = 'ok';
-	            return json($return);
-	        }else{
-	            $return['code'] = 10002;
-	            $return['msg_test'] = '缺少appid或者缺少用户id';
-	            return json($return);
-	        }
 	    }
-	    
-	}
-	//修改购物车商品数量(自减)
-	function dec_cart(){
-	    if(!isset($this->data['id'])){
-	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
-	    }
-	    $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setDec('num');
-	    if($res){
-	        $return['code'] = 10000;
-	        $return['msg_test'] = 'ok';
-	        return json($return);
-	    }else{
-	        $return['code'] = 100001;
-	        $return['msg_test'] = '缺少appid或者缺少用户id';
-	        return json($return);
-	    }
-	}
-	//修改购物车商品数量(自增)
-	function inc_cart(){
-	    if(!isset($this->data['id'])){
-	        $return['code'] = 10001;$return['缺少商品id'];return json($return);
-	    }
-	    $res = model('goods_cart')->where(['appid'=>$this->apps,'id'=>$this->data['id'],'is_cart'=>1,'user_id'=>$this->user['id']])->setInc('num');
-	    if($res){
-	        $return['code'] = 10000;
-	        $return['msg_test'] = 'ok';
-	        return json($return);
-	    }else{
-	        $return['code'] = 100001;
-	        $return['msg_test'] = '缺少appid或者缺少用户id';
-	        return json($return);
-	    }
-
 	}
 	//购买商品
 	function buy(){
@@ -286,6 +255,11 @@ class App extends Xiguakeji{
 					//检查库存是否足够
 					if($spec_array[$this->data['spec']]['lastNum'] != '∞' && $spec_array[$this->data['spec']]['lastNum'] < $this->data['num'] ){
 						$return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$spec_array[$this->data['spec']]['lastNum'].'件';return json($return);
+					}else if($spec_array[$this->data['spec']]['lastNum'] != '∞'){
+					    //库存充足，扣除库存
+		                        $spec_array[$this->data['spec']]['lastNum'] -= $this->data['num'];
+		                        $specInfo['spec'] = json_encode($spec_array);
+		                        model('goods') -> save($specInfo,['id' => $this->data['id']]);
 					}
 					$cart_data['spec_key'] = $this->data['spec'];
 					$cart_data['spec_value'] = $spec_array[$this->data['spec']]['name'];
@@ -295,6 +269,10 @@ class App extends Xiguakeji{
 				//检查库存是否足够
 				if( $info['stock'] != -1 && $info['stock'] < $this->data['num']  ){
 					$return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$info['stock'].'件';return json($return);
+					}else if($info['stock'] != -1){
+		                    //库存充足，扣除库存
+		                    $stock['stock'] = $info['stock'] - $this->data['num'];
+		                    model('goods') -> save($stock,['id' => $this->data['id']]);
 				}
 			}
 			$cart_data['user_id'] = $this->user['id'];
@@ -325,6 +303,39 @@ class App extends Xiguakeji{
 
 			if(!$carts['id']){
 				$return['code'] = 10004;$return['msg_test'] = '购物车是空的';return json($return);
+			}
+			$idList = explode(',',$this -> data['ids']);
+			foreach ($idList as $k => $v){
+                //获取购物车的详情
+                $goodCart = db('goods_cart') -> field('spec_key,num,good_id') -> where(['id' => $v]) -> find();
+			    //判断这个商品是否存在，还有库存是否够
+                $is_good = db('goods') -> field('id,name,spec,stock') -> where(['id' => $goodCart['good_id']]) -> find();
+                if(!$is_good){
+                    $return['code'] = 10010;
+                    $return['msg'] = $is_good['name'] . '商品已经下架了,请选择其他商品吧';
+                    return json($return);
+                }
+                $spec_array = json_decode($is_good['spec'],true);
+                if(count($spec_array) != 0){
+                        //检查库存是否足够
+                        if($spec_array[$goodCart['spec_key']]['lastNum'] != '∞' && $spec_array[$goodCart['spec_key']]['lastNum'] < $goodCart['num']){
+                            $return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$spec_array[$goodCart['spec_key']]['lastNum'].'件';return json($return);
+                        }else if($spec_array[$goodCart['spec_key']]['lastNum'] != '∞'){
+                            //库存充足，扣除库存
+                            $spec_array[$goodCart['spec_key']]['lastNum'] -= $goodCart['num'];
+                            $specInfo['spec'] = json_encode($spec_array);
+                            model('goods') -> save($specInfo,['id' => $goodCart['good_id']]);
+                        }
+                }else{
+                    //检查库存是否足够
+                    if( $is_good['stock'] != -1 && $is_good['stock'] < $goodCart['num']  ){
+                        $return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$is_good['stock'].'件';return json($return);
+                    }else if($is_good['stock'] != -1){
+                        //库存充足，扣除库存
+                        $stock['stock'] = $is_good['stock'] - $goodCart['num'];
+                        model('goods') -> save($stock,['id' => $goodCart['good_id']]);
+                    }
+                }
 			}
 			$name = $carts['name'];$pic = $carts['pic'];$num = $carts['num'];
 			$total_fee = model('goods_cart')
