@@ -156,6 +156,14 @@ class Rooms extends Xiguakeji
 
         $where['appid'] = $this->data['appid'];
         $info = db('stores_style')->where($where)->find();
+
+        $mystring = $info['pic'];
+        $findme   = 'Uploads';
+        $pos = strpos($mystring, $findme);
+        if(!$pos){
+            $info['pic'] = 'Uploads/banner/'.$info['pic'];
+        }
+
         if($info){
             $return['code'] = 10000;
             $return['data'] = $info ;
@@ -213,8 +221,8 @@ class Rooms extends Xiguakeji
        $data['total_price'] = $total_fee;
        $data['bed_type'] =$info['bed_type'];
        $data['address'] =$address['stores_address'];
-       $data['end_time'] =strtotime($this->data['end_time']);
-       $data['start_time'] =strtotime($this->data['start_time']);
+       $data['end_time'] =strtotime($this->data['end_time']." 14:00");
+       $data['start_time'] =strtotime($this->data['start_time']." 12:00");
 
         unset($data['session_key']);
         unset($data['apps']);
@@ -291,7 +299,7 @@ class Rooms extends Xiguakeji
         $limit_num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10 ;
         $where['user_id'] = $this->user['id'];
         $where['state'] = $this->data['type'];
-        $where['appid'] = $this->apps;
+        $where['appid'] = $this->data['appid'];
         //->alias('a')->join($join)  -> where($where)
         $info = db('rooms_order')
             -> where($where)
@@ -299,6 +307,13 @@ class Rooms extends Xiguakeji
             -> limit($limit_num)
             -> order('id desc')
             -> select();
+
+        foreach($info as $k=>$v){
+            $rooms = db('rooms')->field('id,photo')->where(['id' => $v['rooms_id']])->find();
+            $pic = explode(',',$rooms['photo']);
+            $info[$k]['room_photo'] = $pic[0];
+        }
+
 
         $return['code'] = 10000;
         $return['msg_test'] = '加载成功';
@@ -315,6 +330,10 @@ class Rooms extends Xiguakeji
        $where['id'] = $this->data['id'];
 
        $info = db('rooms_order')->where($where)->find();
+
+       $rooms = db('rooms')->field('id,photo')->where(['id' => $info['rooms_id']])->find();
+       $pic = explode(',',$rooms['photo']);
+       $info['room_photo'] = $pic[0];
 
        if($info){
            $return['code'] = 10000;
@@ -337,14 +356,37 @@ class Rooms extends Xiguakeji
        $where['appid'] = $this->data['appid'];
        $where['id'] = $this->data['id'];
        $where['user_id'] = $this->this->user['id'];
-       $data['state'] = 2;
        $data['is_refunds'] = 1;
 
-       $check  = db('rooms_order')->field("id,is_checkin")->where($where)->find();
+       $check  = db('rooms_order')->field("id,is_checkin,start_time")->where($where)->find();
         if($check['is_check_in'] != 0){
             $return['code'] = 10004;
             $return['msg'] = '对不起，您无法进行此操作';
             $return['msg_test'] = '对不起，您无法进行此操作';
+            return json($return);
+        }
+        if((time() > $check['start_time']) || (time() - $check['start_time']  < 7200)){
+            $return['code'] = 10004;
+            $return['msg'] = '对不起，您无法进行此操作';
+            $return['msg_test'] = '对不起，您无法进行此操作';
+            return json($return);
+        }
+        if($check['is_refunds'] == 1){
+            $return['code'] = 10004;
+            $return['msg'] = '已提交过申请，请耐心等待';
+            $return['msg_test'] = '已提交过申请，请耐心等待';
+            return json($return);
+        }
+        if($check['is_refunds'] == 2){
+            $return['code'] = 10004;
+            $return['msg'] = '已退款，请勿提交';
+            $return['msg_test'] = '已退款，请勿提交';
+            return json($return);
+        }
+        if($check['is_refunds'] == 3){
+            $return['code'] = 10004;
+            $return['msg'] = '您的申请已经被驳回，请勿申请';
+            $return['msg_test'] = '您的申请已经被驳回,请勿申请';
             return json($return);
         }
 

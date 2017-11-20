@@ -223,6 +223,11 @@ class common extends Controller{
         $result = $this->curl_post_ssl($url,$data);
         $postObj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
         $result_code = trim($postObj->result_code);
+
+
+
+
+
         return $result_code;
     }
 
@@ -268,7 +273,7 @@ class common extends Controller{
             return false;
         }
     }
-
+    /*退款接口 end*/
 
 	//设置服务器域名
 	function domain(){
