@@ -56,6 +56,7 @@ class Notify{
 		//更改订单状态，下发模板消息，下发商户通知
 		model('goods_cart') -> save(['is_pay'=>1],['id'=>['exp','in ('.$order['carts'].')']]);
 		model('goods_order') -> save(['state'=>1],['id'=>$order_id]);
+		$this -> sendMail($order['appid'],$order['name']);
 	}
 
 	/*酒店小程序预约购买付款*/
@@ -72,7 +73,18 @@ class Notify{
         }
         //更改订单状态，下发模板消息，下发商户通知
         db('rooms_order') ->where(['id'=>$order_id])-> update(['state'=>1]);
-        db('rooms_order') ->setDec('number_in',1);
+        $where['id'] = $order['rooms_id'];
+        db('rooms') ->where($where)->setDec('number_in',1);
+        $this -> sendMail($order['appid'],$order['room_type']);
+	}
+
+    /**
+	 * 通过appid获取这个小程序是谁的，同时发送邮件通知有新订单，尽快处理
+	*/
+    private function sendMail($appid,$name){
+		$mail = db('app') -> field('notifyemail') -> where(['appid' => $appid]) -> find();
+		if(!$mail){return;}
+		sendMail($mail['notifyemail'],'你有新的订单,请尽快处理','你有新的订单,请尽快处理【'.$name.'】等...','163');
 	}
 	/**
 	*	xml转为数组

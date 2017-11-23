@@ -1,10 +1,10 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Administrator
+ * User: 李佳飞
  * Date: 2017/11/1 0001
  * Time: 13:45
- * 平台后台管理员的充值和购买小程序的一部通知
+ * 平台后台管理员的充值和购买小程序的异步通知
  */
 namespace app\custom\controller;
 class NotifyAdmin{

@@ -90,7 +90,9 @@ class Service extends Action{
 	            return json($return);
 	        }
 	    }
-	    $res = model('subscribe_service') -> allowField(true) -> save($this->data,['id' => $this->data['service_id'],'custom_id' => $this->custom->id]);
+        $this->data['service_particulars'] = $_POST['service_particulars'];
+
+        $res = model('subscribe_service') -> allowField(true) -> save($this->data,['id' => $this->data['service_id'],'custom_id' => $this->custom->id]);
 	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
 	   
 	    return json($return);
@@ -160,7 +162,8 @@ class Service extends Action{
 	    $this -> data['create_time'] = time();
 	    $this -> data['custom_id'] = $this -> custom -> id;
         $data = $this -> data;
-        $data = array_splice($data,1);
+        $data['service_particulars']=$_POST['service_particulars'];
+        unset($data['session_key']);
         $id =  db('subscribe_service')-> insertGetId($data);
 //      $arr = db('subscribe_service')->where(['appid' => $this->data['appid'],'custom_id' => $this -> custom->id])->select();
         if($id){

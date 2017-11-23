@@ -287,6 +287,7 @@ class Shop extends Action{
 				return json($return);
 			}
 		}
+        $this -> data['content'] = $_POST['content'];
 		model('goods') -> allowField(true) -> save($this -> data,['id' =>$this -> data['good_id'],'custom_id' => $this->custom->id]);
 		$return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
 		return json($return);
