@@ -55,14 +55,20 @@ class Order extends Action{
                 $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
             }
         }
+        $number = db('goods_order')
+            -> where(['appid' => $this -> data['appid'],'state' => $state])
+            -> where($where)
+            -> count();
         $data = db('goods_order')
             -> field("id,state,username,prepay_time,price,order_sn")
             -> where(['appid' => $this -> data['appid'],'state' => $state])
             -> where($where)
+            -> order('id desc')
             -> page($page,$num)
             -> select();
         $return['code'] = 10000;
         $return['data'] = $data;
+        $return['number'] = $number;
         $return['msg_test'] = 'ok';
         return json($return);
     }
@@ -78,7 +84,7 @@ class Order extends Action{
         }
         $info = db('goods_order')
             -> alias('a')
-            -> field("a.id,a.custom_id,a.username,a.tel,a.mail,a.province,a.city,a.dist,a.address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
+            -> field("a.id,a.custom_id,a.username,a.tel,a.mail,concat(a.province,a.city,a.dist,a.address) address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
             -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> group('b.id')
@@ -106,7 +112,7 @@ class Order extends Action{
         }
         $state = db('goods_order') -> getFieldById($this->data['order_id'],'state');
         if($this->data['state'] == 2){
-            if(!isset($this->data['kd_number'])){
+            if(!isset($this->data['kd_number']) || !isset($this -> data['kd_code'])){
                 $return['code'] = 10002;
                 $return['msg_test'] = '请传递订单号';
                 return json($return);
@@ -117,6 +123,7 @@ class Order extends Action{
                 return json($return);
             }
             $info['kd_number'] = $this->data['kd_number'];
+            $info['kd_code'] = $this->data['kd_code'];
             $info['state'] = 2;
             $res = db('goods_order') -> where(['id' => $this->data['order_id'] * 1]) -> update($info);
             if($res){
@@ -179,13 +186,18 @@ class Order extends Action{
                 $where['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
             }
         }
+        $count = db('subscribe_order')
+            -> where($where)
+            -> count();
         $data = db('subscribe_order')
             -> field("id,subscribe_name,username,create_time,price,state,order_sn")
             -> where($where)
+            -> order('id desc')
             -> page($page,$num)
             -> select();
         $return['code'] = 10000;
         $return['data'] = $data;
+        $return['number'] = $count;
         $return['msg_test'] = 'ok';
         return json($return);
     }
@@ -201,7 +213,7 @@ class Order extends Action{
         }
         $info = db('subscribe_order')
             -> alias('a')
-            -> field("a.id,a.appid,a.price,a.subscribe_name,a.subscribe_time,a.subscribe_time,a.username,a.tel,a.remark,a.state,a.create_time,a.order_sn,a.end_time,b.name,b.pic")
+            -> field("a.id,a.appid,a.price,a.subscribe_name,a.subscribe_time,a.subscribe_time,a.username,a.tel,a.remark,a.state,a.create_time,a.order_sn,a.end_time,b.name,a.order_pic as pic")
             -> join("__SUBSCRIBE_SERVICE_USER__ b",'a.service_user_id = b.id','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> find();
@@ -218,7 +230,7 @@ class Order extends Action{
 
     /**
      * 修改状态
-     * 状态0(预约成功，待处理)1（预约已确定）2（预约取消待处理）3（预约取消）4 已完成
+     * 状态0(预约成功，待处理)1(后台已确定)2 后台已取消 3 已完成
      */
     public function updateSubscribeOrderState(){
         if(!isset($this->data['state']) || !isset($this->data['order_id'])){
@@ -227,6 +239,7 @@ class Order extends Action{
             return json($return);
         }
         $state = db('subscribe_order') -> getFieldById($this->data['order_id'],'state');
+        //管理员想确认订单
         if($this->data['state'] == 1){
             if($state != 0){
                 $return['code'] = 10003;
@@ -244,7 +257,7 @@ class Order extends Action{
                 $return['msg_test'] = '失败';
                 return json($return);
             }
-
+        //管理员想取消订单
         }else if($this->data['state'] == 2){
             if($state != 0){
                 $return['code'] = 10003;
@@ -261,13 +274,16 @@ class Order extends Action{
                 $return['msg_test'] = '失败';
                 return json($return);
             }
+        //当用户去店消费后，管理员可以吧当前订单标记为已完成
         }else if($this->data['state'] == 3){
-            if($state != 2){
+            if($state != 1){
                 $return['code'] = 10003;
                 $return['msg_test'] = '状态不可修改';
                 return json($return);
             }
-            $res = db('subscribe_order') -> where(['id' => $this->data['order_id']]) -> setField('state',3);
+            $info['state'] = 3;
+            $info['end_time'] = time();
+            $res = db('subscribe_order') -> where(['id' => $this->data['order_id']]) -> update($info);
             if($res){
                 $return['code'] = 10000;
                 $return['msg_test'] = 'ok';

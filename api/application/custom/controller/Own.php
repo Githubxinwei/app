@@ -61,8 +61,8 @@ class Own extends Action{
 		$this -> data['name'] = $app_info['name'];
 		$this -> data['pic'] = $app_info['pic'];
 		$this -> data['create_time'] = time();
-		$this -> data['try_time'] = time() + 60 * 60;
-		$this -> data['use_time'] = time() + 60 * 60;
+		$this -> data['try_time'] = time() + 86400;//一天的使用期
+		$this -> data['use_time'] = time() + 86400;
 		$id = model('app') -> allowField(true) -> save($this -> data);
 		if($id){
 			//更新用户的数据表
@@ -116,7 +116,37 @@ class Own extends Action{
 			$return['msg_test'] = '小程序类型不存在';
 			return json($return);
 		}
-		$fee = $app_info['fee'];
+
+
+        $user_id = $this -> custom ->id; //用户id
+        $user = db('custom')->field("is_agency_user,is_belong")->where(['id'=>$user_id])->find(); //用户信息
+        /*代理商的情况*/
+        if($user['is_agency_user'] == 1 ){
+            $where['type_auto'] = 1 ;
+            $where['type_ssh'] = 1 ;
+            $where['user_system'] = 1 ;
+        }
+        /*普通用户是超级管理员下的情况*/
+        if($user['is_belong'] == 0 ){
+            $where['type_auto'] = 1 ;
+            $where['type_ssh'] = 2 ;
+            $where['user_system'] = 1 ;
+        }
+        /*普通用户是代理商的情况下*/
+        if($user['is_belong'] == 1 ){
+            $where['type_auto'] = 2 ;
+            $where['type_ssh'] = 2 ;
+            $where['user_system'] = $user['id_agency'];
+        }
+        $where['type'] = $app_type;
+        $info = db('app_setting')->where($where)->find();
+        $data['name'] = $is_true['name'];
+        $data['price'] = $info['price'];
+        $data['zk'] = '';
+        $data['all_money'] = $data['price'] - $data['zk'];
+        $fee =  $data['all_money'];
+
+
 		if(!$fee || $fee <= 0){
 			$return['code'] = 10008;
 			$return['msg'] = '小程序价格错误';
@@ -476,12 +506,13 @@ class Own extends Action{
 			$return['msg_test'] = '格式不正确';
 			return json($return);
 		}
-		$code = mt_rand(100000,999999);
-		$param = "code:{$code}";
-		$code = sendMsg('183177745941','zaefNsQrp2GJ9F3Y','TP1709201',$this->data['tel'],$param,$code);
+		$code1 = mt_rand(100000,999999);
+		$param = "code:{$code1}";
+		$code = sendMsgInfo($this->data['tel'],$param);
 		if($code == 0000){
 			$return['code'] = 10000;
 			$return['msg'] = '发送成功';
+            file_cache($this->data['tel'] . '.php',$code1,120);
 			return json($return);
 		}else{
 			$return['code'] = 10003;
@@ -496,9 +527,9 @@ class Own extends Action{
 	 * code
 	 */
 	public function verifyMsgCode(){
-		if(!isset($this->data['code'])){
+		if(!isset($this->data['code']) || !isset($this->data['tel'])){
 			$return['code'] = 10001;
-			$return['msg_test'] = '缺少参数';
+			$return['msg_test'] = '缺少参数code和tel';
 			return json($return);
 		}
 		if(!preg_match("/^[0-9]{6}$/",$this -> data['code'])){
@@ -506,8 +537,7 @@ class Own extends Action{
 			$return['msg_test'] = 'code位6位数字';
 			return json($return);
 		}
-		$code = session('xigua_verify');
-		$code = 88888;//测试
+        $code = file_cache($this->data['tel'] . '.php');
 		if(!$code){
 			$return['code'] = 10003;
 			$return['msg_test'] = '验证码失效,请重新获取';
@@ -550,14 +580,19 @@ class Own extends Action{
 				$where['nickName'] = $this->data['nickname'];
 			}
 		}
+        $number = db('user')
+            -> where(['apps' => $this -> data['appid']])
+            -> where($where)
+            -> count();
 		$info = db('user')
 			-> field("avatarUrl,nickName,gender,country,province,create_time")
-			-> where("FIND_IN_SET({$app_id['id']},apps)")
+			-> where(['apps' => $this -> data['appid']])
 			-> where($where)
 			-> page($page,$num)
 			-> select();
 		$return['code'] = 10000;
 		$return['data'] = $info;
+		$return['number'] = $number;
 		$return['msg_test'] = 'ok';
 		return json($return);
 	}

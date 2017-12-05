@@ -168,16 +168,15 @@ class Rooms extends Xiguakeji
         $mystring = $info['pic'];
         $findme   = 'Uploads';
         $pos = strpos($mystring, $findme);
-        if(!$pos){
+
+
+        if($pos != 0){
             $info['pic'] = 'Uploads/banner/'.$info['pic'];
         }
-
 
             $return['code'] = 10000;
             $return['data'] = $info ;
             return json($return);
-
-
     }
 
 
@@ -405,43 +404,35 @@ class Rooms extends Xiguakeji
 
        $where['appid'] = $this->data['appid'];
        $where['id'] = $this->data['id'];
-       $where['user_id'] = $this->this->user['id'];
-       $data['is_refunds'] = 1;
+       $where['user_id'] = $this->user['id'];
+       $check  = db('rooms_order')->field("id,state,start_time,rooms_id")->where($where)->find();
+        if($check['state'] != 1 ){
+            $return['code'] = 10004;
+            $return['msg'] = '该订单不支持退款';
+            return json($return);
+        }
+        $time = $check['start_time'] + 60*60*18;
 
-       $check  = db('rooms_order')->field("id,is_checkin,start_time")->where($where)->find();
-        if($check['is_check_in'] != 0){
+        if(time() > $time){
             $return['code'] = 10004;
-            $return['msg'] = '对不起，您无法进行此操作';
+            $return['msg'] = '18:00之后不允许退款';
             return json($return);
         }
-        if((time() > $check['start_time']) || (time() - $check['start_time']  < 7200)){
+        if(time() > $check['end_time']){
             $return['code'] = 10004;
-            $return['msg'] = '对不起，您无法进行此操作';
-            return json($return);
-        }
-        if($check['is_refunds'] == 1){
-            $return['code'] = 10004;
-            $return['msg'] = '已提交过申请，请耐心等待';
-            return json($return);
-        }
-        if($check['is_refunds'] == 2){
-            $return['code'] = 10004;
-            $return['msg'] = '已退款，请勿提交';
-
-            return json($return);
-        }
-        if($check['is_refunds'] == 3){
-            $return['code'] = 10004;
-            $return['msg'] = '您的申请已经被驳回，请勿申请';
-
+            $return['msg'] = '该订单不支持退款';
             return json($return);
         }
 
-       $res = db('rooms_order')->where($where)->update($data);
-       if($res){
+        $data['state'] = 4;
+        $data['refund_msg'] = $this->data['refund_msg'];
+
+        db('rooms')-> where(['id' => $check['rooms_id']])->setInc('number_in' , 1);//申请退款房间剩余数量加上
+        $res = db('rooms_order')->where($where)->update($data);
+        if($res){
            $return['code'] = 10000;
-           $return['msg'] = '申请退款成功，退款将于三个工作日内退还至您的微信钱包';
-           $return['msg_test'] = '申请退款成功，退款将于三个工作日内退还至您的微信钱包';
+           $return['msg'] = '申请退款成功';
+           $return['msg_test'] = '申请退款成功';
            return json($return);
        }else{
            $return['code'] = 10001;

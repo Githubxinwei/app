@@ -462,6 +462,9 @@ class App extends Xiguakeji{
                 $cart = model('goods_cart')->Field(['id','spec_value'])->where("id",$value)->find();
                 $info[$k]['spec_value'] = $cart['spec_value'];
             }
+
+            $cart = model('goods_cart')->where("id",'in',$v['carts'])->select();
+            $info[$k]['goods'] = $cart;
         }
 
 		$return['code'] = 10000;
@@ -493,13 +496,11 @@ class App extends Xiguakeji{
         $order = model('goods_order') -> where('id',$this->data['id']) -> find();
         if(empty($order) || $order['appid'] != $this->apps  || $order['user_id'] != $this->user['id'] ){
             $return['code'] = 10001;
-            $return['msg'] = '订单不存在';
             $return['msg_test'] = '订单不存在';
             return json($return);
         }
         if($order['state'] != 0 ){
             $return['code'] = 10001;
-            $return['msg'] = '订单不是待付款状态';
             $return['msg_test'] = '订单不是待付款状态';
             return json($return);
         }
@@ -509,16 +510,44 @@ class App extends Xiguakeji{
         if($info){
             $return['code'] = 10000;
             $return['msg'] = '订单取消成功';
-            $return['msg_test'] = '订单取消成功';
             return json($return);
         }else{
             $return['code'] = 10003;
             $return['msg'] = '操作失败';
-            $return['msg_test'] = '操作失败';
             return json($return);
         }
 
      }
+
+
+    /**
+     * 订单取消
+     * 订单的state改变状态为4表示订单退款，同时is_return生效，0 后台没操作 1 后台已同意 2 后台不同意
+     * 如果后台管理员不同意，要把订单的state改为原来的状态，同时is_return改为2，订单原来的状态保存在is_expire这个字段中，这个字段的作用只有在订单未支付也就是state为0 的时候才起作用 ，可以暂时使用这个字段保存订单状态
+     */
+    public function orderRefund(){
+        $orderInfo = db('goods_order') -> field('id,state') -> where(['id' => $this -> data['order_id']]) -> find();
+        if(!$orderInfo || $orderInfo['state'] == 0 || $orderInfo['state'] == 5){
+            $return['code'] = 10001;
+            $return['msg_test'] = '操作失败';
+            return json($return);
+        }
+        $info['state'] = 4;
+        $info['is_return'] = 0;
+        $info['is_expire'] = $orderInfo['state'];
+        $res = model('goods_order') -> save($info,['id' => $orderInfo['id']]);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg_test'] = '退款申请已发出,管理员审核中';
+            return json($return);
+        }else{
+            $return['code'] = 10002;
+            $return['msg_test'] = '退款申请失败';
+            return json($return);
+        }
+    }
+
+
 
     /**
      * 前台点击订单的确定收货的时候，改变订单的state为已完成状态

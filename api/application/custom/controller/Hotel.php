@@ -19,8 +19,8 @@ class Hotel extends Action{
         $this -> data = input('post.','','htmlspecialchars');
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid不存在或者预约名字不存在';
-            $return['msg_test'] = 'appid不存在或者预约名字不存在';
+            $return['msg'] = 'appid不存在或者小名字不存在';
+            $return['msg_test'] = 'appid不存在或者小名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
@@ -32,14 +32,14 @@ class Hotel extends Action{
         $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10004;
-            $return['msg'] = '当前用户没有此预约程序,appid不对';
-            $return['msg_test'] = '当前用户没有此预约程序,appid不对';
+            $return['msg'] = '当前用户没有此小程序,appid不对';
+            $return['msg_test'] = '当前用户没有此小程序,appid不对';
             return json($return);
         }
         if($is_true['custom_id'] != $this->custom->id){
             $return['code'] = 10005;
-            $return['msg'] = '当前预约程序不是这个用户的';
-            $return['msg_test'] = '当前预约程序不是这个用户的';
+            $return['msg'] = '当前小程序不是这个用户的';
+            $return['msg_test'] = '当前小程序不是这个用户的';
             return json($return);
         }
 	unset($this -> data['session_key']);
@@ -688,16 +688,17 @@ class Hotel extends Action{
 
     }
 
-    /*退款接口*/
+    /*申请退款接口*/
     public  function refunds(){
-        $weapp = new \app\weixin\controller\Common($this->apps);
+        $weapp = new \app\weixin\controller\Common($this->data['appid']);
         $weapp -> __construct('WRJZVRMU');
         $refund_no = time().rand(1000,9999);
         $where['appid'] = $this->data['appid'];
         $where['id'] = $this->data['id'];
         $order_info = db('rooms_order')->where($where)->find();
         $res = $weapp->pay_refund($order_info['order_sn'],$refund_no,$order_info['total_price']*100);
-        if($res){
+        $over = db('rooms_order')->where($where)->update(['state'=>2,'is_refunds'=>2]);
+        if($res && $over){
             $return['code'] = 10000;
             $return['msg_test'] = 'ok';
             return json($return);
@@ -805,7 +806,6 @@ class Hotel extends Action{
         }
 
     }
-
 
     /*修改订单状态   入住结束确认接口*/
     public function update_order_state(){

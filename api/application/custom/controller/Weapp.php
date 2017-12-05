@@ -57,76 +57,11 @@ class Weapp extends Action{
 			$return['code'] = 10007; $return['msg_test'] = '小程序模板类型不存在';
 		}
 		$template_id = $template['template_id'];
-		$color_arr = [
-			['BarText'=>'black','theme'=>'#ffffff','text'=>'#000','icon'=>'blue','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#1d1d1d','text'=>'#fff','icon'=>'blue','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#3790f4','text'=>'#fff','icon'=>'Deep-blue','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#ff8635','text'=>'#fff','icon'=>'orange','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#2a9a3d','text'=>'#fff','icon'=>'green','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#ed5ec0','text'=>'#fff','icon'=>'pink','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#9f56dd','text'=>'#fff','icon'=>'purple','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#ad855e','text'=>'#fff','icon'=>'soil','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#00c1e4','text'=>'#fff','icon'=>'blue','selected'=>'#000'],
-			['BarText'=>'black','theme'=>'#f12c20','text'=>'#fff','icon'=>'orange','selected'=>'#000'],
-		];
-		$layout_arr = ['grid','table','table_row'];
-		$color = $color_arr[9];//主题色
-		$layout = $layout_arr[1];echo $layout;//布局
-		$search = 1==1 ? 'true' : 'false';//启用搜索框
-		$on_service = 1==112 ? 'true' : 'false';//启用客服
-		$ext_json = '{
-			"extEnable": true,
-			"extAppid": "wxee74a03b4c01bebc",
-			"window":{
-			"navigationBarTitleText": "西瓜科技演示",
-			"navigationBarTextStyle":"white",
-			"navigationBarBackgroundColor": "'.$color['theme'].'",
-			"backgroundTextStyle":"light"
-			},
-			"ext":{
-			 "xgAppId":"23542640",
-			"appid":"wxee74a03b4c01bebc",
-			 "themeColor":"'.$color['theme'].'",
-			 "themeTextColor":"'.$color['text'].'",
-			 "layoutType":"'.$layout.'",
-			 "showSearching":'.$search.',
-			 "useOnlineService":'.$on_service.',
-			 "host":"https://weapp.xiguawenhua.com"
-			},
-			"tabBar": {
-				"selectedColor": "'.$color['selected'].'",
-				"backgroundColor": "#fff",
-				"color":"#555",
-				"borderStyle": "black",
-				"list": [
-					{
-						"pagePath": "pages/index/index",
-						"iconPath": "./img/images/un-home.png",
-						"selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
-						"postion": "top",
-						"text": "首页"
-					},
-					{
-						"pagePath": "pages/cart/cart",
-						"iconPath": "./img/images/un-care.png",
-						"selectedIconPath": "./img/images/'.$color['icon'].'-care.png",
-						"text": "购物车"
-					},
-					{
-						"pagePath": "pages/order/order",
-						"iconPath": "./img/images/un-order.png",
-						"selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
-						"text": "订单"
-					},
-					{
-						"pagePath": "pages/more/more",
-						"iconPath": "./img/images/un-more.png",
-						"selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
-						"text": "更多"
-					}
-				]
-			}
-		}';
+		$ext_json = getAppExtJson($this->auth['apps']);
+		if(!$ext_json){
+		    return;
+        }
+
 		$res = $this->weapp ->commit($template_id,$ext_json);//dump($res);
 		if($res['errcode'] == 0){
 			model('app') -> where('appid',$this->auth['apps'])->update(['is_publish'=>2]);

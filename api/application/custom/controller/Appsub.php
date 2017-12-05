@@ -63,6 +63,10 @@ class Appsub  extends Xiguakeji
             -> where($where)->page($page)->limit($limit_num)
             -> order('id desc')
             -> select();
+        foreach ($info as $k => $v){
+            $pic = explode(',',$v['service_pic']);
+            $info[$k]['service_pic'] = $pic[0];
+        }
         $return['code'] = 10000;
         $return['data'] = $info;
         return json($return);
@@ -76,7 +80,15 @@ class Appsub  extends Xiguakeji
        $info = db('subscribe_cate')-> field('id,name') -> where($where) -> order('code desc') -> select();
        foreach($info as $k=>$v){
            $goods = db("subscribe_service")->field('service_pic')->where("cate_id",$v['id'])->order("id desc")->find();
-           $info[$k]['cata_pic'] = $goods['service_pic'];
+           if($goods){
+               //这个分类下有商品，
+               $goods = explode(',',$goods['service_pic']);
+               $info[$k]['cata_pic'] = $goods[0];
+           }else{
+               //没有，显示一个默认的图片
+               $info[$k]['cata_pic'] = 'Uploads/13222222222/20170929/15066492564598.gif';
+           }
+
        }
 
 
@@ -124,11 +136,24 @@ class Appsub  extends Xiguakeji
         if($info['service_particulars']){
             $info['service_particulars'] = json_decode($info['service_particulars'],true);
         }
+        $info['service_pic'] = explode(',',$info['service_pic']);
         /*基本设置*/
         $setting = db('subscribe_service_setting')
-            ->field("id,is_show_address,is_show_tel,button_name,appid")
+            ->field("is_show_address,is_show_tel,button_name")
             -> where('appid',$this->data['appid'])
             ->find();
+        $appInfo = db('app') -> field('address,tel') -> where(['appid' => $this -> data['appid']]) -> find();
+        if($setting){
+            if($setting['is_show_address'] == 1){
+                $info['app_address'] = $appInfo['address'];
+            }
+            if($setting['is_show_tel'] == 1){
+                $info['app_tel'] = $appInfo['tel'];
+            }
+            if($setting['button_name']){
+                $info['button_name'] = $setting['button_name'];
+            }
+        }
         unset($info['appid']);
         $return['code'] = 10000;
         $return['setting'] = $setting;
@@ -157,10 +182,12 @@ class Appsub  extends Xiguakeji
         $data["create_time"] = time();
         $data["order_sn"] = date("YmdHis").rand(100,999);
         $goods = db('subscribe_service')
-            ->field("id,service_name,service_price")
+            ->field("id,service_name,service_price,service_pic")
             ->where("id",$data['subscribe_id'])
             ->find();
         $data['subscribe_name'] = $goods['service_name'];
+        $order_pic = explode(',',$goods['service_pic']);
+        $data['order_pic'] = $order_pic[0];
         $data['price'] = $goods['service_price'];
         $res = model('subscribe_order')->allowField(true)->save($data);
         if($res){
@@ -191,15 +218,13 @@ class Appsub  extends Xiguakeji
         $where['state'] = $this->data['state'];
         $where['appid'] = $this->data['appid'];
         $info = db('subscribe_order')
-            ->field('id,price,subscribe_name,subscribe_id,service_user_id,subscribe_time,username,tel,remark,create_time,state')
+            ->field('id,price,subscribe_name,subscribe_id,service_user_id,subscribe_time,username,tel,remark,create_time,state,order_pic as service_pic')
             -> where($where)
             -> page($page)
             -> limit($limit_num)
             -> order('id desc')
             -> select();
         foreach($info as $k=>$v){
-            $sub_id = db('subscribe_service') ->field("service_pic")->where("id",$v['subscribe_id']) -> find();
-            $info[$k]['service_pic']= $sub_id['service_pic'];
            if($v['service_user_id'] != 0){
                $user_id = db('subscribe_service_user') ->field("name")->where("id",$v['service_user_id']) -> find();
                $info[$k]['user_name']= $user_id['name'];
@@ -214,12 +239,14 @@ class Appsub  extends Xiguakeji
     /*获取订单详情信息 appid  id  custom_id */
     function order_detail(){
 
-        $where['appid'] = $this->data['appid'];
-        $where['id'] = $this->data['id'];
-        $where['user_id'] = $this->user['id'];
-        $info = db('subscribe_order') -> where($where) -> find();
-        $sub_id = db('subscribe_service') ->field("service_pic")->where("id",$info['subscribe_id']) -> find();
-        $info['service_pic']= $sub_id['service_pic'];
+        $where['a.appid'] = $this->data['appid'];
+        $where['a.id'] = $this->data['id'];
+        $where['a.user_id'] = $this->user['id'];
+        $info = db('subscribe_order')
+            -> alias('a')
+            -> field('a.*,a.order_pic as service_pic,b.tel app_tel')
+            -> join("__APP__ b","a.appid = b.appid","LEFT")
+            -> where($where) -> find();
         if($info['service_user_id'] != 0) {
             $user_id = db('subscribe_service_user') ->field("name")->where("id",$info['service_user_id']) -> find();
             $info['user_name']= $user_id['name'];
