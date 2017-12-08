@@ -132,9 +132,9 @@ class Recharge extends Action {
             $where['user_system'] = $user['id_agency'];
         }
         $where['type'] = $type;
-        $info = db('app_setting')->where($where)->find();
+        $setting = db('app_setting')->where($where)->find();
         $data['name'] = $is_true['name'];
-        $data['price'] = $info['price'];
+        $data['price'] = $setting['price'];
         $data['zk'] = '';
         $data['all_money'] = $data['price'] - $data['zk'];
         $app_fee =  $data['all_money'];
@@ -152,6 +152,7 @@ class Recharge extends Action {
         $data['order_sn'] = $this->custom->id . time() . mt_rand(1,9999);
         $data['create_time'] = time();
         $data['type'] = 1;
+        $data['year_num'] = $setting['year_num'];
         $res = file_cache($data['order_sn'],$data);
         if($res){
             $weapp = new \app\weixin\controller\Common();

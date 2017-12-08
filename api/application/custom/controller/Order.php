@@ -127,9 +127,15 @@ class Order extends Action{
             $info['state'] = 2;
             $res = db('goods_order') -> where(['id' => $this->data['order_id'] * 1]) -> update($info);
             if($res){
-                $return['code'] = 10000;
-                $return['msg_test'] = 'ok';
-                return json($return);
+                $order = db('goods_order')->field('tel')->where(['id' => $this->data['order_id']])->find();
+                /*发送短信通知*/
+                $param = "kd_number:{$this->data['kd_number']}";
+                $code = sendMessage($order['tel'],$param);
+                if($code) {
+                    $return['code'] = 10000;
+                    $return['msg_test'] = 'ok';
+                    return json($return);
+                }
             }else{
                 $return['code'] = 10004;
                 $return['msg_test'] = '失败';

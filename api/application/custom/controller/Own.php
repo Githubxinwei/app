@@ -27,6 +27,7 @@ class Own extends Action{
 	 * 用户创建小程序
 	 */
 	public function createUserApp(){
+
 		$this -> data['custom_id'] = $this -> custom -> id;
 		if(!isset($this -> data['type']) || !isset($this -> data['custom_id'])){
 			$return['code'] = 10002;
@@ -38,15 +39,23 @@ class Own extends Action{
 			$return['msg_test'] = '小程序不存在';
 			return json($return);
 		}
+        if(!isset($this -> data['setting_id'])){
+            $return['code'] = 10003;
+            $return['msg_test'] = '套餐参数丢失';
+            return json($return);
+        }
 
 		//判断当前用户是否可以在创建小程序
-		$maxappnum = db('custom') -> getFieldByid($this -> data['custom_id'],'max_app_num');
-		$app_num = db('custom') -> getFieldByid($this -> data['custom_id'],'app_num');
-		if($app_num >= $maxappnum){
+        $app_num = db('app')->where(['custom_id'=> $this->data['custom_id'],'type'=>$this -> data['type']])->count();
+        $maxappnum = db('app_setting')->field('app_num')->where(['id'=>$this->data['setting_id']])->find();
+//		$maxappnum = db('custom') -> getFieldByid($this -> data['custom_id'],'max_app_num');
+//		$app_num = db('custom') -> getFieldByid($this -> data['custom_id'],'app_num');
+		if($app_num >= $maxappnum['app_num']){
 			$return['code'] = 10006;
-			$return['msg_test'] = '当前用户小程序数据已满';
+			$return['msg_test'] = '当前用户此类型的小程序已上限';
 			return json($return);
 		}
+
 		//获取当前用户随机的字符串
 		$flag = true;
 		while($flag){
@@ -83,7 +92,7 @@ class Own extends Action{
 	}
 
 	/**
-	 * 小程序购买
+	 * 小程序购买 账户余额购买
 	 */
 	public function buyUserApp(){
 		$this -> data['custom_id'] = $this -> custom -> id;
@@ -139,13 +148,13 @@ class Own extends Action{
             $where['user_system'] = $user['id_agency'];
         }
         $where['type'] = $app_type;
-        $info = db('app_setting')->where($where)->find();
+        $setting = db('app_setting')->where($where)->find();
         $data['name'] = $is_true['name'];
-        $data['price'] = $info['price'];
+        $data['price'] = $setting['price'];
         $data['zk'] = '';
         $data['all_money'] = $data['price'] - $data['zk'];
-        $fee =  $data['all_money'];
-
+        $fee =  $data['all_money'] ;
+		
 
 		if(!$fee || $fee <= 0){
 			$return['code'] = 10008;
@@ -153,15 +162,15 @@ class Own extends Action{
 			return json($return);
 		}
 		//判断用户是否有钱
-		$userMoney = db('custom') -> getFieldByid($this -> data['custom_id'],'wallet');
-		if($fee > $userMoney){
+		$userMoney = db('custom') -> field('wallet')->where(['id'=> $this -> data['custom_id']])->find();
+
+        if($fee > $userMoney['wallet']){
 			$return['code'] = 10009;
 			$return['msg'] = '用户余额不足';
 			return json($return);
 		}
         $model = db();
 		$model -> startTrans();
-
 		try{
             $res = db('custom') -> where(['id' => $this -> data['custom_id']]) -> setDec('wallet',$fee);
             if($res){
@@ -173,11 +182,12 @@ class Own extends Action{
                 $buyData['pay_time'] = time();
                 $buyData['type'] = 0;
                 $buyData['state'] = 1;
+                $buyData['year_num'] = $setting['year_num'];
                 db('buy_app_log') -> insertGetId($buyData);
                 $info['update_time'] = time();
                 //判断当前购买的时间是否在过期
                 $app_info = db('app') -> field("use_time,fee") ->  where(['appid' => $this -> data['appid']]) -> find();
-                $year_time = strtotime('1 year');
+                $year_time = strtotime($setting['year_num'].'year');
                 if($app_info['use_time'] > time()){
                     //还没过，应该在原来的基础上添加
                     $info['use_time'] = $app_info['use_time'] + $year_time - time();
@@ -251,7 +261,7 @@ class Own extends Action{
 			return json($return);
 		}
 		//判断当前用户的小程序是否有这个appid
-		$info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id,start_time,over_time,business') ->  where(['appid' => $this -> data['appid']]) -> find();
+		$info = db('app') -> field('name,pic,desc,tel,site_url,address,is_publish,custom_id,start_time,over_time,business,is_forbidden') ->  where(['appid' => $this -> data['appid']]) -> find();
 		if($info['custom_id'] != $this->custom->id){
 			$return['code'] = 10004;
 			$return['msg_test'] = '这个app不是这个用户的';
@@ -489,8 +499,6 @@ class Own extends Action{
 			return json($return);
 		}
 	}
-
-
 	/**
 	 * 发送手机验证码
 	 *
@@ -521,7 +529,6 @@ class Own extends Action{
 		}
 	}
 
-
 	/**
 	 * 验证手机号是否正确
 	 * code
@@ -537,7 +544,7 @@ class Own extends Action{
 			$return['msg_test'] = 'code位6位数字';
 			return json($return);
 		}
-        $code = file_cache($this->data['tel'] . '.php');
+                $code = file_cache($this->data['tel'] . '.php');
 		if(!$code){
 			$return['code'] = 10003;
 			$return['msg_test'] = '验证码失效,请重新获取';
@@ -598,7 +605,7 @@ class Own extends Action{
 	}
 
 	public function getCustomInfo(){
-	    $info = db('custom') -> field("nickname,username,wallet,expense,app_num,register_time") -> where("id",$this->custom->id) -> find();
+	    $info = db('custom') -> field("id,nickname,username,wallet,expense,app_num,register_time,is_agency_user") -> where("id",$this->custom->id) -> find();
         $return['code'] = 10000;
         $return['data'] = $info;
         $return['msg_test'] = 'ok';

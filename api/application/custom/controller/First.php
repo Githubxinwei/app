@@ -70,6 +70,10 @@ class First{
 		$data['password'] = xgmd5($data['password']);
 		//默认的每个用户的初始金额是10000元
 		$data['wallet'] = 10000;
+
+		if($data['is_agency_user'] == 1 ){
+            $data['is_agency'] = 1;
+        }
 		$res = model('custom') -> allowField(true) -> save($data);
 		if($res){
 			$arr['code'] = 10000;$arr['msg'] = '注册成功';$arr['msg_test'] = '注册成功';

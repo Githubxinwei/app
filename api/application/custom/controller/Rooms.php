@@ -169,14 +169,17 @@ class Rooms extends Xiguakeji
         $findme   = 'Uploads';
         $pos = strpos($mystring, $findme);
 
-
+        if(!$pos){
+            $info['pic'] = 'Uploads/banner/'.$info['pic'];
+        }
         if($pos != 0){
             $info['pic'] = 'Uploads/banner/'.$info['pic'];
         }
 
-            $return['code'] = 10000;
-            $return['data'] = $info ;
-            return json($return);
+        $return['assss'] = $pos ;
+        $return['code'] = 10000;
+        $return['data'] = $info ;
+        return json($return);
     }
 
 

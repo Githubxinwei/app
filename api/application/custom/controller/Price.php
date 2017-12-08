@@ -34,6 +34,7 @@ class Price extends Action
 
         $user = db('custom')->where(['id'=>$user_id])->find(); //用户信息
 
+
          /*代理商的情况*/
         if($user['is_agency_user'] == 1 ){
             $where['type_auto'] = 1 ;
@@ -57,7 +58,7 @@ class Price extends Action
 
         $where['type'] = $this->data['type'];
 
-        $info = db('app_setting')->field("is_agency_user,is_belong")->where($where)->find();
+        $info = db('app_setting')->where($where)->find();
 
         $return['code'] = 10000;
         $return['data'] = $info;
@@ -79,7 +80,7 @@ class Price extends Action
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
-        $is_true = db('app')->field('id,name,type,create_time,try_time,custom_id') -> where(['appid' => $this -> data['appid']]) -> find();
+        $is_true = db('app')->field('id,name,type,create_time,try_time,custom_id,use_time') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10004;
             $return['msg'] = '当前用户没有此小程序,appid不对';
@@ -127,7 +128,7 @@ class Price extends Action
         $data['name'] = $is_true['name'];
         $data['price'] = $info['price'];
         $data['zk'] = '';
-        $data['over_time'] = date('Y年m月d日', strtotime("+1year",$is_true['try_time']));//指定时间戳+1天 2017-01-10 21:10:16
+        $data['over_time'] = date('Y年m月d日', strtotime("+".$info['year_num']."year",$is_true['use_time']));//指定时间戳+1天 2017-01-10 21:10:16
         $data['start_time']  =  date('Y年m月d日',$is_true['create_time']);
         $data['all_money'] = $data['price'] - $data['zk'];
 
@@ -136,4 +137,7 @@ class Price extends Action
         return json($return);
 
     }
+
+
+
 }

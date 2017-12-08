@@ -198,6 +198,47 @@ class Agency  extends Controller
 
     }
 
+    /*普通用户申请成为代理商*/
+    public function  normal_agent(){
+
+        $data = $this->data;
+        $data['is_agency_user'] = 1;
+        $data['is_agency'] = 1;
+
+        $id_cart = checkIdCard($data['id_cart']);
+        if(!$id_cart){
+            $return['code'] = 10003;
+            $return['msg'] = '身份证号不正确';
+            $return['msg_test'] = '身份证号不正确';
+            return json($return);
+        }
+
+        $info  = db('custom')->where(['id'=>$this->data['id']])->find();
+        if($info['is_agency_user'] == 1 && $info['is_agency'] == 2 ){
+            $return['code'] = 10003;
+            $return['msg'] = "您已经是代理商";
+            return json($return);
+        }
+        if($info['is_agency'] == 1 ){
+            $return['code'] = 10003;
+            $return['msg'] = "请耐心等待审核";
+            return json($return);
+        }
+        unset($data['session_key']);
+        unset($data['appid']);
+        $res = db('custom')->where(['id'=>$this->data['id']])->update($data);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = "已提交，请等待审核";
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = "提交失败";
+            return json($return);
+        }
+
+    }
+
     /*代理商列表*/
     public  function get_agent_list(){
 
@@ -248,7 +289,10 @@ class Agency  extends Controller
             $list['nowIp'] = $_SERVER["REMOTE_ADDR"];
             $list['nowTime'] = date('Y年m月d日H:i:s',time());
             $list['custom_id'] = $this->data['id'];
-           $add =  db('system')->where(['username'=>$list['username']])->find();
+            $add =  db('system')->where(['username'=>$list['username']])->find();
+            $num = db("custom")->where(['is_agency_user'=>1])->find();
+            db("custom")->where(['id'=>$list['custom_id']])->update(['angency_number'=>$num]); //修改代理商可以添加的普通用户数量
+
            if($add){
                $return['code'] = 10003;
                $return['msg'] = '该手机号已存在';
@@ -270,7 +314,6 @@ class Agency  extends Controller
             $return['msg'] = "失败";
             return json($return);
         }
-
 
     }
 
@@ -442,9 +485,18 @@ class Agency  extends Controller
 
         $res = db('custom')->insert($data);
         if($res){
-            $return['code'] = 10000;
-            $return['msg'] = "添加成功";
-            return json($return);
+
+            /*发送短信通知*/
+            $param = "password:{$data['password']}";
+            $code = sendMessage($data['username'],$param);
+
+            if($code){
+                $return['code'] = 10000;
+                $return['msg'] = "添加成功";
+                return json($return);
+            }
+
+
         }else{
             $return['code'] = 10001;
             $return['msg'] = "添加失败";
@@ -454,6 +506,8 @@ class Agency  extends Controller
 
 
     }
+
+
 
 
 }

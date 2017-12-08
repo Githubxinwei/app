@@ -75,6 +75,8 @@ class NotifyAdmin{
         if($is_true){
             return;//订单不是待处理状态，已确认收款
         }
+
+
         $buyData['custom_id'] = $value['custom_id'];
         $buyData['appid'] = $value['appid'];
         $buyData['money'] = $data['total_fee']/100;
@@ -83,6 +85,7 @@ class NotifyAdmin{
         $buyData['pay_time'] = time();
         $buyData['type'] = $value['type'];
         $buyData['state'] = 1;
+        $buyData['year_num'] = $value['year_num'];
         $model = db();
         $model -> startTrans();
         try{
@@ -91,7 +94,7 @@ class NotifyAdmin{
                 $info['update_time'] = time();
                 //判断当前购买的时间是否在过期
                 $app_info = db('app') -> field("use_time,fee") ->  where(['appid' => $value['appid']]) -> find();
-                $year_time = strtotime('1 year');
+                $year_time = strtotime($value['year_num'].'year');
                 if($app_info['use_time'] > time()){
                     //还没过，应该在原来的基础上添加
                     $info['use_time'] = $app_info['use_time'] + $year_time - time();

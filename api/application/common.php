@@ -153,6 +153,9 @@ function createNonceStr($length = 16) {
 	}
 	return "z".$str;
 }
+
+
+/*验证码短信通知*/
 function msg_everify($tel,$code){
 	$key =  '4c9ff96cc33a783b21329b8c20e8ee7c';//您申请的APPKEY
 	$tpl_id = '43730';//您申请的短信模板ID，根据实际情况修改
@@ -243,6 +246,52 @@ function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
 	$result = json_decode($result,true);
 	return $result['return_code'];
 }
+
+
+/**
+  添加普通用户 短信提醒
+ * $tel  手机号
+ *
+ */
+function sendMessage($tel,$params,$password){
+    if(!isset($tel) || !isset($params)||!isset($password)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+    $data1 = [
+        'appid'=>'183177745941',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
+
+/**
+商品发货 短信提醒
+ * $tel  手机号
+ */
+function sendShop($tel,$params,$kd_number){
+    if(!isset($tel) || !isset($params)||!isset($password)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";  //接口請求地址
+    $data1 = [
+        'appid'=>'183177745941',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
+
+
 
 /**
  * @param $appid id
