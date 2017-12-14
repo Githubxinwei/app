@@ -55,6 +55,12 @@ class Hotel extends Action{
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
+        if(trim($this -> data['stores_name']) == '' || trim($this -> data['stores_tell']) =='' || trim($this -> data['stores_address'] == '')){
+            $return['code'] = 10007;
+            $return['msg'] = '参数不能为空';
+            $return['msg_test'] = '参数不能为空';
+            return json($return);
+        }
         $data = $this->data;
         $data['custom_id'] = $this -> custom -> id;
         $where['appid'] = $this->data['appid'];

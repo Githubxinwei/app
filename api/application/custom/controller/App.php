@@ -607,7 +607,25 @@ class App extends Xiguakeji{
             return json($return);
         }
     }
-	
+
+    //获取分销二维码
+    public function get_qr_code(){
+
+        $scene = $this->user['id'];
+        $weapp = new \app\weixin\controller\Common($this->apps);
+        $qr_code = $weapp -> get_qr_code($scene);
+        if($qr_code){
+            $return['code'] = 10000;
+            $return['data'] = $qr_code;
+            return json($return);
+        }else{
+            $return['code'] = 10002;
+            $return['msg_test'] = '网络错误';
+            return json($return);
+        }
+
+    }
+
 }
 
 

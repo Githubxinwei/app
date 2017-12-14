@@ -28,8 +28,6 @@ class Agency  extends Controller
      /*获取小程序类型*/
      public function get_app(){
 
-
-
          if(!isset($this->data['type_auto'])){
              $return['code'] = 10003;
              $return['msg'] = '身份参数丢失';
@@ -76,7 +74,7 @@ class Agency  extends Controller
              $return['msg_test'] = '身份参数丢失';
              return json($return);
          }
-         if(!isset($this->data['type']) || !isset($this->data['year_num']) || !isset($this->data['app_num']) ){
+         if(!isset($this->data['type']) || !isset($this->data['year_num'])){
              $return['code'] = 10003;
              $return['msg'] = '参数丢失';
              $return['msg_test'] = '参数丢失';
@@ -485,18 +483,12 @@ class Agency  extends Controller
 
         $res = db('custom')->insert($data);
         if($res){
-
-            /*发送短信通知*/
-            $param = "password:{$data['password']}";
-            $code = sendMessage($data['username'],$param);
-
-            if($code){
-                $return['code'] = 10000;
-                $return['msg'] = "添加成功";
-                return json($return);
-            }
-
-
+            //发送短信通知
+            $param = "password:{$this->data['password']}";
+            sendMsgInfo($data['username'],$param,1,2,$user['id']);
+            $return['code'] = 10000;
+            $return['msg'] = "添加成功";
+            return json($return);
         }else{
             $return['code'] = 10001;
             $return['msg'] = "添加失败";
