@@ -346,8 +346,6 @@ class Rooms extends Xiguakeji
            return json($return);
        }
 
-
-
    }
 
     /*退款申请*/
@@ -402,10 +400,6 @@ class Rooms extends Xiguakeji
            $return['msg_test'] = '网络错误';
            return json($return);
        }
-
-
-
-
 
     }
 
