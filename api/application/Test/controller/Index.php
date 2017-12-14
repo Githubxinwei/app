@@ -25,6 +25,7 @@ class Index {
 			"navigationBarTextStyle":"white",
 			"navigationBarBackgroundColor": "'.$color['theme'].'",
 			"backgroundTextStyle":"light"
+			"backgroundColor": "'.$color['theme'].'"
 			},
 			"ext":{
 			 "xgAppId":"'.$apps.'",

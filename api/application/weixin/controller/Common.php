@@ -223,11 +223,6 @@ class common extends Controller{
         $result = $this->curl_post_ssl($url,$data);
         $postObj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
         $result_code = trim($postObj->result_code);
-
-
-
-
-
         return $result_code;
     }
 
@@ -254,8 +249,6 @@ class common extends Controller{
         curl_setopt($ch,CURLOPT_SSLCERT,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'apiclient_cert.pem');
         curl_setopt($ch,CURLOPT_SSLKEY,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'apiclient_key.pem');
         curl_setopt($ch,CURLOPT_CAINFO,dirname(__FILE__).DIRECTORY_SEPARATOR.'zhengshu'.DIRECTORY_SEPARATOR.'rootca.pem');
-
-
         if( count($aHeader) >= 1 ){
             curl_setopt($ch, CURLOPT_HTTPHEADER, $aHeader);
         }

@@ -36,16 +36,11 @@ class Rooms extends Xiguakeji
     public  function brands(){
         $where['appid'] = $this->data['appid'];
         $info = db('app')->field('id,site_url,start_time,over_time,address,tel,desc,name,pic')->where($where)->find();
-        if($info){
+
             $return['code'] = 10000;
             $return['data'] = $info ;
             return json($return);
-        }else{
-            $return['code'] = 10001;
-            $return['msg'] = '获取失败';
-            $return['msg_test'] = '获取失败';
-            return json($return);
-        }
+
     }
 
     /*获取门店列表*/
@@ -63,27 +58,21 @@ class Rooms extends Xiguakeji
 
         foreach($stores as $k=>$v){
 
-            $res = db('rooms')->where(['appid' => $v['appid']])->Min("price");
+            $res = db('rooms')->where(['appid' => $v['appid']])->Min("price"); //最低价格
             $stores[$k]['price'] =$res;
             unset($wheres);
 
             $wheres[]=['exp',"FIND_IN_SET(".$v['id'].",stores_id)"];
             $wheres['appid'] = $v['appid'];
 
-            $room = db('rooms')->where($wheres)->Sum('number_in');
+            $room = db('rooms')->where($wheres)->Sum('number_in'); //剩余房间
             $stores[$k]['number'] = $room;
         }
 
-        if($stores){
             $return['code'] = 10000;
             $return['data'] = $stores ;
             return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = "获取失败";
-            $return['msg_test'] = '获取失败';
-            return json($return);
-        }
+
 
     }
 
@@ -96,16 +85,11 @@ class Rooms extends Xiguakeji
         }
 
         $stores = db('stores')->where($where)->find();
-        if($stores){
+
             $return['code'] = 10000;
             $return['data'] = $stores ;
             return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = "获取失败";
-            $return['msg_test'] = '获取失败';
-            return json($return);
-        }
+
 
     }
 
@@ -117,18 +101,29 @@ class Rooms extends Xiguakeji
         foreach($rooms as $k=>$v){
             $pic = explode(',',$v['photo']);
             $rooms[$k]['photo'] = $pic[0];
+            /*获取价格调整信息  调整价格  总价*/
+            $rules = db('rooms_rules')
+                ->where(['appid'=>$this -> data['appid'] ,'rules_range' => $v['room_type'],'stores_id'=>$this->data['stores_id']])
+                ->where('start_time','<',time())
+                ->where('over_time','>',time())
+                ->whereOr(['rules_range'=>'所有房型'])
+                ->find();
+
+            if($rules) {
+                if ($rules['rules'] == 1) {
+                    $rooms[$k]['price'] = $v['price'] * $rules['rules_detail'] + $v['price'];
+                } elseif ($rules['rules'] == 2) {
+                    $rooms[$k]['price'] = $v['price'] + $rules['rules_detail'];
+                } elseif ($rules['rules'] == 3) {
+                    $rooms[$k]['price'] = $v['price'] - $v['price'] * $rules['rules_detail'];
+                }
+
+            }
+
         }
-        if($rooms || empty($rooms)){
             $return['code'] = 10000;
             $return['data'] = $rooms ;
             return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = "获取失败";
-            $return['msg_test'] = '获取失败';
-            return json($return);
-        }
-
     }
 
     /*获取房间详细信息*/
@@ -137,16 +132,29 @@ class Rooms extends Xiguakeji
         $where['id'] = $this -> data['id'];
         $rooms = db('rooms')->where($where)->find();
         $rooms['photo'] = explode(',',$rooms['photo']);
-        if($rooms){
-            $return['code'] = 10000;
-            $return['data'] = $rooms ;
-            return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = "获取失败";
-            $return['msg_test'] = '获取失败';
-            return json($return);
-        }
+        /*获取价格调整信息  调整价格  总价*/
+        $rules = db('rooms_rules')
+            ->where(['appid'=>$this -> data['appid'] ,'rules_range' => $rooms['room_type'],'stores_id'=>$this->data['stores_id']])
+            ->where('start_time','<',time())
+            ->where('over_time','>',time())
+            ->whereOr(['rules_range'=>'所有房型'])
+            ->find();
+
+            if($rules){
+                if($rules['rules'] == 1 ){
+                    $rooms['price'] = $rooms['price']*$rules['rules_detail'] + $rooms['price'];
+                }elseif($rules['rules'] == 2){
+                    $rooms['price'] = $rooms['price'] + $rules['rules_detail'] ;
+                }elseif($rules['rules'] == 3){
+                    $rooms['price'] = $rooms['price'] - $rooms['price']*$rules['rules_detail'];
+                }
+            }
+
+        $rules['start_time'] = date("Y-m-d H:i:s",$rules['start_time']);
+
+        $return['code'] = 10000;
+        $return['data'] = $rooms ;
+        return json($return);
 
     }
 
@@ -160,21 +168,18 @@ class Rooms extends Xiguakeji
         $mystring = $info['pic'];
         $findme   = 'Uploads';
         $pos = strpos($mystring, $findme);
+
         if(!$pos){
             $info['pic'] = 'Uploads/banner/'.$info['pic'];
         }
-
-        if($info){
-            $return['code'] = 10000;
-            $return['data'] = $info ;
-            return json($return);
-        }else{
-            $return['code'] = 10001;
-            $return['msg'] = '获取失败';
-            $return['msg_test'] = '获取失败';
-            return json($return);
+        if($pos != 0){
+            $info['pic'] = 'Uploads/banner/'.$info['pic'];
         }
 
+        $return['assss'] = $pos ;
+        $return['code'] = 10000;
+        $return['data'] = $info ;
+        return json($return);
     }
 
 
@@ -200,8 +205,7 @@ class Rooms extends Xiguakeji
        $order_sn = date('Y').$time.rand(1000,9999);
 
        $info = db("rooms")->field("room_type,price,bed_type,number_in")->where(['id' => $this->data['rooms_id']])->find();
-        $name =$info['room_type'];
-       $total_fee = $this->data['num'] * $info['price'];
+       $name =$info['room_type'];
 
        if($info['number_in'] <= 0){
            $return['code'] = 10008;
@@ -211,27 +215,50 @@ class Rooms extends Xiguakeji
        }
 
        $address = db("stores")->field('stores_address')->where(['id' => $this->data['stores_id']])->find();
-       $data = $this->data;
-       $data['user_id'] = $this->user['id'];
-       $data['order_sn'] = $order_sn;
-       $data['create_time'] = $time;
-       $data['openid'] = $this->user['openid'];
-       $data['room_type'] = $info['room_type'];
-       $data['price'] = $info['price'];
-       $data['total_price'] = $total_fee;
-       $data['bed_type'] =$info['bed_type'];
-       $data['address'] =$address['stores_address'];
-       $data['end_time'] =strtotime($this->data['end_time']." 14:00");
-       $data['start_time'] =strtotime($this->data['start_time']." 12:00");
 
+       /*获取价格调整信息  调整价格  总价*/
+        $rules = db('rooms_rules')
+            ->where(['appid'=>$this -> data['appid'] ,'rules_range' => $info['room_type'],'stores_id'=>$this->data['stores_id']])
+            ->where('start_time','<',time())
+            ->where('over_time','>',time())
+            ->whereOr(['rules_range'=>'所有房型'])
+            ->find();
+        if($rules){
+            if($rules['rules'] == 1 ){
+                $info['price'] = $info['price']*$rules['rules_detail'] + $info['price'];
+            }elseif($rules['rules'] == 2){
+                $info['price'] = $info['price'] + $rules['rules_detail'] ;
+            }elseif($rules['rules'] == 3){
+                $info['price'] = $info['price'] - $info['price']*$rules['rules_detail'];
+            }
+        }
+
+        $data = $this->data;
+        $data['price'] = $info['price'];
+        $data['total_price'] = $this->data['num'] * $data['price'];
+        $data['user_id'] = $this->user['id'];
+        $data['order_sn'] = $order_sn;
+        $data['create_time'] = $time;
+        $data['openid'] = $this->user['openid'];
+        $data['room_type'] = $info['room_type'];
+        $data['bed_type'] =$info['bed_type'];
+        $data['address'] =$address['stores_address'];
+        $data['end_time'] =strtotime($this->data['end_time']." 14:00");
+        $data['start_time'] =strtotime($this->data['start_time']." 12:00");
+
+        $total_fee = $this->data['num'] * $data['price'];
         unset($data['session_key']);
         unset($data['apps']);
+
+
         $id = db('rooms_order')->insertGetId($data);
 
         $weapp = new \app\weixin\controller\Common($this->data['appid']);
         $order_id = $id;
         $attach = json_encode(['type'=>3,'id'=>$order_id]);//type值为3时，是酒店小程序的支付请求
+
         $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
+
         if(!$prepay_id){
             $return['code'] = 10005;$return['msg'] = '微信小程序参数配置有误';return json($return);
         }
@@ -250,16 +277,11 @@ class Rooms extends Xiguakeji
         $where['appid'] = $this->data['appid'];
         $where['user_id'] = $this->user['id'];
         $info = model('rooms_order')->where($where)->find();
-        if($info){
-            $return['code'] = 10000;
-            $return['data'] = $info;
-            return json($return);
-        }else{
-            $return['code'] = 10001;
-            $return['msg'] = '订单错误';
-            $return['msg_test'] = '订单错误';
-            return json($return);
-        }
+
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        return json($return);
+
 
     }
 
@@ -270,23 +292,47 @@ class Rooms extends Xiguakeji
             $return['code'] = 10001;$return['msg_test'] = '缺少参数id';return json($return);
         }
         $order = db('rooms_order') -> where('id',$this->data['id']) -> find();
+        $num = db('rooms') ->field('number_in')-> where('id',$order['rooms_id']) -> find();
+  
+        if($num['number_in'] <= 0){
+            $return['code'] = 10008;
+            $return['msg'] = '房间已满';
+            $return['msg_test'] = '房间已满';
+            return json($return);
+        }
         if(empty($order) || $order['appid'] != $this->apps  || $order['user_id'] != $this->user['id'] ){
             $return['code'] = 10001;$return['msg_test'] = '订单不存在';return json($return);
         }
         if($order['state'] != 0 ){
             $return['code'] = 10001;$return['msg_test'] = '订单不是待付款状态';return json($return);
         }
+  
+        //判断当前订单是否过期，从创建起，两小时之内
+        $time = time() - 7200;
+        if($order['create_time'] < $time){
+
+            $return['code'] = 10011;
+
+            $return['msg'] = '订单已过期';return json($return);
+        }
         $weapp = new \app\weixin\controller\Common($this->apps);
         //prepay_id是否过期，过期重新生成
         if( time() - $order['prepay_time'] > 7200 ){
+            $order_sn = date('Y').time().rand(1000,9999);
             $prepay_id = $weapp ->get_prepay_id($this->user['openid'],$order['total_price']*100,$order['order_sn'],$order['id'],'西瓜科技-'.$order['room_type']);
-            db('rooms_order')->where(['id'=>$order['id']])-> update(['prepay_id'=>$prepay_id,'prepay_time'=>time()]);
+
+            if(!$prepay_id){
+                $return['code'] = 10010;
+                $return['msg_test'] = '生成prepay_id出错';
+            }
+            model('rooms_order') -> save(['prepay_id'=>$prepay_id,'prepay_time'=>time(),'order_sn' => $order_sn],['id'=>$order['id']]);
         }else{
             $prepay_id = $order['prepay_id'];
         }
+
         $return['code'] = 10000;
         $return['msg_test'] = 'data内数据即调起支付所需参数，无需进行加密操作，直接使用';
-        $return['data'] = $weapp -> paysign($prepay_id);
+        $return['data'] =$weapp -> paysign($prepay_id);
         return json($return);
     }
 
@@ -301,12 +347,26 @@ class Rooms extends Xiguakeji
         $where['state'] = $this->data['type'];
         $where['appid'] = $this->data['appid'];
         //->alias('a')->join($join)  -> where($where)
-        $info = db('rooms_order')
-            -> where($where)
-            -> page($page)
-            -> limit($limit_num)
-            -> order('id desc')
-            -> select();
+         /*已确认的订单下  包含 已支付 已入住 退款中的 订单 */
+        if($this->data['type'] == 1){
+            $info = db('rooms_order')
+                -> where($where)
+                ->whereOr('state','3')
+                ->whereOr('state','4')
+                ->whereOr('state','5')
+                -> page($page)
+                -> limit($limit_num)
+                -> order('id desc')
+                -> select();
+        }else{
+            $info = db('rooms_order')
+                -> where($where)
+                -> page($page)
+                -> limit($limit_num)
+                -> order('id desc')
+                -> select();
+        }
+
 
         foreach($info as $k=>$v){
             $rooms = db('rooms')->field('id,photo')->where(['id' => $v['rooms_id']])->find();
@@ -334,17 +394,9 @@ class Rooms extends Xiguakeji
        $rooms = db('rooms')->field('id,photo')->where(['id' => $info['rooms_id']])->find();
        $pic = explode(',',$rooms['photo']);
        $info['room_photo'] = $pic[0];
-
-       if($info){
-           $return['code'] = 10000;
-           $return['data'] = $info;
-           return json($return);
-       }else{
-           $return['code'] = 10001;
-           $return['msg'] = '网络错误';
-           $return['msg_test'] = '网络错误';
-           return json($return);
-       }
+       $return['code'] = 10000;
+       $return['data'] = $info;
+       return json($return);
 
    }
 
@@ -353,46 +405,35 @@ class Rooms extends Xiguakeji
 
        $where['appid'] = $this->data['appid'];
        $where['id'] = $this->data['id'];
-       $where['user_id'] = $this->this->user['id'];
-       $data['is_refunds'] = 1;
+       $where['user_id'] = $this->user['id'];
+       $check  = db('rooms_order')->field("id,state,start_time,rooms_id")->where($where)->find();
+        if($check['state'] != 1 ){
+            $return['code'] = 10004;
+            $return['msg'] = '该订单不支持退款';
+            return json($return);
+        }
+        $time = $check['start_time'] + 60*60*18;
 
-       $check  = db('rooms_order')->field("id,is_checkin,start_time")->where($where)->find();
-        if($check['is_check_in'] != 0){
+        if(time() > $time){
             $return['code'] = 10004;
-            $return['msg'] = '对不起，您无法进行此操作';
-            $return['msg_test'] = '对不起，您无法进行此操作';
+            $return['msg'] = '18:00之后不允许退款';
             return json($return);
         }
-        if((time() > $check['start_time']) || (time() - $check['start_time']  < 7200)){
+        if(time() > $check['end_time']){
             $return['code'] = 10004;
-            $return['msg'] = '对不起，您无法进行此操作';
-            $return['msg_test'] = '对不起，您无法进行此操作';
-            return json($return);
-        }
-        if($check['is_refunds'] == 1){
-            $return['code'] = 10004;
-            $return['msg'] = '已提交过申请，请耐心等待';
-            $return['msg_test'] = '已提交过申请，请耐心等待';
-            return json($return);
-        }
-        if($check['is_refunds'] == 2){
-            $return['code'] = 10004;
-            $return['msg'] = '已退款，请勿提交';
-            $return['msg_test'] = '已退款，请勿提交';
-            return json($return);
-        }
-        if($check['is_refunds'] == 3){
-            $return['code'] = 10004;
-            $return['msg'] = '您的申请已经被驳回，请勿申请';
-            $return['msg_test'] = '您的申请已经被驳回,请勿申请';
+            $return['msg'] = '该订单不支持退款';
             return json($return);
         }
 
-       $res = db('rooms_order')->where($where)->update($data);
-       if($res){
+        $data['state'] = 4;
+        $data['refund_msg'] = $this->data['refund_msg'];
+
+        db('rooms')-> where(['id' => $check['rooms_id']])->setInc('number_in' , 1);//申请退款房间剩余数量加上
+        $res = db('rooms_order')->where($where)->update($data);
+        if($res){
            $return['code'] = 10000;
-           $return['msg'] = '申请退款成功，退款将于三个工作日内退还至您的微信钱包';
-           $return['msg_test'] = '申请退款成功，退款将于三个工作日内退还至您的微信钱包';
+           $return['msg'] = '申请退款成功';
+           $return['msg_test'] = '申请退款成功';
            return json($return);
        }else{
            $return['code'] = 10001;

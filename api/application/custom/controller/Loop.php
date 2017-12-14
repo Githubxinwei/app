@@ -22,8 +22,8 @@ class Loop extends Action{
 			$return['msg_test'] = 'appid格式不正确';
 			echo json_encode($return);exit;
 		}
-		$custom_id = db('app') -> where("appid",$this->data['appid']) -> value('custom_id');
-		if($custom_id != $this->custom->id){
+		$this -> custom_id = db('app') -> field('custom_id,type') ->  where("appid",$this->data['appid']) -> find();
+		if($this -> custom_id['custom_id'] != $this->custom->id){
 			$return['code'] = 100020;
 			$return['msg_test'] = '当前app不是这个用户的';
 			echo json_encode($return);exit;
@@ -57,7 +57,23 @@ class Loop extends Action{
 	 * appid
 	 */
 	public function getAllShopInfo(){
-		$info = db('goods') -> where(['appid' => $this->data['appid']]) -> column('name','id');
+        switch ($this -> custom_id['type']){
+            case 1:
+                $appModel = db('goods');
+                $field = 'name';
+                break;
+            case 2:
+                $appModel = db('subscribe_service');
+                $field = 'service_name';
+                break;
+            default:
+                $appModel = '';
+        }
+        if(!$appModel){
+            $return['code'] = 10001;
+            $return['msg_test'] = 'error';
+        }
+		$info = $appModel -> where(['appid' => $this->data['appid']]) -> column($field,'id');
 		$return['code'] = 10000;
 		$return['data'] = $info;
 		$return['msg_test'] = 'ok';
@@ -68,7 +84,21 @@ class Loop extends Action{
 	 * 获取所有的分类的信息
 	 */
 	public function getAllCateInfo(){
-		$info = db('goods_cate') -> where(['appid' => $this->data['appid']]) -> column('name','id');
+        switch ($this -> custom_id['type']){
+            case 1:
+                $appModel = db('goods_cate');
+                break;
+            case 2:
+                $appModel = db('subscribe_cate');
+                break;
+            default:
+                $appModel = '';
+        }
+        if(!$appModel){
+            $return['code'] = 10001;
+            $return['msg_test'] = 'error';
+        }
+		$info = $appModel -> where(['appid' => $this->data['appid']]) -> column('name','id');
 		$return['code'] = 10000;
 		$return['data'] = $info;
 		$return['msg_test'] = 'ok';
@@ -79,10 +109,7 @@ class Loop extends Action{
 	 * 获取所有的页面的信息
 	 */
 	public function getAllPageInfo(){
-		$data = array(
-			'Pages/order/order' => '订单',
-			'Pages/User/index' => '我的中心',
-		);
+		$data = get_app_page($this->custom_id['type']);
 		$return['code'] = 10000;
 		$return['data'] = $data;
 		$return['msg_test'] = 'ok';

@@ -48,7 +48,6 @@ class App extends Xiguakeji{
 				$info[$k]['pic'] = '/uploads/18595906710/20170929/15066512347389.gif';
 			}
 			$spec_list =$v->getData();
-
 			if(count($spec_list['spec']) > 0){
                 $return['code'] = 10000;$return['data'] = '111';
 				$spec = json_decode($spec_list['spec'],true);
@@ -56,9 +55,12 @@ class App extends Xiguakeji{
 				foreach($spec as $kk=>$vv){
 				    if(isset($vv['price'])){
                         $price[$kk]=$vv['price'];
+
                     }			
 		    	
 			}
+
+                 
                 asort($price);
 				$pos=reset($price);
 				$info[$k]['prices'] = $pos;
@@ -103,6 +105,7 @@ class App extends Xiguakeji{
 		$return['code'] = 10000;$return['data'] = $info;
 		return json($return);
 	}
+
 	//加入购物车
 	function add_cart(){
 		//传入id，num，spec
@@ -158,7 +161,7 @@ class App extends Xiguakeji{
 			$cart_data['num'] = $this->data['num'];
 			if($cart_data['pic']){
 				$pic_arr = explode(',',$cart_data['pic']);
-			 	$cart_data['pic'] = $pic_arr[0];
+				$cart_data['pic'] = $pic_arr[0];
 			}
 			$res = model('goods_cart') ->allowField(true) -> save($cart_data);
 		}
@@ -186,7 +189,6 @@ class App extends Xiguakeji{
 		 	$return['code'] = 10000;return json($return);
 		 }	
 	}
-
 	//修改购物车商品数量
 	function alter_cnum(){
 	    if(!isset($this->data['id'])){
@@ -261,10 +263,10 @@ class App extends Xiguakeji{
 						$return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$spec_array[$this->data['spec']]['lastNum'].'件';return json($return);
 					}else if($spec_array[$this->data['spec']]['lastNum'] != '∞'){
 					    //库存充足，扣除库存
-		                        $spec_array[$this->data['spec']]['lastNum'] -= $this->data['num'];
-		                        $specInfo['spec'] = json_encode($spec_array);
-		                        model('goods') -> save($specInfo,['id' => $this->data['id']]);
-					}
+                        $spec_array[$this->data['spec']]['lastNum'] -= $this->data['num'];
+                        $specInfo['spec'] = json_encode($spec_array);
+                        model('goods') -> save($specInfo,['id' => $this->data['id']]);
+                    }
 					$cart_data['spec_key'] = $this->data['spec'];
 					$cart_data['spec_value'] = $spec_array[$this->data['spec']]['name'];
 					$cart_data['price'] = $spec_array[$this->data['spec']]['price'];
@@ -273,11 +275,11 @@ class App extends Xiguakeji{
 				//检查库存是否足够
 				if( $info['stock'] != -1 && $info['stock'] < $this->data['num']  ){
 					$return['code'] = 10002;$return['msg'] = '商品库存不足，剩余'.$info['stock'].'件';return json($return);
-					}else if($info['stock'] != -1){
-		                    //库存充足，扣除库存
-		                    $stock['stock'] = $info['stock'] - $this->data['num'];
-		                    model('goods') -> save($stock,['id' => $this->data['id']]);
-				}
+				}else if($info['stock'] != -1){
+                    //库存充足，扣除库存
+                    $stock['stock'] = $info['stock'] - $this->data['num'];
+                    model('goods') -> save($stock,['id' => $this->data['id']]);
+                }
 			}
 			$cart_data['user_id'] = $this->user['id'];
 			$cart_data['good_id'] = $info['id'];
@@ -297,7 +299,7 @@ class App extends Xiguakeji{
 			$name = $info['name'];$num = $this->data['num'];
 		}else{
 
-			if( !isset($this->data['ids']) ){
+			if(  !isset($this->data['ids']) ){
 				$return['code'] = 10001;$return['msg_test'] = '缺少商品信息,其中内含ids';return json($return);
 			}
 			//从数据库取出商品
@@ -340,7 +342,7 @@ class App extends Xiguakeji{
                         model('goods') -> save($stock,['id' => $goodCart['good_id']]);
                     }
                 }
-			}
+            }
 			$name = $carts['name'];$pic = $carts['pic'];$num = $carts['num'];
 			$total_fee = model('goods_cart')
                 -> where(['user_id'=>$this->user['id'],'appid'=>$this->apps,'is_cart'=>1,'id'=>['exp','in ('.$this->data['ids'].')']])
@@ -409,10 +411,12 @@ class App extends Xiguakeji{
         if(strtotime($order['create_time']) < $time){
             $return['code'] = 10011;$return['msg'] = '订单已过期';return json($return);
         }
+
 		$weapp = new \app\weixin\controller\Common($this->apps);
 		//prepay_id是否过期，过期重新生成
 		if( time() - $order['prepay_time'] > 7200 ){
 			//重新生成商户订单号
+
             $order_sn = date('Y').time().rand(1000,9999);
 			$prepay_id = $weapp -> get_prepay_id($this->user['openid'],$order['price']*100,$order_sn,$order['id'],'西瓜科技-'.$order['name']);
 			if(!$prepay_id){
@@ -448,7 +452,8 @@ class App extends Xiguakeji{
 		$info = model('goods_order')
             ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts,zipcode,kd_code,kd_number,create_time')
             -> where($where)
-	    -> where($where1)
+            -> where($where1)
+
             -> page($page)
             -> limit($limit_num)
             -> order('id desc')
@@ -461,7 +466,10 @@ class App extends Xiguakeji{
                 $cart = model('goods_cart')->Field(['id','spec_value'])->where("id",$value)->find();
                 $info[$k]['spec_value'] = $cart['spec_value'];
             }
+
 	    $cart = model('goods_cart')->where("id",'in',$v['carts'])->select();
+
+
             $info[$k]['goods'] = $cart;
         }
 
@@ -508,16 +516,18 @@ class App extends Xiguakeji{
         if($info){
             $return['code'] = 10000;
             $return['msg'] = '订单取消成功';
-            $return['msg_test'] = '订单取消成功';
             return json($return);
         }else{
             $return['code'] = 10003;
             $return['msg'] = '操作失败';
+
 	    return json($return);
         }
 
      }
-     /**
+     
+
+    /**
      * 订单取消
      * 订单的state改变状态为4表示订单退款，同时is_return生效，0 后台没操作 1 后台已同意 2 后台不同意
      * 如果后台管理员不同意，要把订单的state改为原来的状态，同时is_return改为2，订单原来的状态保存在is_expire这个字段中，这个字段的作用只有在订单未支付也就是state为0 的时候才起作用 ，可以暂时使用这个字段保存订单状态
@@ -529,7 +539,7 @@ class App extends Xiguakeji{
             $return['msg_test'] = '操作失败';
             return json($return);
         }
-	$info['state'] = 4;
+        $info['state'] = 4;
         $info['is_return'] = 0;
         $info['is_expire'] = $orderInfo['state'];
         $res = model('goods_order') -> save($info,['id' => $orderInfo['id']]);
@@ -543,6 +553,8 @@ class App extends Xiguakeji{
             return json($return);
         }
     }
+
+
 
     /**
      * 前台点击订单的确定收货的时候，改变订单的state为已完成状态
@@ -578,8 +590,9 @@ class App extends Xiguakeji{
     }
 
     /**
-     * form_id 发送模板的时候需要使用到这个     
-     */    
+     * form_id 发送模板的时候需要使用到这个
+     */
+
     public function saveFormId(){
         if(!isset($this->data['form_id'])){
             $return['code'] = 10001;

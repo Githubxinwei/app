@@ -8,11 +8,13 @@
  */
 namespace app\system\controller;
 use think\Controller;
+use think\Session;
 
 class Info extends Controller{
 
     function _initialize()
     {
+        header('Access-Control-Allow-Origin:*');
         $this -> data = input('post.','','htmlspecialchars');
         $this -> user = session('admin');
         if($this->user == null){
@@ -41,9 +43,16 @@ class Info extends Controller{
         if(isset($this->data['start_time']) && isset($this->data['end_time'])){
             $where['register_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
         }
+
+        $user = $this -> user;
+
+        if($user['is_agency_user'] == 1 ){
+            $arr = db('system')->field('custom_id')->where(['id'=>$user['id']])->find();
+            $where['id_agency'] = $arr['custom_id'];
+        }
         $count = db('custom') -> where($where) -> count();
         $info = db('custom')
-            -> field('id,nickname,username,wallet,expense,app_num,max_app_num,register_time')
+            -> field('id,nickname,username,wallet,expense,app_num,max_app_num,register_time,is_forbidden')
             -> where($where)
             -> page($page,$limit)
             -> order('register_time desc')
@@ -63,7 +72,7 @@ class Info extends Controller{
             $return['msg_test'] = '参数缺失';
             return json($return);
         }
-        $info = db('custom') -> field('id,nickname,username,wallet,expense,ip,app_num,max_app_num,register_time') ->  find($this->data['agent_id']*1);
+        $info = db('custom') -> field('is_forbidden,id,nickname,username,wallet,expense,ip,app_num,max_app_num,register_time') ->  find($this->data['agent_id']*1);
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';
         $return['data'] = $info;
@@ -111,7 +120,7 @@ class Info extends Controller{
         }
         $count = db('user') -> where($where) -> count();
         $info = db('user')
-            -> field('id,nickName,gender,avatarUrl,city,province,country,create_time')
+            -> field('id,nickName,gender,avatarUrl,city,province,country,create_time,is_forbidden')
             -> where($where)
             -> page($page,$limit)
             -> order('create_time desc')
@@ -131,7 +140,7 @@ class Info extends Controller{
             $return['msg_test'] = '参数缺失';
             return json($return);
         }
-        $info = db('user')  -> field('id,nickName,gender,avatarUrl,city,province,country,create_time') ->  find($this->data['user_id']*1);
+        $info = db('user')  -> field('id,nickName,gender,avatarUrl,city,province,country,create_time,is_forbidden') ->  find($this->data['user_id']*1);
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';
         $return['data'] = $info;
@@ -186,7 +195,7 @@ class Info extends Controller{
             -> count();
         $info = db('app')
             -> alias('a')
-            -> field('a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.is_publish,b.nickname as username')
+            -> field('a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.is_publish,b.nickname as username,a.is_forbidden')
             -> join("__CUSTOM__ b",'a.custom_id = b.id','LEFT')
             -> where($where)
             -> page($page,$limit)
@@ -211,7 +220,7 @@ class Info extends Controller{
         }
         $info = db('app')
             -> alias('a')
-            -> field("a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.fee,a.desc,a.tel,a.site_url,a.address,a.is_publish,a.notifytel,a.notifyemail,a.start_time,a.over_time,a.business,a.is_del,b.name as username")
+            -> field("a.id,a.name,a.pic,a.type,a.create_time,a.use_time,a.fee,a.desc,a.tel,a.site_url,a.address,a.is_publish,a.notifytel,a.notifyemail,a.start_time,a.over_time,a.business,a.is_del,b.nickname as username,a.is_forbidden")
             -> join("__CUSTOM__ b",'a.custom_id = b.id',"LEFT")
             -> where(['a.id' => $this->data['app_id']*1])
             -> find();
@@ -221,7 +230,7 @@ class Info extends Controller{
             return json($return);
         }
         $appType = get_app($info['type']);
-        $info['type'] = isset($appType['name']) ? isset($appType['name']) : '无';
+        $info['type'] = isset($appType['name']) ? $appType['name'] : '无';
         $return['code'] = 10000;
         $return['msg_test'] = 'ok';
         $return['data'] = $info;
@@ -237,7 +246,7 @@ class Info extends Controller{
             $return['msg_test'] = '参数缺失';
             return json($return);
         }
-        $res = db('app') -> delete($this->data['app_id']);
+        $res = db('app') -> where(['id' => $this->data['app_id']]) -> setField('is_del',1);
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
@@ -258,22 +267,27 @@ class Info extends Controller{
         return json($return);
     }
 
+    /**
+     * 通过代理id禁用当前代理
+     */
+    public function forbiddenById(){
+        if(!isset($this->data['id']) || !isset($this->data['is_forbidden'])|| !isset($this->data['type'])){
+            $return['code'] = 10001;
+            $return['msg_test'] = '参数缺失';
+            return json($return);
+        }
+        $is_forbidden = $this->data['is_forbidden'] == 0 ? 0 : 1;
+        $res = db($this->data['type']) -> where(['id' => $this->data['id']]) -> setField('is_forbidden',$is_forbidden);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '修改成功';
+            return json($return);
+        }else{
+            $return['code'] = 10002;
+            $return['msg'] = '修改失败';
+            return json($return);
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    }
 
 }

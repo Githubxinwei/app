@@ -50,16 +50,25 @@ class Recharge extends Action {
             $notify_url = 'https://'.$_SERVER['HTTP_HOST'].url('custom/NotifyAdmin/recharge');
             $code_url = $weapp -> get_qr_prepay_id($data['money'] * 100,$data['order_sn'],$data['order_sn'],'shop',$this->pay,$notify_url);
             /*输出核销二维码图片*/
-            import("Erweima",EXTEND_PATH,'.class.php');
-            $value = $code_url;
-            $errorCorrectionLevel = "H";
-            $matrixPointSize = "8";
-            $path = 'wxqr/' . $this->custom->id . ".png";
-            \QRcode::png($value,false, $errorCorrectionLevel, $matrixPointSize,1);
-            //            $return['code'] = 10000;
-//            $return['msg_test'] = 'ok';
-//            $return['data'] = $path;
-//            return json($return);
+//            import("Erweima",EXTEND_PATH,'.class.php');
+//            $value = $code_url;
+//            $errorCorrectionLevel = "H";
+//            $matrixPointSize = "8";
+//            \QRcode::png($value,false, $errorCorrectionLevel, $matrixPointSize,1);
+            import('phpqrcode.phpqrcode',EXTEND_PATH,'.php');
+            $data =$code_url;
+            $level = 'L';
+            $size =4;
+            $QRcode = new \QRcode();
+            ob_start();
+            $QRcode->png($data,false,$level,$size,2);
+            $imageString = base64_encode(ob_get_contents());
+            ob_end_clean();
+            $imageString = "data:image/jpg;base64,".$imageString;
+            $return['code'] = 10000;
+            $return['msg_test'] = 'ok';
+            $return['data'] = $imageString;
+            return json($return);
         }
     }
 
@@ -93,9 +102,45 @@ class Recharge extends Action {
             $return['msg_test'] = '小程序和用户不对照';
             return json($return);
         }
-        //获取当前小程序的价格
-        $app_fee = get_app($info['type']);
-        $app_fee = $app_fee['fee'];
+/*获取当前小程序的价格*/
+        $is_true = db('app')->field('id,name,type,create_time,try_time,custom_id') -> where(['appid' => $this -> data['appid']]) -> find();
+        $type = $is_true['type'];
+        if(!isset($type)){
+            $return['code'] = 10003;
+            $return['msg'] = '小程序类型丢失';
+            $return['msg_test'] = '小程序类型丢失';
+            return json($return);
+        }
+        $user_id = $this -> custom ->id; //用户id
+        $user = db('custom')->field("is_agency_user,is_belong")->where(['id'=>$user_id])->find(); //用户信息
+        /*代理商的情况*/
+        if($user['is_agency_user'] == 1 ){
+            $where['type_auto'] = 1 ;
+            $where['type_ssh'] = 1 ;
+            $where['user_system'] = 1 ;
+        }
+        /*普通用户是超级管理员下的情况*/
+        if($user['is_belong'] == 0 ){
+            $where['type_auto'] = 1 ;
+            $where['type_ssh'] = 2 ;
+            $where['user_system'] = 1 ;
+        }
+        /*普通用户是代理商的情况下*/
+        if($user['is_belong'] == 1 ){
+            $where['type_auto'] = 2 ;
+            $where['type_ssh'] = 2 ;
+            $where['user_system'] = $user['id_agency'];
+        }
+        $where['type'] = $type;
+        $setting = db('app_setting')->where($where)->find();
+        $data['name'] = $is_true['name'];
+        $data['price'] = $setting['price'];
+        $data['zk'] = '';
+        $data['all_money'] = $data['price'] - $data['zk'];
+        $app_fee =  $data['all_money'];
+/* 获取价格结束*/
+//        $app_fee = get_app($info['type']);
+//        $app_fee = $app_fee['fee'];
         if($app_fee <= 0){
             $return['code'] = 10003;
             $return['msg_test'] = '价格错误';
@@ -107,21 +152,36 @@ class Recharge extends Action {
         $data['order_sn'] = $this->custom->id . time() . mt_rand(1,9999);
         $data['create_time'] = time();
         $data['type'] = 1;
+        $data['year_num'] = $setting['year_num'];
         $res = file_cache($data['order_sn'],$data);
         if($res){
             $weapp = new \app\weixin\controller\Common();
             $notify_url = 'https://'.$_SERVER['HTTP_HOST'].url('custom/NotifyAdmin/wxBuyApp');
-            $code_url = $weapp -> get_qr_prepay_id($data['money'] * 100,$data['order_sn'],$data['order_sn'],'shop',$this->pay,$notify_url);
+            $code_url = $weapp -> get_qr_prepay_id($data['money'] * 100,$data['order_sn'],$data['order_sn'],$data['name'],$this->pay,$notify_url);
             /*输出核销二维码图片*/
-            import("Erweima",EXTEND_PATH,'.class.php');
-            $value = $code_url;
-            $errorCorrectionLevel = "H";
-            $matrixPointSize = "8";
-            $path = 'wxqr/' . $this->custom->id . ".png";
-            \QRcode::png($value,$path, $errorCorrectionLevel, $matrixPointSize,1);
+//            import("Erweima",EXTEND_PATH,'.class.php');
+//            $value = $code_url;
+//            $errorCorrectionLevel = "H";
+//            $matrixPointSize = "8";
+//            $path = 'wxqr/' . $this->custom->id . ".png";
+//            \QRcode::png($value,$path, $errorCorrectionLevel, $matrixPointSize,1);
+//            $return['code'] = 10000;
+//            $return['msg_test'] = 'ok';
+//            $return['data'] = $path;
+//            return json($return);
+            import('phpqrcode.phpqrcode',EXTEND_PATH,'.php');
+            $data =$code_url;
+            $level = 'L';
+            $size =4;
+            $QRcode = new \QRcode();
+            ob_start();
+            $QRcode->png($data,false,$level,$size,2);
+            $imageString = base64_encode(ob_get_contents());
+            ob_end_clean();
+            $imageString = "data:image/jpg;base64,".$imageString;
             $return['code'] = 10000;
             $return['msg_test'] = 'ok';
-            $return['data'] = $path;
+            $return['data'] = $imageString;
             return json($return);
         }
 

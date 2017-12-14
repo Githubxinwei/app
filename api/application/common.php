@@ -79,8 +79,8 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 //返回小程序模板信息
 function get_app($type){
 	$arr = [
-		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.02,'template_id'=>22],
-		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>26],
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.02,'template_id'=>34],
+		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>35],
         3=>['code'=>3,'name'=>'酒店小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>1]
 
     ];
@@ -121,8 +121,8 @@ function get_app_page($type){
 //返回小程序的主题配置
 function get_theme($key){
 	$color_arr = [
-		['BarText'=>'black','theme'=>'#ffffff','text'=>'#000','icon'=>'blue','selected'=>'#000'],
-		['BarText'=>'black','theme'=>'#1d1d1d','text'=>'#fff','icon'=>'blue','selected'=>'#000'],
+		['BarText'=>'black','theme'=>'#ffffff','text'=>'#000','icon'=>'black','selected'=>'#000'],
+		['BarText'=>'black','theme'=>'#1d1d1d','text'=>'#fff','icon'=>'black','selected'=>'#000'],
 		['BarText'=>'black','theme'=>'#3790f4','text'=>'#fff','icon'=>'Deep-blue','selected'=>'#000'],
 		['BarText'=>'black','theme'=>'#ff8635','text'=>'#fff','icon'=>'orange','selected'=>'#000'],
 		['BarText'=>'black','theme'=>'#2a9a3d','text'=>'#fff','icon'=>'green','selected'=>'#000'],
@@ -153,6 +153,9 @@ function createNonceStr($length = 16) {
 	}
 	return "z".$str;
 }
+
+
+/*验证码短信通知*/
 function msg_everify($tel,$code){
 	$key =  '4c9ff96cc33a783b21329b8c20e8ee7c';//您申请的APPKEY
 	$tpl_id = '43730';//您申请的短信模板ID，根据实际情况修改
@@ -244,6 +247,52 @@ function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
 	return $result['return_code'];
 }
 
+
+/**
+  添加普通用户 短信提醒
+ * $tel  手机号
+ *
+ */
+function sendMessage($tel,$params,$password){
+    if(!isset($tel) || !isset($params)||!isset($password)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+    $data1 = [
+        'appid'=>'183177745941',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
+
+/**
+商品发货 短信提醒
+ * $tel  手机号
+ */
+function sendShop($tel,$params,$kd_number){
+    if(!isset($tel) || !isset($params)||!isset($password)){
+        return -1;
+    }
+    $url = "http://www.xiguakeji.cc/sms/send";  //接口請求地址
+    $data1 = [
+        'appid'=>'183177745941',
+        'appsecret'=>'zaefNsQrp2GJ9F3Y',
+        't_id'=>'TP1709201',
+        'mobile'=>$tel,
+        'params'=>$params,
+    ];
+    $result = http_request($url,$data1);
+    $result = json_decode($result,true);
+    return $result['return_code'];
+}
+
+
+
 /**
  * @param $appid id
  * @param $appsecret
@@ -332,8 +381,8 @@ function sendMail($to,$title,$content,$type='qq'){
  */
 function sendAuditMsg($appid,$msg,$type){
     $info = db('app') -> field('name,notifytel,notifyemail') -> where(['appid' => $appid]) -> find();
-    if(!$info || $info['notifytel'] || $info['notifyemail']){
-        file_cache('notifytel.php',$appid . $info . '.....',FILE_APPEND);
+    if(!$info || !$info['notifytel'] || !$info['notifyemail']){
+        file_cache('notifytel.php',$appid . json_encode($info) . '.....',FILE_APPEND);
         return;
     }
     if($type == 1){
@@ -382,7 +431,8 @@ function getAppExtJson($app){
 	"navigationBarTitleText": "西瓜科技演示",
 	"navigationBarTextStyle":"white",
 	"navigationBarBackgroundColor": "'.$color['theme'].'",
-	"backgroundTextStyle":"light"
+	"backgroundTextStyle":"light",
+	"backgroundColor": "'.$color['theme'].'"
 	},
 	"ext":{
 	 "xgAppId":"'.$apps.'",
@@ -520,4 +570,35 @@ function scanFile($path) {
         }
     }
     return $result;
+}
+
+
+/*身份证号验证*/
+function checkIdCard($idcard){
+    // 只能是18位
+    if(strlen($idcard)!=18){
+        return false;
+    }
+    // 取出本体码
+    $idcard_base = substr($idcard, 0, 17);
+    // 取出校验码
+    $verify_code = substr($idcard, 17, 1);
+    // 加权因子
+    $factor = array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+    // 校验码对应值
+    $verify_code_list = array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
+    // 根据前17位计算校验码
+    $total = 0;
+    for($i=0; $i<17; $i++){
+        $total += substr($idcard_base, $i, 1)*$factor[$i];
+    }
+    // 取模
+    $mod = $total % 11;
+    // 比较校验码
+    if($verify_code == $verify_code_list[$mod]){
+        return true;
+    }else{
+        return false;
+    }
+
 }
