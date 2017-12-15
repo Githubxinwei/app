@@ -186,4 +186,66 @@ class Recharge extends Action {
         }
 
     }
+
+
+    /*微信购买小程序升级数量*/
+    public function wxBuyAppNum(){
+
+        if(!isset($this -> data['id'])){
+            $return['code'] = 10002;
+            $return['msg'] = '参数丢失';
+            $return['msg_test'] = '参数丢失';
+            return json($return);
+        }
+        $id = $this->data['id'];
+        $info = db('app_num')->where(['id'=>$id])->find();
+        $app_fee = $info['price'];
+        if($app_fee <= 0){
+            $return['code'] = 10003;
+            $return['msg_test'] = '价格错误';
+            return json($return);
+        }
+        $data['custom_id'] = $this->custom->id;
+        $data['money'] = $app_fee;
+        $data['order_sn'] = $this->custom->id . time() . mt_rand(1,9999);
+        $data['create_time'] = time();
+        $data['type'] = 1;
+        $data['app_num'] = $info['app_num'];
+        $res = file_cache($data['order_sn'],$data);
+        if($res){
+            $weapp = new \app\weixin\controller\Common();
+            $notify_url = 'https://'.$_SERVER['HTTP_HOST'].url('custom/NotifyAdmin/wxBuyAppNum');
+            $code_url = $weapp -> get_qr_prepay_id($data['money'] * 100,$data['order_sn'],$data['order_sn'],'app数量升级'.$data['app_num'],$this->pay,$notify_url);
+            /*输出核销二维码图片*/
+//            import("Erweima",EXTEND_PATH,'.class.php');
+//            $value = $code_url;
+//            $errorCorrectionLevel = "H";
+//            $matrixPointSize = "8";
+//            $path = 'wxqr/' . $this->custom->id . ".png";
+//            \QRcode::png($value,$path, $errorCorrectionLevel, $matrixPointSize,1);
+//            $return['code'] = 10000;
+//            $return['msg_test'] = 'ok';
+//            $return['data'] = $path;
+//            return json($return);
+            import('phpqrcode.phpqrcode',EXTEND_PATH,'.php');
+            $data =$code_url;
+            $level = 'L';
+            $size =4;
+            $QRcode = new \QRcode();
+            ob_start();
+            $QRcode->png($data,false,$level,$size,2);
+            $imageString = base64_encode(ob_get_contents());
+            ob_end_clean();
+            $imageString = "data:image/jpg;base64,".$imageString;
+            $return['code'] = 10000;
+            $return['msg_test'] = 'ok';
+            $return['data'] = $imageString;
+            return json($return);
+        }
+
+    }
+
+
+
+
 }

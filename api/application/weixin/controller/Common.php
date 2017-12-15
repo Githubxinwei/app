@@ -37,11 +37,24 @@ class common extends Controller{
 		$res = http_request($url,$data);
 		return json_decode($res,true);
 	}
+
+    function user_app_qr($user_id,$page){
+        $url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$this->access_token;
+        $data = [
+            "scene" => $user_id,
+			"page" => $page
+        ];
+        $data = json_encode($data);
+        $res = http_request($url,$data);
+        return json_decode($res,true);
+    }
+
 	//获取模板消息的关键词库
 	function template_get($id){
 		$url = 'https://api.weixin.qq.com/cgi-bin/wxopen/template/library/get?access_token='.$this->access_token;
 		$data = '{"id":"'.$id.'"}';
 		$res = http_request($url,$data);
+		halt($res);
 		return(json_decode($res,true));
 	}
 	//组合模板并添加至帐号下的个人模板库
@@ -367,12 +380,26 @@ class common extends Controller{
 	function get_qrcode(){
 		$url = 'https://api.weixin.qq.com/wxa/get_qrcode?access_token='.$this->access_token;
 		$res = http_request($url);
+		halt($res);
 		$name = STATIC_APTH.'qrcode/'.$this->appid.'.jpg';
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
+	//获得我的二维码
+    public function get_qrcodes($uid) {
 
+        $data = array();
+        $data['scene'] = $uid;
+        $data['page'] = "pages/index/index";
+        $data = json_encode($data);
+        $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" . $this->access_token;
+        $da = http_request($url,$data);
 
+        $name = STATIC_APTH.'code/'.$uid.'.jpg';
+        file_put_contents($name,$da);
+        return '/static/code/'.$uid.'.jpg';
+
+   	 }
 
 }
 

@@ -615,31 +615,47 @@ class App extends Xiguakeji{
             return json($return);
         }
     }
-
-    //获取分销二维码
-    public function get_qr_code(){
-
-        /* header( 'Content-Type:text/html;charset=utf-8 ');
-        $scene = $this->data['scene'];
-        $weapp = new \app\weixin\controller\Common($this->apps);
-        $qr_code = $weapp -> get_qr_code($scene);
-        if($qr_code){
+    
+    //获取我的二维码
+    public function get_my_qrcode(){
+        
+        $info = db('user')->field('id') -> where(['apps' =>$this->apps])->find();
+        $uid = $info['id'];
+        $my_qrcode = action('weixin/common/get_qrcodes',$uid);
+        if($my_qrcode){
             $return['code'] = 10000;
-            $return['data'] = $qr_code;
+            $return['data'] =$my_qrcode;
             return json($return);
         }else{
-            $return['code'] = 10002;
+            $return['code'] = 10001;
             $return['msg_test'] = '网络错误';
             return json($return);
-        } */
-        $scene = $this->data['scene'];
-        $url = 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token='.$this->access_token;
-        $res = http_request($url);
-        $name = STATIC_APTH.'qrcode/'.$scene.'.jpg';
-        file_put_contents($name,$res);
-        return '/static/qrcode/'.$scene.'.jpg';
-
+        }
+        
     }
+    //确定上级
+    public function superior(){
+        if (!isset($this->data['scene'])) {
+            $return['code'] = 10001;
+            $return['msg_test'] = '用户id不存在';
+            return json($return);
+        }
+        $p_id = model('user')->field('p_id')->where(['id' => $this->data['scene']])->find();
+        if (!$p_id) {
+            
+            $res = model('user')->allowField(true)->save($this->data,['p_id' => $this->data['scene']]);
+            if ($res) {
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            } else {
+                $return['code'] = 10002;
+                $return['msg_test'] = '网络错误';
+                return json($return);
+            }
+        }
+    }
+    
 
 }
 
