@@ -32,14 +32,16 @@ class Distribution extends Action{
     }
     //分销详情
     public function getDistInfo() {
-        $info = db('dist_rule') -> where(['appid' => $this->data['appid']]) -> find();
+        $info = db('dist_rule')
+            -> field('switch,level,scale,type,good_list,is_withdraw')
+            ->where(['appid' => $this->data['appid']]) -> find();
         if ($info) {
             $return['code'] = 10000;
             $return['msg_test'] = '查询成功';
             $return['data'] = $info;
             return json($return);
         } else {
-            $return['code'] = 10001;
+            $return['code'] = 10010;
             $return['msg_test'] = '查询失败,请稍后重试';
             return json($return);
         }
@@ -47,19 +49,57 @@ class Distribution extends Action{
     }
     //分销设置
     public function setDist() {
-        if (!isset($this->data['switch'])) {
-            $return['code'] = 10001;
-            $return['msg_test'] =  'switch不存在';
+        if (!isset($this->data['is_withdraw'])) {
+            $return['code'] = 10005;
+            $return['msg_test'] =  '提现is_withdraw不能为空';
             return  json($return);
         }
-        $res = model('dist_rule')->allowField(true)->save($this->data);
-        if ($res) {
-            $return['code'] = 10000;
-            $return['msg_test'] = '保存成功';
-            return json($return);
-        } else {
+        if (!isset($this->data['type'])) {
+            $return['code'] = 10004;
+            $return['msg_test'] =  '商品分销type不能为空';
+            return  json($return);
+        }
+        if (!isset($this->data['scale'])) {
+            $return['code'] = 10003;
+            $return['msg_test'] =  '分销比例scale不能为空';
+            return  json($return);
+        }
+        if (!isset($this->data['level'])) {
             $return['code'] = 10002;
-            $return['msg_test'] = '网络错误';
+            $return['msg_test'] =  '分销等级level不能为空';
+            return  json($return);
+        }
+        if (!isset($this->data['switch'])) {
+            $return['code'] = 10001;
+            $return['msg_test'] =  '分销switch不能为空';
+            return  json($return);
+        }
+        $this->data['custom_id'] = $this->custom['id'];
+        $info = db('dist_rule')->field('id')->where(['custom_id' => $this->data['custom_id']])->find();
+        if (!$info) {
+            unset($this->data['session_key']);
+            $res = db('dist_rule')->insert($this->data);
+            if($res){
+                $return['code'] = 10000;
+                $return['msg'] = '保存成功';
+                return json($return);
+            }else{
+                $return['code'] = 10010;
+                $return['msg'] = '网络错误,保存失败';
+                return json($return);
+            }
+        } else {
+            unset($this->data['session_key']);
+            $res = model('dist_rule')->allowField(true)->where(['appid' => $this->data['appid']])->update($this->data);
+            if(isset($res)){
+                $return['code'] = 10000;
+                $return['msg'] = '保存成功';
+                return json($return);
+            }else{
+                $return['code'] = 10010;
+                $return['msg'] = '网络错误,保存失败';
+                return json($return);
+            }
         }
     }
     

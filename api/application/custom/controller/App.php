@@ -640,20 +640,28 @@ class App extends Xiguakeji{
             $return['msg_test'] = '用户id不存在';
             return json($return);
         }
-        $p_id = model('user')->field('p_id')->where(['id' => $this->data['scene']])->find();
-        if (!$p_id) {
-            
-            $res = model('user')->allowField(true)->save($this->data,['p_id' => $this->data['scene']]);
-            if ($res) {
-                $return['code'] = 10000;
-                $return['msg_test'] = 'ok';
-                return json($return);
-            } else {
-                $return['code'] = 10002;
-                $return['msg_test'] = '网络错误';
-                return json($return);
+        //判断二维码是否有效
+        $id = db('user')->field('id')->where(['id' => $this->data['scene']])->find();
+        if ($id) {
+            if ($id != $this->user['id']) {
+                $res = model('user')->allowField(true)->save($this->data,['p_id' => $id]);
+                if ($res) {
+                    $return['code'] = 10000;
+                    $return['msg_test'] = 'ok';
+                    return json($return);
+                } else {
+                    $return['code'] = 10002;
+                    $return['msg_test'] = '网络错误';
+                    return json($return);
+                }
             }
+        } else {
+            $return['code'] = 10003;
+            $return['msg'] = '此用户不存在,二维码无效';
+            $return['msg_test'] = '用户id不存在';
+            return json($return);
         }
+        
     }
     
 
