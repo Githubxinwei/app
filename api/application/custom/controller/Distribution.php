@@ -49,6 +49,7 @@ class Distribution extends Action{
             $return['msg_test'] =  '参数缺失';
             return  json($return);
         }
+        $dist_data = array();
 		$dist_data['appid'] = $this->data['appid'];
 		$dist_data['custom_id'] = $this->custom['id'];
 		$dist_data['is_withdraw'] = $this->data['is_withdraw'];
@@ -93,12 +94,12 @@ class Distribution extends Action{
 
         if (!isset($this->data['appid'])) {
             $return['code'] = 10002;
-            $return['msg_test'] =  '小程序参数不存在';
+            $return['msg_test'] =  '小程序参数丢失';
             return  json($return);
         }
         $info = db('dist_record')
             -> alias('a')
-            -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.user_nickName,c.xj_nickName')
+            -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.nickName as user_nickName,c.nickName as xj_nickName')
             -> join("__USER__ b",'a.user_id = b.id','LEFT')
             -> join("__USER__ c",'a.xj_userid = c.id','LEFT')
             -> where(['appid' => $this->data['appid']])
