@@ -380,12 +380,11 @@ class common extends Controller{
 	function get_qrcode(){
 		$url = 'https://api.weixin.qq.com/wxa/get_qrcode?access_token='.$this->access_token;
 		$res = http_request($url);
-		halt($res);
 		$name = STATIC_APTH.'qrcode/'.$this->appid.'.jpg';
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
-	//获得我的二维码
+	//生成分销二维码
     public function get_qrcodes($uid) {
 
         $data = array();

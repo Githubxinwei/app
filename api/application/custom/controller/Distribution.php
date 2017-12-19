@@ -33,52 +33,35 @@ class Distribution extends Action{
     //分销详情
     public function getDistInfo() {
         $info = db('dist_rule')
-            -> field('switch,level,scale,type,good_list,is_withdraw')
+            -> field('appid,switch,level,scale,type,good_list,is_withdraw,withdraw_type')
             ->where(['appid' => $this->data['appid']]) -> find();
-        if ($info) {
-            $return['code'] = 10000;
-            $return['msg_test'] = '查询成功';
-            $return['data'] = $info;
-            return json($return);
-        } else {
-            $return['code'] = 10010;
-            $return['msg_test'] = '查询失败,请稍后重试';
-            return json($return);
-        }
+
+        $return['code'] = 10000;
+        $return['msg_test'] = '查询成功';
+        $return['data'] = $info;
+        return json($return);
         
     }
     //分销设置
     public function setDist() {
-        if (!isset($this->data['is_withdraw'])) {
-            $return['code'] = 10005;
-            $return['msg_test'] =  '提现is_withdraw不能为空';
-            return  json($return);
-        }
-        if (!isset($this->data['type'])) {
-            $return['code'] = 10004;
-            $return['msg_test'] =  '商品分销type不能为空';
-            return  json($return);
-        }
-        if (!isset($this->data['scale'])) {
-            $return['code'] = 10003;
-            $return['msg_test'] =  '分销比例scale不能为空';
-            return  json($return);
-        }
-        if (!isset($this->data['level'])) {
-            $return['code'] = 10002;
-            $return['msg_test'] =  '分销等级level不能为空';
-            return  json($return);
-        }
-        if (!isset($this->data['switch'])) {
+        if (!isset($this->data['is_withdraw']) || !isset($this->data['type']) || !isset($this->data['scale']) || !isset($this->data['level']) || !isset($this->data['switch'])) {
             $return['code'] = 10001;
-            $return['msg_test'] =  '分销switch不能为空';
+            $return['msg_test'] =  '参数缺失';
             return  json($return);
         }
-        $this->data['custom_id'] = $this->custom['id'];
-        $info = db('dist_rule')->field('id')->where(['custom_id' => $this->data['custom_id']])->find();
-        if (!$info) {
-            unset($this->data['session_key']);
-            $res = db('dist_rule')->insert($this->data);
+		$dist_data['appid'] = $this->data['appid'];
+		$dist_data['custom_id'] = $this->custom['id'];
+		$dist_data['is_withdraw'] = $this->data['is_withdraw'];
+		$dist_data['type'] = $this->data['type'];
+		$dist_data['scale'] = $this->data['scale'];
+		$dist_data['level'] = $this->data['level'];
+		$dist_data['switch'] = $this->data['switch'];
+		$dist_data['type'] = $this->data['type'];
+		$dist_data['good_list'] = $this->data['good_list'];
+		$dist_data['withdraw_type'] = $this->data['withdraw_type'];
+        $id = db('dist_rule')->where(['appid' => $dist_data['appid']])->value('id');
+        if (!$id ) {
+            $res = db('dist_rule')->insert($dist_data);
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '保存成功';
@@ -89,8 +72,7 @@ class Distribution extends Action{
                 return json($return);
             }
         } else {
-            unset($this->data['session_key']);
-            $res = model('dist_rule')->allowField(true)->where(['appid' => $this->data['appid']])->update($this->data);
+            $res = db('dist_rule')->where(['id' => $id])->update($dist_data);
             if(isset($res)){
                 $return['code'] = 10000;
                 $return['msg'] = '保存成功';
@@ -102,5 +84,31 @@ class Distribution extends Action{
             }
         }
     }
-    
+
+    /*分销记录*/
+    public  function dist_list(){
+
+        $limit = isset($this->data['limit']) ? $this->data['limit'] : 10;
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+
+        if (!isset($this->data['appid'])) {
+            $return['code'] = 10002;
+            $return['msg_test'] =  '小程序参数不存在';
+            return  json($return);
+        }
+        $info = db('dist_record')
+            -> alias('a')
+            -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.user_nickName,c.xj_nickName')
+            -> join("__USER__ b",'a.user_id = b.id','LEFT')
+            -> join("__USER__ c",'a.xj_userid = c.id','LEFT')
+            -> where(['appid' => $this->data['appid']])
+            -> page($page,$limit)
+            -> order('a.create_time desc')
+            -> select();
+
+        $return['code'] = 10010;
+        $return['data'] = $info ;
+        return json($return);
+
+    }
 }

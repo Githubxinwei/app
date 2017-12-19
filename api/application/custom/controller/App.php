@@ -381,15 +381,54 @@ class App extends Xiguakeji{
 		$weapp = new \app\weixin\controller\Common($this->apps);
 		$order_id = model('goods_order')->id;
 		$attach = json_encode(['type'=>1,'id'=>$order_id]);//type值为1时，是电商小程序的支付请求
-		$prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
-		if(!$prepay_id){
-			$return['code'] = 10005;$return['msg'] = '微信小程序参数配置有误';return json($return);
-		}
-		model('goods_order') -> save(['prepay_id'=>$prepay_id,'prepay_time'=>time()],['id'=>$order_id]);
+        //再生成订单之前，判断用户是否要使用余额支付，如果支付，判断订单的金额减去用户的余额是否为0，如果为0不生成prepay_id，并把用户余额减去订单金额，如果不为0，说明订单金额多。
+        if(!isset($this -> data['is_wallet'])){
+            $return['code'] = 10003;
+            $return['msg_test'] = '缺少参数';
+            return json($return);
+        }
+        $orderInfo = array();
+        $orderInfo['user_money'] = 0;
+        if($this -> data['is_wallet'] == 1){
+            //用户想要使用余额，判断是否有余额，并判断是订单金额多还是余额金额多
+            $userInfo = db('user') -> field('money') -> where(['id' => $this -> user['id']]) -> find();
+            if($userInfo['money'] > 0){
+                //判断订单金额多还是余额多，两种情况不一样
+                if($total_fee > $userInfo['money']){
+                    //订单金额多，把订单金额减去用户余额，同时，把用户余额值为0，把订单表中的user_money变为用户余额，表示当前订单使用了这么多金额。
+                    $orderInfo['price'] = $total_fee - $userInfo['money'];
+                    $total_fee = $total_fee - $userInfo['money'];
+                    $orderInfo['user_money'] = $userInfo['money'];
+                    db('user') -> where(['id' => $this -> user['id']]) -> setField('money',0);
+                }else{
+                    //用户的余额大于订单的金额，订单金额值为0，user_money是订单金额，用户余额变为余额-订单金额
+                    $orderInfo['price'] = 0;
+                    $orderInfo['user_money'] = $total_fee;
+                    db('user') -> where(['id' => $this -> user['id']]) -> setDec('money',$total_fee);
+                    $total_fee = 0;
+                }
+
+            }else{
+                //用户没有余额，或余额不正确,不处理，直接生成prepay_id
+            }
+        }
+        if($total_fee == 0){
+            //用户余额大于订单金额
+            $prepay_id = $this -> user['id'] . time() . mt_rand(1000,9999);
+        }else{
+            $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
+            if(!$prepay_id){
+                $return['code'] = 10005;$return['msg'] = '微信小程序参数配置有误';return json($return);
+            }
+        }
+
+        $orderInfo['prepay_id'] = $prepay_id;
+        $orderInfo['prepay_time'] = time();
+		model('goods_order') -> save($orderInfo,['id'=>$order_id]);
 		$return['code'] = 10000;
 		// $return['msg_test'] = 'data内数据即调起支付所需参数，无需进行加密操作，直接使用';
 		// $return['data'] = $weapp -> paysign($prepay_id);
-		$return['data']  = ['id'=>$order_id];
+		$return['data']  = ['id'=>$order_id,'total_fee' => $total_fee,'user_money' => $orderInfo['user_money']];
 		$return['msg_test'] = '可以向付款页跳转了';
 		return json($return);
 	}
@@ -411,27 +450,59 @@ class App extends Xiguakeji{
         if(strtotime($order['create_time']) < $time){
             $return['code'] = 10011;$return['msg'] = '订单已过期';return json($return);
         }
-
-		$weapp = new \app\weixin\controller\Common($this->apps);
-		//prepay_id是否过期，过期重新生成
-		if( time() - $order['prepay_time'] > 7200 ){
-			//重新生成商户订单号
-
-            $order_sn = date('Y').time().rand(1000,9999);
-			$prepay_id = $weapp -> get_prepay_id($this->user['openid'],$order['price']*100,$order_sn,$order['id'],'西瓜科技-'.$order['name']);
-			if(!$prepay_id){
-                $return['code'] = 10010;
-                $return['msg_test'] = '生成prepay_id出错';
+        if($order['price'] == 0 && $order['user_money'] != 0){
+            //订单金额等于0
+            $flag = 888888;
+        }else{
+            $weapp = new \app\weixin\controller\Common($this->apps);
+            //prepay_id是否过期，过期重新生成
+            if( time() - $order['prepay_time'] > 7200 ){
+                //重新生成商户订单号
+                $order_sn = date('Y').time().rand(1000,9999);
+                $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$order['price']*100,$order_sn,$order['id'],'西瓜科技-'.$order['name']);
+                if(!$prepay_id){
+                    $return['code'] = 10010;
+                    $return['msg_test'] = '生成prepay_id出错';
+                }
+                model('goods_order') -> save(['prepay_id'=>$prepay_id,'prepay_time'=>time(),'order_sn' => $order_sn],['id'=>$order['id']]);
+            }else{
+                $prepay_id = $order['prepay_id'];
             }
-			model('goods_order') -> save(['prepay_id'=>$prepay_id,'prepay_time'=>time(),'order_sn' => $order_sn],['id'=>$order['id']]);
-		}else{
-			$prepay_id = $order['prepay_id'];
-		}
+            $flag = $weapp -> paysign($prepay_id);
+        }
+		//判断订单的金额是否是0，如果是0
 		$return['code'] = 10000;
 		$return['msg_test'] = 'data内数据即调起支付所需参数，无需进行加密操作，直接使用';
-		$return['data'] = $weapp -> paysign($prepay_id);
+		$return['data'] = $flag;
 		return json($return);
 	}
+
+    /**
+     * @return \think\response\Json
+     * 当用户的订单是0的时候,不需要调用微信的接口，直接修改订单状态
+     */
+    public function setUserOrderState(){
+        $order_id = $this -> data['order_id'];
+        if(!isset($order_id) && !$order_id){
+            $return['code'] = 10001;
+            $return['msg_test'] = '订单id不对';
+            return json($return);
+        }
+        $orderInfo = db('goods_order') -> field('user_id,appid,name,carts,price,user_money,state') -> where(['id' => $order_id]) -> find();
+        if(!$orderInfo || $orderInfo['user_id'] != $this -> user['id'] || $orderInfo['price'] != 0 || $orderInfo['user_money'] == 0 || $orderInfo['state'] != 0){
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数错误';
+            return json($return);
+        }
+        //修改订单的状态，并发送邮件给管理员，这种订单不参与分销
+        model('goods_cart') -> save(['is_pay'=>1],['id'=>['exp','in ('.$orderInfo['carts'].')']]);
+        model('goods_order') -> save(['state'=>1],['id'=>$order_id]);
+        //判断当前小程序是否有分销
+        action('custom/Notify/sendMail',[$orderInfo['appid'],$orderInfo['name']]);
+        $return['code'] = 10000;
+        $return['msg_test'] = '支付成功';
+        return json($return);
+    }
 
 	//订单列表，囊括未付款，待发货，已发货，已完成，已退款
 	function order_list(){
@@ -450,7 +521,7 @@ class App extends Xiguakeji{
 		$where['appid'] = $this->apps;
 		//->alias('a')->join($join)  -> where($where) 
 		$info = model('goods_order')
-            ->field('id,name,num,pic,price,order_sn,username,tel,dist,city,province,address,carts,zipcode,kd_code,kd_number,create_time')
+            ->field('id,name,num,pic,price,user_money,order_sn,username,tel,dist,city,province,address,carts,zipcode,kd_code,kd_number,create_time')
             -> where($where)
             -> where($where1)
 
@@ -488,6 +559,7 @@ class App extends Xiguakeji{
 		$info['tel'] = $res->tel;
 		$info['site_url'] = $res->site_url;
 		$info['address'] = $res->address;
+		$info['money'] = $this->user->money;;
 		$return['code'] = 10000;
 		$return['data'] = $info;
 		return json($return);
@@ -616,7 +688,7 @@ class App extends Xiguakeji{
         }
     }
     
-    //获取我的二维码
+    //生成分销二维码
     public function get_my_qrcode(){
         
         $info = db('user')->field('id') -> where(['apps' =>$this->apps])->find();
@@ -641,17 +713,26 @@ class App extends Xiguakeji{
             return json($return);
         }
         //判断二维码是否有效
-        $id = db('user')->field('id')->where(['id' => $this->data['scene']])->find();
+        $id = db('user')->where(['id' => $this->data['scene']])->value('id');
         if ($id) {
+            //排除用户自己扫自己
             if ($id != $this->user['id']) {
-                $res = model('user')->allowField(true)->save($this->data,['p_id' => $id]);
-                if ($res) {
-                    $return['code'] = 10000;
-                    $return['msg_test'] = 'ok';
-                    return json($return);
+                //判断用户上级是否已确定
+                $p_id = db('user')->where(['id' => $this->user['id']])->value('p_id');
+                if (!$p_id) {
+                    $res = model('user')->allowField(true)->where(['id' => $this->user['id']])->update(['p_id' => $this->data['scene']]);
+                    if ($res) {
+                        $return['code'] = 10000;
+                        $return['msg_test'] = 'ok';
+                        return json($return);
+                    } else {
+                        $return['code'] = 10002;
+                        $return['msg_test'] = '网络错误';
+                        return json($return);
+                    }
                 } else {
-                    $return['code'] = 10002;
-                    $return['msg_test'] = '网络错误';
+                    $return['code'] = 10010;
+                    $return['msg_test'] = '用户上级已确定';
                     return json($return);
                 }
             }
