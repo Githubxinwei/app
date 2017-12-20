@@ -191,6 +191,12 @@ class Recharge extends Action {
     /*微信购买小程序升级数量*/
     public function wxBuyAppNum(){
 
+        if(!isset($this -> data['id'])){
+            $return['code'] = 10002;
+            $return['msg'] = '参数丢失';
+            $return['msg_test'] = '参数丢失';
+            return json($return);
+        }
         $id = $this->data['id'];
         $info = db('app_num')->where(['id'=>$id])->find();
         $app_fee = $info['price'];

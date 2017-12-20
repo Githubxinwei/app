@@ -384,55 +384,22 @@ class common extends Controller{
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
+    	//获得我的二维码
+        public function get_qrcodes($uid) {
 
+	        $data = array();
+	        $data['scene'] = $uid;
+	        $data['page'] = "pages/index/index";
+	        $data = json_encode($data);
+	        $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" . $this->access_token;
+	        $da = http_request($url,$data);
 
-  /*  public function curl_get($url)
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $data = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-        return $data;
-    }*/
+	        $name = STATIC_APTH.'code/'.$uid.'.jpg';
+	        file_put_contents($name,$da);
+	        return '/static/code/'.$uid.'.jpg';
+        
 
-    //获得分销二维码
-    public function get_qr_code($uid)
-    {
-//        header('content-type:image/gif');
-//        $uid = 6;
-        $data = array();
-        $data['scene'] = "uid=" . $uid;
-        $data['page'] = "pages/index/index";
-        $data['width'] = "400";
-        $data = json_encode($data);
-//        $access = json_decode($this->get_access_token(), true);
-        $access_token = $this->access_token;
-        $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" . $access_token;
-        $da = $this->get_http_array($url, $data);
-        $name = STATIC_APTH.'code/'.$uid.'.jpg';
-        file_put_contents($name,$da);
-        return '/static/code/'.$uid.'.jpg';
-
-    }
-
-    public function get_http_array($url, $post_data)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);   //没有这个会自动输出，不用print_r();也会在后面多个1
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-        $output = curl_exec($ch);
-        curl_close($ch);
-        $out = json_decode($output);
-        return $out;
-    }
-
-
+   	 }
 
 }
 

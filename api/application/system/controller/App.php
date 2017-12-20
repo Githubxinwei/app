@@ -65,8 +65,14 @@ class App extends Controller
 
     /*套餐列表*/
     public function get_app_list(){
+        if(!isset($this->data['type_ssh'])){
+            $return['code'] = 10003;
+            $return['msg'] = '参数丢失';
+            $return['msg_test'] = '参数丢失';
+            return json($return);
+        }
 
-        $info = db('app_num')->where(['user_system'=>$this->user['id']])->select();
+        $info = db('app_num')->where(['user_system'=>$this->user['id'],' type_ssh'=>$this->data['type_ssh']])->select();
         $return['code'] = 10000;
         $return['data'] = $info ;
         return json($return);

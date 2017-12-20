@@ -119,9 +119,8 @@ class NotifyAdmin{
 
     }
 
-    /*
-     * 后台用户升级app数量
-     * */
+
+    //    后台用户升级app数量
     public function wxBuyAppNum(){
         $postStr = $GLOBALS["HTTP_RAW_POST_DATA"];
         $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
@@ -141,11 +140,11 @@ class NotifyAdmin{
         if($is_true){
             return;//订单不是待处理状态，已确认收款
         }
-        $data['custom_id'] = $value['custom_id'];
-        $data['money'] = $data['total_fee']/100;
-        $data['order_sn'] = $value['order_sn'];
-        $data['create_time'] = $value['create_time'];
-        $data['app_num'] = $value['app_num'];
+        $buyData['custom_id'] = $value['custom_id'];
+        $buyData['money'] = $data['total_fee']/100;
+        $buyData['order_sn'] = $value['order_sn'];
+        $buyData['create_time'] = $value['create_time'];
+        $buyData['app_num'] = $value['app_num'];
         $buyData['pay_time'] = time();
         $buyData['state'] = 1;
         $model = db();

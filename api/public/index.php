@@ -13,7 +13,10 @@
 
 // 定义应用目录
 define('APP_PATH', __DIR__ . '/../application/');
+define('WEB_PATH', __DIR__);
 header("Access-Control-Allow-Origin:*");
+define('DATA_ROOT','./data/');
+define('STATIC_APTH',__DIR__ . '/../public/static/');
 header("Content-type:text/html;charset=utf-8");
 // 加载框架引导文件
 require __DIR__ . '/../xigua/start.php';

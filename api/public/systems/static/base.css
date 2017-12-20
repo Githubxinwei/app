@@ -1,0 +1,49 @@
+
+/*搜索按钮*/
+.search_button{
+ color: white;
+ display: inline-block;
+ padding: 0.09rem 0.3rem;
+ border-radius: 0.03rem;
+ background-color: #59A2ED;
+}
+.search_button:hover{
+   opacity: 0.5;
+   color: white;
+}
+a:hover{
+  opacity: 0.5;
+}
+.top{width: 100%; height: 0.48rem;}
+.top>div{
+  width: 100%;
+  height: 0.48rem;
+  background-color: white;
+  line-height: 0.48rem;
+  box-shadow:5px 5px 10px #E7E7E7;
+}
+.top>div>i{
+  margin-left: 0.2rem;
+  display: inline-block;
+  color: #59A2ED;
+  font-size: 0.16rem;
+}
+header>span{font-size: 0.18rem;font-weight: 500}
+/*提示文字*/
+.hint{
+  display: inline-block;
+  margin-left: 0.1rem;
+  font-size: 0.14rem;
+  letter-spacing: 0.01rem;
+  color:black;
+  }
+
+.ivu-page-item-active{
+  background-color: #59a2ed !important;
+}
+.input {
+    display: inline-block;
+    width: 2.5rem;
+    border: 1px solid #E5E5E5;
+    padding: 0.1rem 0.1rem;
+  }

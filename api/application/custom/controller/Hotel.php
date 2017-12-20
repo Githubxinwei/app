@@ -771,12 +771,13 @@ class Hotel extends Action{
         }
 
         $data = db('rooms_order')
-            ->field('id,state,username,order_sn,prepay_time,total_price,is_refunds')
+            ->field('id,state,username,order_sn,prepay_time,total_price,is_refunds,user_money,total_fee')
             -> where($where)
             -> page($page,$limit)
             -> select();
+
         $number = db('rooms_order')
-            ->field('id,state,username,order_sn,prepay_time,total_price,is_refunds')
+            ->field('id')
             -> where($where)
             -> count();
 

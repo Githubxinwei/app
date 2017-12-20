@@ -217,11 +217,12 @@ class Agency  extends Controller
             $return['msg'] = "您已经是代理商";
             return json($return);
         }
-        if($info['is_agency'] == 1 ){
+        if($info['is_agency'] == 1 && $info['is_agency'] == 1){
             $return['code'] = 10003;
             $return['msg'] = "请耐心等待审核";
             return json($return);
         }
+
         unset($data['session_key']);
         unset($data['appid']);
         $res = db('custom')->where(['id'=>$this->data['id']])->update($data);
@@ -240,10 +241,24 @@ class Agency  extends Controller
     /*代理商列表*/
     public  function get_agent_list(){
 
-        $page = isset($this -> data['page']) ? $this -> data['page'] : 1;
-        $limit = isset($this -> data['number']) ? $this -> data['number'] : 15;
+        $page = isset($this -> data['page']) ? $this->data['page'] : 1;
+        $limit = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
+        //如果有筛选条件，那么加where 名称  手机号 时间戳
+        $where = array();
+        if(isset($this->data['name'])){
+            $where['nickname'] = $this->data['name'];
+        }
+        if(isset($this->data['username'])){
+            $where['username'] = $this->data['username'];
+        }
+        if(isset($this->data['start_time']) && isset($this->data['end_time']) && trim($this->data['start_time']) != '' && trim($this->data['end_time']) !=''){
+            $where['register_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
+        }
+
+        $where['is_agency_user'] = 1;
+        $where = array_filter($where);
         $data = db("custom")
-            ->where(['is_agency_user'=>1])
+            ->where($where)
             ->page($page,$limit)
             ->select();
         $num = db("custom")->where(['is_agency_user'=>1])->count();
@@ -288,7 +303,7 @@ class Agency  extends Controller
             $list['nowTime'] = date('Y年m月d日H:i:s',time());
             $list['custom_id'] = $this->data['id'];
             $add =  db('system')->where(['username'=>$list['username']])->find();
-            $num = db("custom")->where(['is_agency_user'=>1])->find();
+            $num = db("custom")->where(['is_agency_user'=>1,'is_agency'=>2])->find();
             db("custom")->where(['id'=>$list['custom_id']])->update(['angency_number'=>$num]); //修改代理商可以添加的普通用户数量
 
            if($add){
@@ -299,9 +314,14 @@ class Agency  extends Controller
            }else{
                db('system') ->insert($list);
            }
+
+        }elseif($this->data['is_agency'] == 3){
+            $data['is_agency_user'] = 0;
         }
 
-        $res = db('custom')->where(['id'=> $this->data['id']])->update(['is_agency'=>$this->data['is_agency']]);
+        $data['is_agency'] = $this->data['is_agency'];
+
+        $res = db('custom')->where(['id'=> $this->data['id']])->update($data);
 
         if($res){
             $return['code'] = 10000;
@@ -333,7 +353,7 @@ class Agency  extends Controller
             return json($return);
         }
 
-        $res = db('custom')->where(['is_agency_user'=>1])->update(['angency_number'=>$this->data['angency_number']]);
+        $res = db('custom')->where(['is_agency_user'=>1,'is_agency'=>2])->update(['angency_number'=>$this->data['angency_number']]);
 
         if($res){
             $return['code'] = 10000;
@@ -351,7 +371,7 @@ class Agency  extends Controller
     /*普通用户可添加数量*/
     public  function number_user(){
 
-        $data = db('custom')->where(['is_agency_user'=>1])->find();
+        $data = db('custom')->field('angency_number')->where(['is_agency_user'=>1])->find();
         $return['code'] = 10000;
         $return['data'] = $data;
         return json($return);
@@ -435,8 +455,9 @@ class Agency  extends Controller
             $return['msg_test'] = '账号类型不能设置普通用户';
             return json($return);
         }
+        /*当前用户的custom_id*/
+        $arr = db('system')->field('id,custom_id')->where(['id'=>$user['id']])->find();
 
-        $arr = db('system')->field('custom_id')->where(['id'=>$user['id']])->find();
         $data = [
             'username'=> $this->data['username'],
             'password'=> xgmd5($this->data['password']) ,
@@ -445,7 +466,7 @@ class Agency  extends Controller
             'agency_realname'=> $this->data['agency_realname'],
             'id_cart'=> $this->data['id_cart'],
             'is_belong'=>1 ,
-            'id_agency'=> $arr['custom_id'],
+            'id_agency'=> $arr['id'],
             'nickname' =>$this->data['nickname']
         ];
         if(!isset($data['username']) || !isset($data['password'])){
@@ -456,6 +477,7 @@ class Agency  extends Controller
             $arr['code'] = 10002;$arr['msg'] = '手机号格式不正确';$arr['msg_test'] = '手机号格式不正确';
             return json($arr);
         }
+        /*身份证号验证*/
         $id_cart = checkIdCard($data['id_cart']);
         if(!$id_cart){
             $return['code'] = 10003;
@@ -463,6 +485,7 @@ class Agency  extends Controller
             $return['msg_test'] = '身份证号不正确';
             return json($return);
         }
+        /*判断手机号是否存在*/
         $have = db('custom')->where(['username'=>$data['username']])->find();
         if($have){
             $return['code'] = 10003;
@@ -471,9 +494,9 @@ class Agency  extends Controller
             return json($return);
         }
 
-        $count = db('custom')->where(['id_agency'=>$data['id_agency']])->count();
-        $num = db('custom')->field('angency_number')->where(['id'=>$arr['custom_id'],'is_agency_user'=>1])->find();
-
+        /*判断代理商当前是否还可以哪添加普通用户*/
+        $count = db('custom')->where(['id_agency'=>$data['id_agency']])->count();/*查询岗前代理商已添加的普通用户*/
+        $num = db('custom')->field('angency_number')->where(['id'=>$arr['custom_id'],'is_agency_user'=>1,'is_agency'=>2])->find();//可以添加的数量
         if($count>=$num['angency_number']){
             $return['code'] = 10003;
             $return['msg'] = '普通用户已上限';

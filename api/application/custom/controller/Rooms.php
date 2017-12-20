@@ -158,7 +158,6 @@ class Rooms extends Xiguakeji
 
     }
 
-
     /*酒店风格内容获取*/
     public function style_detail(){
 
@@ -181,7 +180,6 @@ class Rooms extends Xiguakeji
         $return['data'] = $info ;
         return json($return);
     }
-
 
     /*生成酒店预约订单*/
     public  function create_order(){
@@ -232,7 +230,7 @@ class Rooms extends Xiguakeji
                 $info['price'] = $info['price'] - $info['price']*$rules['rules_detail'];
             }
         }
-
+        $is_wallet = $this->data['is_wallet'];
         $data = $this->data;
         $data['price'] = $info['price'];
         $data['total_price'] = $this->data['num'] * $data['price'];
@@ -249,20 +247,55 @@ class Rooms extends Xiguakeji
         $total_fee = $this->data['num'] * $data['price'];
         unset($data['session_key']);
         unset($data['apps']);
-
+        unset($data['is_wallet']);
 
         $id = db('rooms_order')->insertGetId($data);
 
         $weapp = new \app\weixin\controller\Common($this->data['appid']);
         $order_id = $id;
         $attach = json_encode(['type'=>3,'id'=>$order_id]);//type值为3时，是酒店小程序的支付请求
+        //再生成订单之前，判断用户是否要使用余额支付，如果支付，判断订单的金额减去用户的余额是否为0，如果为0不生成prepay_id，并把用户余额减去订单金额，如果不为0，说明订单金额多。
+        $orderInfo = array();
+        if(isset($is_wallet) &&  $is_wallet == 1){
+            //用户想要使用余额，判断是否有余额，并判断是订单金额多还是余额金额多
+            $userInfo = db('user') -> field('money') -> where(['id' => $this -> user['id']]) -> find();
+            if($userInfo['money'] > 0){
+                //判断订单金额多还是余额多，两种情况不一样
+                if($total_fee > $userInfo['money']){
+                    //订单金额多，把订单金额减去用户余额，同时，把用户余额值为0，把订单表中的user_money变为用户余额，表示当前订单使用了这么多金额。
+                    $orderInfo['total_fee'] = $total_fee - $userInfo['money'];
+                    $total_fee = $total_fee - $userInfo['money'];
+                    $orderInfo['user_money'] = $userInfo['money'];
+                    db('user') -> where(['id' => $this -> user['id']]) -> setField('money',0);
+                }else{
+                    //用户的余额大于订单的金额，订单金额值为0，user_money是订单金额，用户余额变为余额-订单金额
+                    $orderInfo['total_fee'] = 0;
+                    $orderInfo['user_money'] = $total_fee;
+                    db('user') -> where(['id' => $this -> user['id']]) -> setDec('money',$total_fee);
+                    $total_fee = 0;
+                }
 
-        $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
-
-        if(!$prepay_id){
-            $return['code'] = 10005;$return['msg'] = '微信小程序参数配置有误';return json($return);
+            }else{
+                //用户没有余额，或余额不正确,不处理，直接生成prepay_id
+            }
+        }else{
+            $orderInfo['total_fee'] = $total_fee ;
         }
-        db('rooms_order') ->where(['id'=>$order_id])->update(['prepay_id'=>$prepay_id,'prepay_time'=>time()]);
+
+        if($total_fee == 0){
+            //用户余额大于订单金额
+            $prepay_id = $this -> user['id'] . time() . mt_rand(1000,9999);
+        }else{
+            $prepay_id = $weapp -> get_prepay_id($this->user['openid'],$total_fee*100,$order_sn,$attach,'西瓜科技-'.$name);
+            if(!$prepay_id){
+                $return['code'] = 10005;$return['msg'] = '微信小程序参数配置有误';return json($return);
+            }
+        }
+
+        $orderInfo['prepay_id'] = $prepay_id;
+        $orderInfo['prepay_time'] = time();
+
+        db('rooms_order') ->where(['id'=>$order_id])->update($orderInfo);
         $return['code'] = 10000;
         $return['data']  = ['id'=>$order_id];
         $return['msg_test'] = '可以向付款页跳转了';
@@ -277,7 +310,6 @@ class Rooms extends Xiguakeji
         $where['appid'] = $this->data['appid'];
         $where['user_id'] = $this->user['id'];
         $info = model('rooms_order')->where($where)->find();
-
         $return['code'] = 10000;
         $return['data'] = $info;
         return json($return);
@@ -336,6 +368,30 @@ class Rooms extends Xiguakeji
         return json($return);
     }
 
+    //@return \think\response\Json
+    //当用户的订单价格是0的时候,不需要调用微信的接口，直接修改订单状态
+    public function setUserOrderState(){
+        $order_id = $this -> data['id'];
+        if(!isset($order_id) && !$order_id){
+            $return['code'] = 10001;
+            $return['msg_test'] = '订单id不对';
+            return json($return);
+        }
+        $orderInfo = db('rooms_order') -> field('user_id,appid,username,total_price,user_money,state,total_fee') -> where(['id' => $order_id]) -> find();
+        if(!$orderInfo || $orderInfo['user_id'] != $this -> user['id'] || $orderInfo['total_fee'] > 0 || $orderInfo['user_money'] == 0 || $orderInfo['state'] != 0){
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数错误';
+            return json($return);
+        }
+        //修改订单的状态，并发送邮件给管理员，这种订单不参与分销
+        model('rooms_order') -> save(['state'=>1],['id'=>$order_id]);
+        //判断当前小程序是否有分销
+        action('custom/Notify/sendMail',[$orderInfo['appid'],$orderInfo['username']]);
+        $return['code'] = 10000;
+        $return['msg_test'] = '支付成功';
+        return json($return);
+    }
+
     //订单列表，未付款，已付款，已确定，退款中,已退款
     public  function order_list(){
         if( !isset($this->data['type']) || !in_array($this->data['type'], [0,1,2]) ){
@@ -346,6 +402,8 @@ class Rooms extends Xiguakeji
         $where['user_id'] = $this->user['id'];
         $where['state'] = $this->data['type'];
         $where['appid'] = $this->data['appid'];
+        $where['is_delete'] = 0;
+
         //->alias('a')->join($join)  -> where($where)
          /*已确认的订单下  包含 已支付 已入住 退款中的 订单 */
         if($this->data['type'] == 1){
@@ -397,9 +455,6 @@ class Rooms extends Xiguakeji
        $return['code'] = 10000;
        $return['data'] = $info;
        return json($return);
-
-
-
    }
 
     /*退款申请*/
@@ -447,6 +502,39 @@ class Rooms extends Xiguakeji
 
 
 
+
+    }
+
+    //获取更多信息
+    function info(){
+        $info['user'] = $this->user->nickName;
+        $info['avatarUrl'] = $this->user->avatarUrl;
+        $info['money'] = $this->user->money;
+        $return['code'] = 10000;
+        $return['data'] = $info;
+        return json($return);
+    }
+    
+    /*取消订单*/
+    public function close_order(){
+
+        $where['appid'] = $this->data['appid'];
+        $where['id'] = $this->data['id'];
+
+        $order = db('rooms_order')->where($where)->find();
+        if(isset($order['user_money']) && $order['user_money'] > 0){
+            db('user') -> where(['id' => $this -> user['id']]) -> setDec('money',$order['user_money']);
+        }
+        $res = db('rooms_order')->where($where)->update(["is_delete" => 1 ]);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg'] = '取消成功';
+            return json($return);
+        }else{
+            $return['code'] = 10001;
+            $return['msg'] = '取消失败';
+            return json($return);
+        }
 
     }
 

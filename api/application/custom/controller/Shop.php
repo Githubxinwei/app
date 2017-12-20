@@ -72,18 +72,10 @@ class Shop extends Action{
                 $info[$k]['prices'] = $pos;
             }
         }
-
-		if($info){
-			$return['code'] = 10000;
-			$return['data'] = ['number' => $number,'info' => $info];
-			$return['msg_test'] = '成功了';
-			return json($return);
-		}else{
-			$return['code'] = 10004;
-			$return['msg'] = '查询失败,请稍后重试';
-			return json($return);
-		}
-
+		$return['code'] = 10000;
+		$return['data'] = ['number' => $number,'info' => $info];
+		$return['msg_test'] = '成功了';
+		return json($return);
 	}
 
 

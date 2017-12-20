@@ -42,7 +42,7 @@ class Own extends Action{
 
 		//判断当前用户是否可以在创建小程序
 //       $app_num = db('app')->where(['custom_id'=> $this->data['custom_id'],'type'=>$this -> data['type']])->count();
-        $setting = db('app_setting')->field('id,app_num')->where(['id'=>$this->data['setting_id']])->find();
+        $setting = db('app_setting')->field('id,user_system')->where(['id'=>$this->data['setting_id']])->find();
 //		$maxappnum = db('custom') -> getFieldByid($this -> data['custom_id'],'max_app_num');
 //		$app_num = db('custom') -> getFieldByid($this -> data['custom_id'],'app_num');
 /*		if($app_num >= $maxappnum['app_num']){
@@ -68,6 +68,7 @@ class Own extends Action{
 		$this -> data['create_time'] = time();
 		$this -> data['try_time'] = time() + 86400;//一天的使用期
 		$this -> data['use_time'] = time() + 86400;
+        $this -> data['id_agency'] = $setting['user_system'];
 		$id = model('app') -> allowField(true) -> save($this -> data);
 		if($id){
 			//更新用户的数据表
@@ -211,10 +212,16 @@ class Own extends Action{
 	}
 
 
-	/*
-     小程序数量升级购买 账户余额购买
-	 * */
+	//   小程序数量升级购买 账户余额购买
+
     public function buyUserAppNum(){
+
+        if(!isset($this -> data['id'])){
+            $return['code'] = 10002;
+            $return['msg'] = '参数丢失';
+            $return['msg_test'] = '参数丢失';
+            return json($return);
+        }
 
         $this -> data['custom_id'] = $this -> custom -> id;
 
@@ -247,6 +254,7 @@ class Own extends Action{
                 $buyData['app_num'] = $info['app_num'];
                 $buyData['type'] = 0;
                 $buyData['state'] = 1;
+                $buyData['pay_time'] = time();
                 db('buy_app_num_log') -> insertGetId($buyData);
                 db('custom') -> where(['id' => $this->data['custom_id']]) -> setInc('max_app_num',$buyData['app_num']);
                 $return['code'] = 10000;
@@ -647,9 +655,11 @@ class Own extends Action{
 		$num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
 		$page = isset($this->data['page']) ? $this->data['page'] : 1;
 		$where = array();
+		$where1 = array();
 		if(isset($this->data['nickname'])){
 			if($this->data['nickname']){
 				$where['nickName'] = $this->data['nickname'];
+				$where1['a.nickName'] = $this->data['nickname'];
 			}
 		}
         $number = db('user')
@@ -657,9 +667,11 @@ class Own extends Action{
             -> where($where)
             -> count();
 		$info = db('user')
-			-> field("avatarUrl,nickName,gender,country,province,create_time")
-			-> where(['apps' => $this -> data['appid']])
-			-> where($where)
+            -> alias('a')
+			-> field("a.avatarUrl,a.nickName,a.gender,a.country,a.province,a.create_time,a.money,w.nickName as sj_name")
+            ->join('xg_user w','a.p_id = w.id','left')
+            -> where(['a.apps' => $this -> data['appid']])
+			-> where($where1)
 			-> page($page,$num)
 			-> select();
 		$return['code'] = 10000;

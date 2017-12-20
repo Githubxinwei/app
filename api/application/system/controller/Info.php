@@ -8,16 +8,22 @@
  */
 namespace app\system\controller;
 use think\Controller;
+use think\Request;
 use think\Session;
 
 class Info extends Controller{
+    public function __construct(Request $request = null)
+    {
+        parent::__construct($request);
+    }
 
     function _initialize()
     {
         header('Access-Control-Allow-Origin:*');
+
         $this -> data = input('post.','','htmlspecialchars');
         $this -> user = session('admin');
-        if($this->user == null){
+        if($this->user == null ){
             $return['code'] = 99999;
             $return['msg'] = '请登录';
             $return['msg_test'] = '请登录';
@@ -27,9 +33,11 @@ class Info extends Controller{
 
 
     /**
-     * 获取代理商的列表  就是custom表里面的用户
+     * 获取用户的列表  就是custom表里面的用户
      */
     public function getAgentList(){
+
+
         $page = isset($this -> data['page']) ? $this->data['page'] : 1;
         $limit = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
         //如果有筛选条件，那么加where 名称  手机号 时间戳
@@ -40,16 +48,17 @@ class Info extends Controller{
         if(isset($this->data['username'])){
             $where['username'] = $this->data['username'];
         }
-        if(isset($this->data['start_time']) && isset($this->data['end_time'])){
+        if(isset($this->data['start_time']) && isset($this->data['end_time']) && trim($this->data['start_time']) != '' && trim($this->data['end_time']) !=''){
             $where['register_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
         }
 
-        $user = $this -> user;
 
+        $user = $this -> user;
         if($user['is_agency_user'] == 1 ){
-            $arr = db('system')->field('custom_id')->where(['id'=>$user['id']])->find();
-            $where['id_agency'] = $arr['custom_id'];
+            $where['id_agency'] = $user['id'];
         }
+        $where = array_filter($where);
+
         $count = db('custom') -> where($where) -> count();
         $info = db('custom')
             -> field('id,nickname,username,wallet,expense,app_num,max_app_num,register_time,is_forbidden')
@@ -109,22 +118,56 @@ class Info extends Controller{
         $limit = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
         //如果有筛选条件，那么加where 名称  手机号 时间戳
         $where = array();
+        $where1 = array();
         if(isset($this->data['name'])){
             $where['nickName'] = $this->data['name'];
+            $where1['a.nickName'] = $this->data['name'];
         }
-        if(isset($this->data['username'])){
-            $where['apps'] = $this->data['username'];
-        }
-        if(isset($this->data['start_time']) && isset($this->data['end_time'])){
+        if(isset($this->data['start_time']) && isset($this->data['end_time'])  && trim($this->data['start_time']) != '' && trim($this->data['end_time']) !='' ){
             $where['create_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
+            $where1['a.create_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
         }
-        $count = db('user') -> where($where) -> count();
-        $info = db('user')
-            -> field('id,nickName,gender,avatarUrl,city,province,country,create_time,is_forbidden')
-            -> where($where)
-            -> page($page,$limit)
-            -> order('create_time desc')
-            -> select();
+        $where = array_filter($where);
+        $where1 = array_filter($where1);
+
+        /*当当前用户是代理商的时候*/
+        $user = $this -> user;
+        if($user['is_agency_user'] == 1 ){
+            $arr = db('app')->field('id,appid')->where(['id_agency'=>$user['id']])->select();
+
+            $array = [];
+            foreach($arr as $k=>$v){
+                if($v != ''){
+                    array_push($v,$array);
+                }
+            }
+            $arr = implode(',',$array);
+            $count = db('user')-> where($where)->where('apps','in',$arr)->count();
+            $info = db('user')
+                -> alias('a')
+                -> field('a.id,a.nickName,a.gender,a.avatarUrl,a.city,a.province,a.country,a.create_time,a.is_forbidden,a.money,b.nickName as sj_name')
+                -> join('xg_user b','a.p_id = b.id','left')
+                -> where($where1)
+                ->where('a.apps','in',$arr)
+                -> page($page,$limit)
+                -> order('a.create_time desc')
+                -> select();
+        }else{
+
+            /*超管用户*/
+            $count = db('user') -> where($where) -> count();
+            $info = db('user')
+                -> alias('a')
+                -> field('a.id,a.nickName,a.gender,a.avatarUrl,a.city,a.province,a.country,a.create_time,a.is_forbidden,a.money,b.nickName as sj_name')
+                -> join('xg_user b','a.p_id = b.id','left')
+                -> where($where1)
+                -> page($page,$limit)
+                -> order('a.create_time desc')
+                -> select();
+        }
+
+
+
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';
         $return['data'] = ['number' => $count,'info' => $info];
@@ -140,7 +183,14 @@ class Info extends Controller{
             $return['msg_test'] = '参数缺失';
             return json($return);
         }
-        $info = db('user')  -> field('id,nickName,gender,avatarUrl,city,province,country,create_time,is_forbidden') ->  find($this->data['user_id']*1);
+
+        $info = db('user')
+            -> alias('a')
+            -> field('a.id,a.nickName,a.gender,a.avatarUrl,a.city,a.province,a.country,a.create_time,a.is_forbidden,a.money,b.nickName as sj_name')
+            -> join('xg_user b','a.p_id = b.id','left')
+            -> find($this->data['user_id']*1);
+
+
         $return['code'] = 10000;
         $return['msg_test'] = '查询成功';
         $return['data'] = $info;
@@ -185,9 +235,19 @@ class Info extends Controller{
         if(isset($this->data['type'])){
             $where['a.type'] = $this->data['type'];
         }
-        if(isset($this->data['nickname'])){
-            $where['b.nickname'] = $this->data['nickname'];
+        if(isset($this->data['start_time']) && isset($this->data['end_time'])  && trim($this->data['start_time']) != '' && trim($this->data['end_time']) !='' ){
+            $where['a.create_time'] = ['between',[$this->data['start_time'],$this->data['end_time']]];
         }
+//        if(isset($this->data['nickname'])){
+//            $where['b.nickname'] = $this->data['nickname'];
+//        }
+        $where = array_filter($where);
+        /*如果当前用户识代理商  则查询 代理商下 普通用户的小程序*/
+        $user = $this -> user;
+        if($user['is_agency_user'] == 1 ){
+            $where['a.id_agency'] = $user['id'];
+        }
+
         $count = db('app')
             -> alias('a')
             -> join("__CUSTOM__ b",'a.custom_id = b.id','LEFT')
@@ -212,6 +272,7 @@ class Info extends Controller{
         return json($return);
     }
 
+    /*小程序详细信息*/
     public function getUserAppById(){
         if(!$this->data['app_id']){
             $return['code'] = 10001;

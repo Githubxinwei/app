@@ -226,7 +226,7 @@ class Component extends Controller{
 				$func_info = $func_info.','.$val['funcscope_category']['id'];
 			}
 		}
-		$app = model('app') ->field('custom_id') -> where('appid',$_GET['apps'])->find();
+		$app = model('app') ->field('custom_id,type') -> where('appid',$_GET['apps'])->find();
 		$auth_info = array(
 			'appid'=>$ress['authorization_info']['authorizer_appid'],
 			'access_token'=>$ress['authorization_info']['authorizer_access_token'],
