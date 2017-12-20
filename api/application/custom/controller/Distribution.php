@@ -7,6 +7,7 @@
  * 后台管理员为每个小程序设置分销，设置分销的只有小程序有支付的时候，才能启用分销
  */
 namespace app\custom\controller;
+use think\Exception;
 
 class Distribution extends Action{
     
@@ -30,10 +31,95 @@ class Distribution extends Action{
             echo json_encode($return);exit;
         }
     }
+    //提现审核
+    public function withdraw_audit(){
+        if (!isset($this->data['id']) || !isset($this->data['is_audit'])) {
+            $return['code'] = 10001;
+            $return['msg_test'] = '参数缺失';
+            return json($return);
+        }
+        $audit_data['is_audit'] = $this->data['is_audit'];
+        $audit_data['success_time'] = time();
+        //审核通过
+        if ($audit_data['is_audit'] == 1) {
+            
+            $res = db('withdraw_record')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->update($audit_data);
+            if ($res) {
+                $return['code'] = 10000;
+                $return['msg_test'] = 'ok';
+                return json($return);
+            } else {
+                $return['code'] = 10010;
+                $return['msg_test'] = '网络错误，失败';
+                return json($return);
+            }
+        }
+        //审核未通过
+        if ($audit_data['is_audit'] == 2) {
+            $model = db();
+            $model -> startTrans();
+            try {
+                 db('withdraw_record')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->update($audit_data);
+                 $info = db('withdraw_record')->field('user_id,money')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->find();
+                 db('user')->where(['id' => $info['user_id'],'appid' => $this->data['appid']])->setInc('money',$info['money']);
+                 $model -> commit();   
+                 $return['code'] = 10000;
+                 $return['msg_test'] = 'ok';
+                 return json($return);
+            } catch (Exception $e) {
+                $model -> rollback();
+                $return['code'] = 10010;
+                $return['msg_test'] = '网络错误,请稍后重试';
+                return json($return);
+            }
+        }
+    }
+    //提现记录
+    public function withdraw_list(){
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+        $limit_num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
+        $withdraw_data = array();
+        $withdraw_data['appid'] = $this->data['appid'];
+        if(isset($this->data['starttime']) && isset($this->data['endtime'])){
+            if($this->data['starttime'] && $this->data['endtime']){
+                $withdraw_data['create_time'] = ['between',[$this->data['starttime'],$this->data['endtime']]];
+            }
+        }
+        if (isset($this->data['is_audit'])) {
+            if ($this->data['is_audit']) {
+                $withdraw_data['is_audit'] = $this->data['is_audit'];
+            }
+        }
+        if (isset($this->data['withdraw_type'])) {
+            if ($this->data['withdraw_type']) {
+                $withdraw_data['withdraw_type'] = $this->data['withdraw_type'];
+            }
+        }
+        if (isset($this->data['tel'])) {
+            if ($this->data['tel']) {
+                $withdraw_data['tel'] = $this->data['tel'];
+            }
+        }
+        if (isset($this->data['name'])) {
+            if ($this->data['name']) {
+                $withdraw_data['name'] = $this->data['name'];
+            }
+        }
+        $info = db('withdraw_record')
+        ->field('id,name,tel,money,withdraw_type,ali_number,bank_name,bank_number,is_audit,create_time,success_time')
+        ->where($withdraw_data)
+        ->order('id desc')
+        ->page($page,$limit_num)
+        ->select();
+        $return['code'] = 10000;
+        $return['msg_test'] = '查询成功';
+        $return['data'] = $info;
+        return json($return);
+    }
     //分销详情
     public function getDistInfo() {
         $info = db('dist_rule')
-            -> field('appid,switch,level,scale,type,good_list,is_withdraw,withdraw_type')
+            -> field('switch,level,scale,type,good_list,is_withdraw,withdraw_type')
             ->where(['appid' => $this->data['appid']]) -> find();
 
         $return['code'] = 10000;
@@ -97,6 +183,9 @@ class Distribution extends Action{
             $return['msg_test'] =  '小程序参数丢失';
             return  json($return);
         }
+        $num = db('dist_record')
+            -> where(['appid' => $this->data['appid']])
+            -> count();
         $info = db('dist_record')
             -> alias('a')
             -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.nickName as user_nickName,c.nickName as xj_nickName')
@@ -107,8 +196,8 @@ class Distribution extends Action{
             -> order('a.create_time desc')
             -> select();
 
-        $return['code'] = 10010;
-        $return['data'] = $info ;
+        $return['code'] = 10000;
+        $return['data'] = ['number'=>$num,'data'=>$info] ;
         return json($return);
 
     }

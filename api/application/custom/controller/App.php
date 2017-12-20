@@ -1,6 +1,7 @@
 <?php
 namespace app\custom\controller;
 use think\Controller;
+use think\Exception;
 
 class App extends Xiguakeji{
 	
@@ -744,6 +745,110 @@ class App extends Xiguakeji{
         }
         
     }
+
+    /**
+     * 用户前台提现
+     */
+    public function userWithdraw(){
+        //判断是否开启了提现
+        $appid = $this -> data['apps'];
+        $rule = db('dist_rule') -> field('is_withdraw,withdraw_type') -> where(['appid' => $appid]) -> find();
+        if(!$rule || $rule['is_withdraw'] == 0){
+            //后台没有设置或没有开启
+            $return['code'] = 10001;
+            $return['msg'] = '提现功能没有开启';
+            return json($return);
+        }else if($rule['is_withdraw'] == 1){
+            //后台没有设置或没有开启
+            $return['code'] = 10000;
+            $return['data'] = array('withdraw_type' => $rule['withdraw_type'],'money' => $this -> user['money']);
+            $return['msg_test'] = '提现功能已开启';
+            return json($return);
+        }
+    }
+
+    /**
+     * 保存用户的提现记录
+     * withdraw_type 1 支付宝 2 银行卡
+     * name 名字 tel 手机号 money 提现金额 ali_number 支付宝账号 bank_name 开户行 bank_number 银行卡账号
+     */
+    public function setUserWithdraw(){
+        //判断用户是否开启了提现。
+        $appid = $this -> data['apps'];
+        $rule = db('dist_rule') -> field('is_withdraw,withdraw_type') -> where(['appid' => $appid]) -> find();
+        if(!$rule || $rule['is_withdraw'] == 0){
+            //后台没有设置或没有开启
+            $return['code'] = 10001;
+            $return['msg'] = '提现功能没有开启';
+            return json($return);
+        }
+        if(!$this -> data['name'] || !$this -> data['tel'] || !$this -> data['money'] || !$this -> data['withdraw_type']){
+            //后台没有设置或没有开启
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }
+
+        if($this -> data['withdraw_type'] == 1 && !$this -> data['ali_number']){
+            //后台没有设置或没有开启
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }else if($this -> data['withdraw_type'] == 0 && (!$this -> data['bank_name'] || !$this -> data['bank_number'])){
+            //后台没有设置或没有开启
+            $return['code'] = 10002;
+            $return['msg_test'] = '参数值缺失';
+            return json($return);
+        }
+        //判断金额是否足够
+        $money = $this -> data['money'] * 1;
+        if(!$money || $money <= 0){
+            $return['code'] = 10003;
+            $return['msg'] = '请输入正确的金额';
+            return json($return);
+        }
+        //判断是否有余额
+        if($money > $this -> user['money']){
+            $return['code'] = 10004;
+            $return['msg'] = '余额不足';
+            return json($return);
+        }
+        //余额充足
+        $model = db();
+        $model -> startTrans();
+        try{
+            $res = db('user') -> where(['id' => $this -> user['id']]) -> setDec('money',$money);
+            if($res){
+                //保存记录
+                $withdraw['money'] = $money;
+                $withdraw['name'] = $this -> data['name'];
+                $withdraw['appid'] = $this -> user['apps'];
+                $withdraw['user_id'] = $this -> user['id'];
+                $withdraw['tel'] = $this -> data['tel'];
+                $withdraw['create_time'] = time();
+                if($this -> data['withdraw_type'] == 1){
+                    //支付宝
+                    $withdraw['ali_number'] = $this -> data['ali_number'];
+                }else if($this -> data['withdraw_type'] == 2){
+                    //银行卡
+                    $withdraw['bank_name'] = $this -> data['bank_name'];
+                    $withdraw['bank_number'] = $this -> data['bank_number'];
+                }
+                $withdraw['withdraw_type'] = $this -> data['withdraw_type'];
+                db('withdraw_record') -> insert($withdraw);
+                $model -> commit();
+                $return['code'] = 10000;
+                $return['msg'] = '提现成功,后台审核中';
+                return json($return);
+            }
+        }catch (Exception $e){
+            $model -> rollback();
+            $return['code'] = 10005;
+            $return['msg'] = '网络错误，请稍后重试';
+            return json($return);
+        }
+    }
+
     
 
 }
