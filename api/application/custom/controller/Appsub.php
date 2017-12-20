@@ -191,6 +191,11 @@ class Appsub  extends Xiguakeji
         $data['price'] = $goods['service_price'];
         $res = model('subscribe_order')->allowField(true)->save($data);
         if($res){
+            //发送短信或邮箱通知
+//            $sendInfo = controller("custom/Notify");
+//            $sendInfo -> sendMail($this->user['apps'],$goods['service_name']);
+            $mail = db('app') -> field('custom_id,name,notifytel,notifyemail') -> where(['appid' => $this -> user['apps']]) -> find();
+            sendMail($mail['notifyemail'],'你有新的订单,请尽快处理','你有新的订单,请尽快处理【'.$goods['service_name'].'】等...','163');
             $return['code'] = 10000;
             $return['msg'] = '预约成功';
             $return['msg_test'] = '预约成功';

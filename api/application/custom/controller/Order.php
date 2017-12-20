@@ -60,7 +60,7 @@ class Order extends Action{
             -> where($where)
             -> count();
         $data = db('goods_order')
-            -> field("id,state,username,prepay_time,price,order_sn")
+            -> field("id,state,username,prepay_time,price,order_sn,user_money")
             -> where(['appid' => $this -> data['appid'],'state' => $state])
             -> where($where)
             -> order('id desc')
@@ -84,7 +84,7 @@ class Order extends Action{
         }
         $info = db('goods_order')
             -> alias('a')
-            -> field("a.id,a.custom_id,a.username,a.tel,a.mail,concat(a.province,a.city,a.dist,a.address) address,a.zipcode,a.state,a.order_sn,b.name,b.pic,b.num,b.price,b.spec_value")
+            -> field("a.id,a.custom_id,a.username,a.tel,a.mail,concat(a.province,a.city,a.dist,a.address) address,a.zipcode,a.state,a.order_sn,a.price,a.price as total_fee,a.user_money,b.name,b.pic,b.num,b.price,b.spec_value")
             -> join("__GOODS_CART__ b",'FIND_IN_SET(b.id,a.carts)','LEFT')
             -> where('a.id',$this->data['order_id'])
             -> group('b.id')
@@ -110,7 +110,8 @@ class Order extends Action{
             $return['msg_test'] = '请传递参数';
             return json($return);
         }
-        $state = db('goods_order') -> getFieldById($this->data['order_id'],'state');
+        $orderInfo = db('goods_order') -> field('tel,state') -> where(['id' => $this -> data['order_id']]) -> find();
+        $state = $orderInfo['state'];
         if($this->data['state'] == 2){
             if(!isset($this->data['kd_number']) || !isset($this -> data['kd_code'])){
                 $return['code'] = 10002;
@@ -127,15 +128,16 @@ class Order extends Action{
             $info['state'] = 2;
             $res = db('goods_order') -> where(['id' => $this->data['order_id'] * 1]) -> update($info);
             if($res){
-                $order = db('goods_order')->field('tel')->where(['id' => $this->data['order_id']])->find();
-                /*发送短信通知*/
-                $param = "kd_number:{$this->data['kd_number']}";
-                $code = sendMessage($order['tel'],$param);
-                if($code) {
+                //发货成功，短信通知
+                $param = "kd_number:{$this -> data['kd_number']}";
+                $code = sendMsgInfo($orderInfo['tel'],$param,1,3,$this -> custom->id);
+                if($code == -6){
+                    $return['code'] = -6;
+                }else{
                     $return['code'] = 10000;
-                    $return['msg_test'] = 'ok';
-                    return json($return);
                 }
+                $return['msg_test'] = 'ok';
+                return json($return);
             }else{
                 $return['code'] = 10004;
                 $return['msg_test'] = '失败';
@@ -165,6 +167,61 @@ class Order extends Action{
 
     }
 
+    /**
+     * 对退货的订单进行赛选
+     * is_return 0 后台未处理 1 后台已同意退款的 2 后台不同意退款的
+     */
+    public function getRefundList(){
+        $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
+        $page = isset ($this->data['page']) ? $this->data['page'] : 1;
+        if(!isset($this -> data['is_return'])){
+            $return['code'] = 10000;
+            $return['msg_test'] = '参数错误';
+            return json($return);
+        }
+        $info = db('goods_order') -> where(['state' => 4,'is_return' => $this -> data['is_return']]) -> page($page,$num) -> select();
+        $return['code'] = 10005;
+        $return['data'] = $info;
+        return json($return);
+    }
+
+
+    /**
+     * 处理退款的操作，
+     */
+    public function setRefund(){
+        if(!isset($this -> data['order_id']) || $this -> data['is_return'] != 1 || $this -> data['is_return'] != 2){
+            $return['code'] = 10001;
+            $return['msg_test'] = '传递参数错误';
+            return json($return);
+        }
+        $orderInfo = db('goods_order') -> field("id,state,is_return,is_expire") -> where(['id' => $this -> data['order_id']]) -> find();
+        if(!$orderInfo || $orderInfo['state'] != 4 || $orderInfo['is_return'] != 0){
+            $return['code'] = 10001;
+            $return['msg'] = '当前订单状态不可改变';
+            return json($return);
+        }
+        $info = array();
+        if($this -> data['is_return'] == 1){
+            //表示当前管理员同意退货，调用微信退款接口
+            //待定
+            $info['is_return'] = 1;
+        }else if($this -> data['is_return'] == 2){
+            //管理员不同意退货，把state改为原来的状态，
+            $info['state'] = $orderInfo['is_expire'];
+            $info['is_return'] = 2;
+        }
+        $res = model('goods_order') -> save($info,['id' => $orderInfo['id']]);
+        if($res){
+            $return['code'] = 10000;
+            $return['msg_test'] = '操作成功';
+            return json($return);
+        }else{
+            $return['code'] = 10002;
+            $return['msg_test'] = '操作失败';
+            return json($return);
+        }
+    }
 
     public function getSubscribeOrderList(){
         $num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
@@ -244,7 +301,8 @@ class Order extends Action{
             $return['msg_test'] = '请传递参数';
             return json($return);
         }
-        $state = db('subscribe_order') -> getFieldById($this->data['order_id'],'state');
+        $orderInfo = db('subscribe_order') -> field('state,tel') ->  where(['id' => $this -> data['order_id']]) -> find();
+        $state = $orderInfo['state'];
         //管理员想确认订单
         if($this->data['state'] == 1){
             if($state != 0){

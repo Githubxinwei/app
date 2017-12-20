@@ -226,7 +226,7 @@ class Component extends Controller{
 				$func_info = $func_info.','.$val['funcscope_category']['id'];
 			}
 		}
-		$app = model('app') ->field('custom_id') -> where('appid',$_GET['apps'])->find();
+		$app = model('app') ->field('custom_id,type') -> where('appid',$_GET['apps'])->find();
 		$auth_info = array(
 			'appid'=>$ress['authorization_info']['authorizer_appid'],
 			'access_token'=>$ress['authorization_info']['authorizer_access_token'],
@@ -234,11 +234,12 @@ class Component extends Controller{
 			'func_info'=>$func_info,
 			'custom_id'=>$app['custom_id'],
 			'upd_time'=>time(),
+            'type' => $app['type']
 		);
 		// 判断是否已存入数据库
 		$appid = $_GET['apps'];
 		$info = model('auth_info') -> where("apps = '$appid' ") -> find();
-		if($info == null){
+        if($info == null){
 			/*在其他号绑定过也无法使用*/
 			$old_info = db('auth_info') -> where(" appid = '$auth_info[appid]' ")->find();
 			if($old_info){

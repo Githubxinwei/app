@@ -35,26 +35,38 @@ class Price extends Action
         $user = db('custom')->where(['id'=>$user_id])->find(); //用户信息
 
 
-         /*代理商的情况*/
-        if($user['is_agency_user'] == 1 ){
+        /*代理商验证通过的情况*/
+        if($user['is_agency_user'] == 1 && $user['is_agency'] == 2){
             $where['type_auto'] = 1 ;
             $where['type_ssh'] = 1 ;
             $where['user_system'] = 1 ;
         }
-
-        /*普通用户是超级管理员下的情况*/
-        if($user['is_belong'] == 0 ){
+        /*代理商验证未通过的情况*/
+        if($user['is_agency_user'] == 1 && $user['is_agency'] != 2){
             $where['type_auto'] = 1 ;
             $where['type_ssh'] = 2 ;
             $where['user_system'] = 1 ;
         }
 
-        /*普通用户是代理商的情况下*/
-        if($user['is_belong'] == 1 ){
-            $where['type_auto'] = 2 ;
-            $where['type_ssh'] = 2 ;
-            $where['user_system'] = $user['id_agency'];
+        /*用户不是代理商的情况下*/
+        if($user['is_agency_user'] == 0){
+
+            /*普通用户是超级管理员下的情况*/
+            if($user['is_belong'] == 0 ){
+                $where['type_auto'] = 1 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = 1 ;
+            }
+
+            /*普通用户是代理商的情况下*/
+            if($user['is_belong'] == 1 ){
+                $where['type_auto'] = 2 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = $user['id_agency'];
+            }
+
         }
+
 
         $where['type'] = $this->data['type'];
 
@@ -101,25 +113,37 @@ class Price extends Action
             return json($return);
         }
         $user_id = $this -> custom ->id; //用户id
-        $user = db('custom')->field("is_agency_user,is_belong")->where(['id'=>$user_id])->find(); //用户信息
-        /*代理商的情况*/
-        if($user['is_agency_user'] == 1 ){
+        $user = db('custom')->where(['id'=>$user_id])->find(); //用户信息
+        /*代理商验证通过的情况*/
+        if($user['is_agency_user'] == 1 && $user['is_agency'] == 2){
             $where['type_auto'] = 1 ;
             $where['type_ssh'] = 1 ;
             $where['user_system'] = 1 ;
         }
-        /*普通用户是超级管理员下的情况*/
-        if($user['is_belong'] == 0 ){
+        /*代理商验证未通过的情况*/
+        if($user['is_agency_user'] == 1 && $user['is_agency'] != 2){
             $where['type_auto'] = 1 ;
             $where['type_ssh'] = 2 ;
             $where['user_system'] = 1 ;
         }
 
-        /*普通用户是代理商的情况下*/
-        if($user['is_belong'] == 1 ){
-            $where['type_auto'] = 2 ;
-            $where['type_ssh'] = 2 ;
-            $where['user_system'] = $user['id_agency'];
+        /*用户不是代理商的情况下*/
+        if($user['is_agency_user'] == 0){
+
+            /*普通用户是超级管理员下的情况*/
+            if($user['is_belong'] == 0 ){
+                $where['type_auto'] = 1 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = 1 ;
+            }
+
+            /*普通用户是代理商的情况下*/
+            if($user['is_belong'] == 1 ){
+                $where['type_auto'] = 2 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = $user['id_agency'];
+            }
+
         }
 
         $where['type'] = $type;
@@ -138,6 +162,52 @@ class Price extends Action
 
     }
 
+     /*获取小程序升级数量套餐信息*/
+    public function  get_app_num(){
+
+         $user_id = $this -> custom ->id; //用户id
+         $user = db('custom')->where(['id'=>$user_id])->find(); //用户信息
+
+
+         /*代理商验证通过的情况*/
+         if($user['is_agency_user'] == 1 && $user['is_agency'] == 2){
+             $where['type_auto'] = 1 ;
+             $where['type_ssh'] = 1 ;
+             $where['user_system'] = 1 ;
+         }
+        /*代理商验证未通过的情况*/
+        if($user['is_agency_user'] == 1 && $user['is_agency'] != 2){
+            $where['type_auto'] = 1 ;
+            $where['type_ssh'] = 2 ;
+            $where['user_system'] = 1 ;
+        }
+
+        /*用户不是代理商的情况下*/
+        if($user['is_agency_user'] == 0){
+
+            /*普通用户是超级管理员下的情况*/
+            if($user['is_belong'] == 0 ){
+                $where['type_auto'] = 1 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = 1 ;
+            }
+
+            /*普通用户是代理商的情况下*/
+            if($user['is_belong'] == 1 ){
+                $where['type_auto'] = 2 ;
+                $where['type_ssh'] = 2 ;
+                $where['user_system'] = $user['id_agency'];
+            }
+
+        }
+
+         $info = db('app_num')->where($where)->select();
+
+         $return['code'] = 10000;
+         $return['data'] = $info;
+         return json($return);
+
+     }
 
 
 }

@@ -1,0 +1,1 @@
+D:\phpStudy\php\php-5.4.45-nts\php.exe -q D:\WWW\000000\weapp\public\order.php

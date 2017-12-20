@@ -120,6 +120,52 @@ class NotifyAdmin{
     }
 
 
+    //    后台用户升级app数量
+    public function wxBuyAppNum(){
+        $postStr = $GLOBALS["HTTP_RAW_POST_DATA"];
+        $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $sign_info = $this->signRecharge($postObj);
+        if(!$sign_info){
+            file_put_contents('numpay.log',PHP_EOL.json_encode($postStr)." 签名验证失败".PHP_EOL,FILE_APPEND);
+            return;//签名失败
+        }
+        $data = $this->xml2arr($postStr);
+
+        $attach = $data['attach'];//这个是文件的名字
+        $value = file_cache($attach);
+        if(!$value){
+            file_put_contents('numpay.log',PHP_EOL.$attach." 文件里面为空".PHP_EOL,FILE_APPEND);
+        }
+        $is_true = db('buy_app_num_log') -> field('id') ->  where(['order_sn' => $value['order_sn']]) -> find();
+        if($is_true){
+            return;//订单不是待处理状态，已确认收款
+        }
+        $buyData['custom_id'] = $value['custom_id'];
+        $buyData['money'] = $data['total_fee']/100;
+        $buyData['order_sn'] = $value['order_sn'];
+        $buyData['create_time'] = $value['create_time'];
+        $buyData['app_num'] = $value['app_num'];
+        $buyData['pay_time'] = time();
+        $buyData['state'] = 1;
+        $model = db();
+        $model -> startTrans();
+        try{
+            $res = $model -> table("xg_buy_app_num_log") -> insertGetId($buyData);
+            if($res){
+                db('custom') -> where(['id' => $value['custom_id']]) -> setInc('max_app_num',$data['app_num']);
+                $model -> commit();
+                file_cache($attach,'del');
+                die('SUCCESS');
+            }else{
+
+            }
+        }catch (\think\Exception $e){
+            $model -> rollback();
+            file_put_contents('numpay.log',PHP_EOL.$attach." 保存数据库时出错".PHP_EOL,FILE_APPEND);
+            die('FAIL');
+        }
+
+    }
 
     /**
      *	xml转为数组
@@ -162,4 +208,6 @@ class NotifyAdmin{
         $new_sign = strtoupper(MD5($str2));
         if($new_sign == $sign){return true;}else{return false;}
     }
+
+
 }

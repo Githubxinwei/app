@@ -1,0 +1,87 @@
+h1{font-size: 0.16rem;font-weight: 600}
+.info{display: flex;padding: 0.05rem 0}
+.left_info{  display: flex;  justify-content:space-between;align-items: center}
+.left_info>strong{line-height: 0.3rem;display: inline-block;font-size: 0.14rem}
+.left_photo{
+  width: 3.5rem;height: 2.82rem;border-radius:0.05rem;border: 1px solid darkgrey;background: #f6f6f6;cursor: pointer;
+  display:flex;justify-content: center;align-items: center;  position: relative;
+}
+.left_photo_one{
+  text-align: center;
+}
+.single-image-wrapper{
+  width:100%;
+  height:100%;
+}
+.shade{
+  width: 3.5rem;
+  height: 2.82rem;
+  position: absolute;
+  z-index: 1;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.images-wrapper{
+  height: 2.82rem;
+  overflow: auto;
+  width: 100%;
+}
+.image-item{
+  border: 1px solid #e2e4e7;
+  display: inline-block;
+  margin-bottom: 0.2rem;
+  margin-right: 0.2rem;
+  position: relative;
+  vertical-align: top;
+  width: 1.45rem;
+}
+.place-holder{
+  border: 2px dashed #ccc;
+  box-sizing: border-box;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 0.5rem;
+  line-height: 115px;
+  text-align: center;
+}
+.image-cover{
+  background: rgba(0,0,0,.5);
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.right{margin-left: 0.2rem}
+.right strong{display: inline-block;font-size: 0.14rem;padding:0.05rem 0}
+.right input{  display: inline-block;  width: 500px;  border-radius:0.05rem;  border: 1px solid gainsboro;  padding: 0.1rem 0.1rem;  }
+.right .text{  width: 500px;  padding: 0.1rem 0.1rem;  height: 2.05rem;  border-radius:0.05rem;  border: 1px solid gainsboro;  display: inline-block;  }
+.price p{padding: 0.1rem 0}
+p>strong{  font-size: 0.16rem;;margin-top: 0.1rem }
+.price{ display: flex;margin-bottom: 0.15rem}
+.left input{ display: inline-block;  width: 300px;  border-radius:0.05rem;  border: 1px solid gainsboro;  padding: 0.1rem 0.1rem; }
+.sorts{padding: 0.05rem 0;font-size: 0.14rem}
+.delivery{padding: 0.05rem 0;font-size: 0.14rem}
+.footer{  position: fixed;  bottom: 0;  padding: 0.2rem 0.3rem;  margin-left: -0.2rem;  background: #fff;  box-shadow: 0 -2px 3px #ddd;  box-sizing: border-box;  width:calc(100vw - 2.6rem);  text-align: center;  }
+.footer>a{  color: black;  display: inline-block;  padding: 0.1rem 0.5rem;  background: #eee;  border-radius: 0.05rem;  }
+.footer>a:nth-child(1){  float: left;  }
+.footer>a:nth-child(2){  color: white;  background: #59A2ED;  }
+.add_shangpin{
+  background-color:white;
+  padding: 0.12rem 0.12rem;
+  border-radius:0.03rem;
+  box-shadow: 5px 5px 10px #E7E7E7;
+}
+.add_se{
+  margin-top: 0.2rem;
+  background-color:white;
+  padding: 0.12rem 0.12rem;
+  border-radius:0.03rem;
+  box-shadow: 5px 5px 10px #E7E7E7;
+}

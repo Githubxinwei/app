@@ -7,8 +7,10 @@ class Login{
     /**
      * 登录请求接口
      */
+
+
 	public function index(){
-        header('Access-Control-Allow-Origin:*');
+        header('Access-Control-Allow-Origin:https://weapp.xiguawenhua.com');
 		$username = input('post.username','','htmlspecialchars');
 		$password = input('post.password','','htmlspecialchars');
 

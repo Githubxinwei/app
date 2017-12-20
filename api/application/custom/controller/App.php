@@ -849,6 +849,24 @@ class App extends Xiguakeji{
         }
     }
 
+    /**
+     * 得到用户的当前提现的记录
+     */
+    public function getUserWithdrawRecord(){
+        $page = isset($this->data['page']) ? $this->data['page'] : 1;
+        $limit_num = isset($this->data['limit_num']) ? $this->data['limit_num'] : 10;
+        $count = db('withdraw_record') -> where(['user_id' => $this -> user['id']]) -> count();
+        $info = db('withdraw_record')
+            -> field('money,withdraw_type,is_audit,create_time')
+            -> where(['user_id' => $this -> user['id']])
+            -> page($page,$limit_num)
+            -> select();
+        $return['code'] = 10000;
+        $return['msg_test'] = 'ok';
+        $return['data'] = $info;
+        $return['number'] = $count;
+        return json($return);
+    }
     
 
 }

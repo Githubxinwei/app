@@ -1,0 +1,17 @@
+<!doctype html><html lang=en><head><meta charset=UTF-8><meta name=viewport content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1"><meta http-equiv=X-UA-Compatible content="ie=edge"><title>西瓜科技</title><link rel=stylesheet href=/static/default.css><link rel=stylesheet type=text/css href=//at.alicdn.com/t/font_489859_uxb58qe01udw8kt9.css><link href=/systems/static/css/app.e39f7791e2a244d6a4eeacfdbc1d9de2.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=/systems/static/js/manifest.3cbcd2bb9b6d3f9a61f0.js></script><script type=text/javascript src=/systems/static/js/vendor.3806e362cde7e2981dea.js></script><script type=text/javascript src=/systems/static/js/app.6f333ee90d9c8bc1c4fb.js></script></body><script>(function (doc, win) {
+    let docEl = doc.documentElement,
+      resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+      recalc = function () {
+        let clientWidth = docEl.clientWidth;
+        if (!clientWidth) return;
+        if(clientWidth>=640){
+          docEl.style.fontSize = '100px';
+        }else{
+          docEl.style.fontSize = 100 * (clientWidth / 640) + 'px';
+        }
+      };
+
+    if (!doc.addEventListener) return;
+    win.addEventListener(resizeEvt, recalc, false);
+    doc.addEventListener('DOMContentLoaded', recalc, false);
+  })(document, window);</script></html>
