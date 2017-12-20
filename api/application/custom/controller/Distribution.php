@@ -7,7 +7,10 @@
  * 后台管理员为每个小程序设置分销，设置分销的只有小程序有支付的时候，才能启用分销
  */
 namespace app\custom\controller;
+<<<<<<< HEAD
 use think\Exception;
+=======
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
 
 class Distribution extends Action{
     
@@ -31,6 +34,7 @@ class Distribution extends Action{
             echo json_encode($return);exit;
         }
     }
+<<<<<<< HEAD
     //提现审核
     public function withdraw_audit(){
         if (!isset($this->data['id']) || !isset($this->data['is_audit'])) {
@@ -119,6 +123,12 @@ class Distribution extends Action{
     public function getDistInfo() {
         $info = db('dist_rule')
             -> field('switch,level,scale,type,good_list,is_withdraw,withdraw_type')
+=======
+    //分销详情
+    public function getDistInfo() {
+        $info = db('dist_rule')
+            -> field('appid,switch,level,scale,type,good_list,is_withdraw,withdraw_type')
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
             ->where(['appid' => $this->data['appid']]) -> find();
 
         $return['code'] = 10000;
@@ -182,9 +192,12 @@ class Distribution extends Action{
             $return['msg_test'] =  '小程序参数丢失';
             return  json($return);
         }
+<<<<<<< HEAD
         $num = db('dist_record')
             -> where(['appid' => $this->data['appid']])
             -> count();
+=======
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
         $info = db('dist_record')
             -> alias('a')
             -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.nickName as user_nickName,c.nickName as xj_nickName')
@@ -195,8 +208,13 @@ class Distribution extends Action{
             -> order('a.create_time desc')
             -> select();
 
+<<<<<<< HEAD
         $return['code'] = 10000;
         $return['data'] = ['number'=>$num,'data'=>$info] ;
+=======
+        $return['code'] = 10010;
+        $return['data'] = $info ;
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
         return json($return);
 
     }

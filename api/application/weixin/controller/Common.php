@@ -384,6 +384,7 @@ class common extends Controller{
 		file_put_contents($name,$res);
 		return '/static/qrcode/'.$this->appid.'.jpg';
 	}
+<<<<<<< HEAD
     	//获得我的二维码
         public function get_qrcodes($uid) {
 
@@ -398,6 +399,21 @@ class common extends Controller{
 	        file_put_contents($name,$da);
 	        return '/static/code/'.$uid.'.jpg';
         
+=======
+	//生成分销二维码
+    public function get_qrcodes($uid) {
+
+        $data = array();
+        $data['scene'] = $uid;
+        $data['page'] = "pages/index/index";
+        $data = json_encode($data);
+        $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" . $this->access_token;
+        $da = http_request($url,$data);
+
+        $name = STATIC_APTH.'code/'.$uid.'.jpg';
+        file_put_contents($name,$da);
+        return '/static/code/'.$uid.'.jpg';
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
 
    	 }
 

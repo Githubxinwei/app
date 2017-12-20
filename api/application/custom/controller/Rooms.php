@@ -455,6 +455,10 @@ class Rooms extends Xiguakeji
        $return['code'] = 10000;
        $return['data'] = $info;
        return json($return);
+<<<<<<< HEAD
+=======
+
+>>>>>>> f3c10d5320de806fe333c38aaa4b99cf1c479c03
    }
 
     /*退款申请*/
@@ -498,10 +502,6 @@ class Rooms extends Xiguakeji
            $return['msg_test'] = '网络错误';
            return json($return);
        }
-
-
-
-
 
     }
 
