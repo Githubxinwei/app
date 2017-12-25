@@ -138,6 +138,10 @@ class Notify{
                     return 0;
                     break;
             }
+		}else if($distRule['type'] == 0){
+			if($type == 1){
+				$price = $orderInfo['price'];
+			}
 		}
 
 		switch ($type){
@@ -163,10 +167,12 @@ class Notify{
 			//分销到达最高的级别
 			return 1;
 		}
+		//得到分销比例
 		$scale = $scaleArr[$i];
 		if(!$scale){return 0;}
 		//判断是否有上级
-		$p_id = db('user') -> getFieldById($user_id,'p_id');
+		$userInfo = db('user') -> field('p_id,apps') -> where(['id' => $user_id]) -> find();
+		$p_id = $userInfo['p_id'];
 		if(!$p_id){return 0;}
 		//分销金额
 		$money = $price * $scale;
@@ -176,6 +182,7 @@ class Notify{
             db('user') -> where(['id' => $p_id]) -> setInc('money',$money);
             //保存记录到记录表中
 			$distRecord['user_id'] = $p_id;
+			$distRecord['appid'] = $userInfo['apps'];
 			$distRecord['xj_userid'] = $user_id;
 			$distRecord['order_id'] = ORDER_ID;
 			$distRecord['money'] = $money;

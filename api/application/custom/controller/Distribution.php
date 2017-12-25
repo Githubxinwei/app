@@ -45,11 +45,11 @@ class Distribution extends Action{
             $res = db('withdraw_record')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->update($audit_data);
             if ($res) {
                 $return['code'] = 10000;
-                $return['msg_test'] = 'ok';
+                $return['msg'] = '审核通过';
                 return json($return);
             } else {
                 $return['code'] = 10010;
-                $return['msg_test'] = '网络错误，失败';
+                $return['msg'] = '网络错误，请稍后重试';
                 return json($return);
             }
         }
@@ -60,15 +60,15 @@ class Distribution extends Action{
             try {
                  db('withdraw_record')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->update($audit_data);
                  $info = db('withdraw_record')->field('user_id,money')->where(['id' => $this->data['id'],'appid' => $this->data['appid']])->find();
-                 db('user')->where(['id' => $info['user_id'],'appid' => $this->data['appid']])->setInc('money',$info['money']);
+                 db('user')->where(['id' => $info['user_id']])->setInc('money',$info['money']);
                  $model -> commit();   
                  $return['code'] = 10000;
-                 $return['msg_test'] = 'ok';
+                 $return['msg'] = '已驳回';
                  return json($return);
             } catch (Exception $e) {
                 $model -> rollback();
                 $return['code'] = 10010;
-                $return['msg_test'] = '网络错误,请稍后重试';
+                $return['msg'] = '网络错误,请稍后重试';
                 return json($return);
             }
         }
@@ -85,7 +85,7 @@ class Distribution extends Action{
             }
         }
         if (isset($this->data['is_audit'])) {
-            if ($this->data['is_audit']) {
+            if ($this->data['is_audit'] >= 0) {
                 $withdraw_data['is_audit'] = $this->data['is_audit'];
             }
         }

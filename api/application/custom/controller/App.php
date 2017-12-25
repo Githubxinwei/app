@@ -593,7 +593,6 @@ class App extends Xiguakeji{
         }else{
             $return['code'] = 10003;
             $return['msg'] = '操作失败';
-
 	    return json($return);
         }
 
@@ -665,7 +664,6 @@ class App extends Xiguakeji{
     /**
      * form_id 发送模板的时候需要使用到这个
      */
-
     public function saveFormId(){
         if(!isset($this->data['form_id'])){
             $return['code'] = 10001;
@@ -691,9 +689,7 @@ class App extends Xiguakeji{
     
     //生成分销二维码
     public function get_my_qrcode(){
-        
-        $info = db('user')->field('id') -> where(['apps' =>$this->apps])->find();
-        $uid = $info['id'];
+        $uid = $this->user['id'];
         $my_qrcode = action('weixin/common/get_qrcodes',$uid);
         if($my_qrcode){
             $return['code'] = 10000;
@@ -714,13 +710,18 @@ class App extends Xiguakeji{
             return json($return);
         }
         //判断二维码是否有效
-        $id = db('user')->where(['id' => $this->data['scene']])->value('id');
-        if ($id) {
+        $pInfo = db('user')-> field('id,create_time') -> where(['id' => $this->data['scene']])->find();
+        if ($pInfo['id']) {
             //排除用户自己扫自己
-            if ($id != $this->user['id']) {
+            if ($pInfo['id'] != $this->user['id']) {
                 //判断用户上级是否已确定
-                $p_id = db('user')->where(['id' => $this->user['id']])->value('p_id');
+                $p_id = $this -> user['p_id'];
                 if (!$p_id) {
+                    if($pInfo['create_time'] > strtotime($this->user['create_time'])){
+                        $return['code'] = 10002;
+                        $return['msg_test'] = '数据错误';
+                        return json($return);
+                    }
                     $res = model('user')->allowField(true)->where(['id' => $this->user['id']])->update(['p_id' => $this->data['scene']]);
                     if ($res) {
                         $return['code'] = 10000;

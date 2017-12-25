@@ -20,7 +20,6 @@ class Agency  extends Controller
         if($this->user == null){
             $return['code'] = 99999;
             $return['msg'] = '请登录';
-            $return['msg_test'] = '请登录';
             return json($return);
         }
     }
@@ -30,13 +29,11 @@ class Agency  extends Controller
 
          if(!isset($this->data['type_auto'])){
              $return['code'] = 10003;
-             $return['msg'] = '身份参数丢失';
              $return['msg_test'] = '身份参数丢失';
              return json($return);
          }
          if(!isset($this->data['type_ssh'])){
              $return['code'] = 10003;
-             $return['msg'] = '参数丢失';
              $return['msg_test'] = '参数丢失';
              return json($return);
          }
@@ -70,19 +67,16 @@ class Agency  extends Controller
 
          if(!isset($this->data['type_auto'])){
              $return['code'] = 10003;
-             $return['msg'] = '身份参数丢失';
              $return['msg_test'] = '身份参数丢失';
              return json($return);
          }
          if(!isset($this->data['type']) || !isset($this->data['year_num'])){
              $return['code'] = 10003;
-             $return['msg'] = '参数丢失';
              $return['msg_test'] = '参数丢失';
              return json($return);
          }
          if(!isset($this->data['type'])){
              $return['code'] = 10003;
-             $return['msg'] = '小程序类型丢失';
              $return['msg_test'] = '小程序类型丢失';
              return json($return);
          }
@@ -98,7 +92,6 @@ class Agency  extends Controller
             if($count >= 3 ){
                 $return['code'] = 10004;
                 $return['msg'] = '套餐数量已满';
-                $return['msg_test'] = '套餐数量已满';
                 return json($return);
             }
             $res = db('app_setting')->insert($this->data);
@@ -118,7 +111,6 @@ class Agency  extends Controller
     public function  update_setting(){
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
@@ -140,13 +132,11 @@ class Agency  extends Controller
 
         if(!isset($this->data['type_auto'])){
             $return['code'] = 10003;
-            $return['msg'] = '身份参数丢失';
             $return['msg_test'] = '身份参数丢失';
             return json($return);
         }
         if(!isset($this->data['type_ssh'])){
             $return['code'] = 10003;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
@@ -163,7 +153,6 @@ class Agency  extends Controller
 
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
@@ -179,7 +168,6 @@ class Agency  extends Controller
 
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
@@ -207,7 +195,6 @@ class Agency  extends Controller
         if(!$id_cart){
             $return['code'] = 10003;
             $return['msg'] = '身份证号不正确';
-            $return['msg_test'] = '身份证号不正确';
             return json($return);
         }
 
@@ -275,13 +262,11 @@ class Agency  extends Controller
 
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '用户参数丢失';
             $return['msg_test'] = '用户参数丢失';
             return json($return);
         }
         if(!isset($this->data['is_agency'])){
             $return['code'] = 10003;
-            $return['msg'] = '状态参数丢失';
             $return['msg_test'] = '状态参数丢失';
             return json($return);
         }
@@ -290,7 +275,6 @@ class Agency  extends Controller
         if(!$id_cart){
             $return['code'] = 10003;
             $return['msg'] = '身份证号不正确';
-            $return['msg_test'] = '身份证号不正确';
             return json($return);
         }
 
@@ -309,13 +293,13 @@ class Agency  extends Controller
            if($add){
                $return['code'] = 10003;
                $return['msg'] = '该手机号已存在';
-               $return['msg_test'] = '该手机号已存在';
                return json($return);
            }else{
                db('system') ->insert($list);
            }
 
         }elseif($this->data['is_agency'] == 3){
+            /*审核失败  重新定义为普通用户  */
             $data['is_agency_user'] = 0;
         }
 
@@ -341,15 +325,13 @@ class Agency  extends Controller
         $user = $this -> user;
             if($user['is_agency_user'] != 0) {
             $return['code'] = 10003;
-            $return['msg'] = '账号类型不能设置普通用户';
             $return['msg_test'] = '账号类型不能设置普通用户';
             return json($return);
         }
 
         if(!isset($this->data['angency_number'])){
             $return['code'] = 10003;
-            $return['msg'] = '参数丢失';
-            $return['msg_test'] = '参数丢失';
+            $return['msg'] = '用户数量必须填写';
             return json($return);
         }
 
@@ -383,13 +365,11 @@ class Agency  extends Controller
         /*is_forbidden*/
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '用户参数丢失';
             $return['msg_test'] = '用户参数丢失';
             return json($return);
         }
         if(!isset($this->data['is_forbidden'])){
             $return['code'] = 10003;
-            $return['msg'] = '状态参数丢失';
             $return['msg_test'] = '状态参数丢失';
             return json($return);
         }
@@ -411,7 +391,6 @@ class Agency  extends Controller
     public  function   delete_agent(){
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '用户参数丢失';
             $return['msg_test'] = '用户参数丢失';
             return json($return);
         }
@@ -433,7 +412,6 @@ class Agency  extends Controller
     public  function  detail_agent(){
         if(!isset($this->data['id'])){
             $return['code'] = 10003;
-            $return['msg'] = '用户参数丢失';
             $return['msg_test'] = '用户参数丢失';
             return json($return);
         }
@@ -451,7 +429,6 @@ class Agency  extends Controller
         $user = $this -> user;
         if($user['is_agency_user'] != 1) {
             $return['code'] = 10003;
-            $return['msg'] = '账号类型不能设置普通用户';
             $return['msg_test'] = '账号类型不能设置普通用户';
             return json($return);
         }
@@ -482,7 +459,6 @@ class Agency  extends Controller
         if(!$id_cart){
             $return['code'] = 10003;
             $return['msg'] = '身份证号不正确';
-            $return['msg_test'] = '身份证号不正确';
             return json($return);
         }
         /*判断手机号是否存在*/
@@ -490,7 +466,6 @@ class Agency  extends Controller
         if($have){
             $return['code'] = 10003;
             $return['msg'] = '手机号已存在';
-            $return['msg_test'] = '手机号已存在';
             return json($return);
         }
 
@@ -500,7 +475,6 @@ class Agency  extends Controller
         if($count>=$num['angency_number']){
             $return['code'] = 10003;
             $return['msg'] = '普通用户已上限';
-            $return['msg_test'] = '普通用户已上限';
             return json($return);
         }
 
