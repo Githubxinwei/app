@@ -12,13 +12,13 @@ return [
     // 数据库类型
     'type'            => 'mysql',
     // 服务器地址
-    'hostname'        => 'rm-m5e337fa5wjx170kk.mysql.rds.aliyuncs.com',
+    'hostname'        => '127.0.0.1',
     // 数据库名
     'database'        => 'weappnew',
     // 用户名
-    'username'        => 'sanjin',
+    'username'        => 'root',
     // 密码
-    'password'        => 'SANjin123',
+    'password'        => 'root',
     // 端口
     'hostport'        => '3306',
     ///
