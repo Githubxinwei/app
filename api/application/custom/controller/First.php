@@ -18,10 +18,14 @@ class First{
 			return json($arr);
 		}
 		$info = db('custom') -> where('username',$username) -> find();
-		if(!$info){
-			$arr['code'] = 10002;$arr['msg'] = '账号或密码错误';$arr['msg_test'] = '账号错误';
+		if(!$info['username'] || empty($info['username'])){
+			$arr['code'] = 10002;$arr['msg'] = '手机号不正确';$arr['msg_test'] = '账号错误';
 			return json($arr);
 		}
+		if($info['password'] != xgmd5($password)){
+            $arr['code'] = 10002;$arr['msg'] = '登录密码错误';$arr['msg_test'] = '登录密码错误';
+            return json($arr);
+        }
 		if($info['password'] == xgmd5($password)){
 		    if($info['is_forbidden'] == 1){
                 $arr['code'] = 10003;$arr['msg'] = '当前账户已禁用';$arr['msg_test'] = '当前账户已禁用';

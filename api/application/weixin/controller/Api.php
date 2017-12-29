@@ -7,8 +7,10 @@ class Api{
 		$postStr = $GLOBALS["HTTP_RAW_POST_DATA"];
 		$component = controller('Weixin/Component');
 		$msg = $component -> decryptMsg($_GET,$postStr);
-		$name = rand(10000,99999);file_cache($name.'get',$_GET,'');file_cache($name.'postObj',$postObj,'');
+		$name = rand(10000,99999);file_cache($name.'get',$_GET,'');
+		//file_cache($name.'postObj',$postObj,'');
 		if (!empty($msg)){
+		    file_cache('ceshiApi.php',$msg);
 			$postObj = simplexml_load_string($msg, 'SimpleXMLElement', LIBXML_NOCDATA);
 			$name = rand(10000,99999);file_cache($name.'get',$_GET,'');file_cache($name.'postObj',$postObj,'');
 			$RX_TYPE = trim($postObj->MsgType);
@@ -16,7 +18,7 @@ class Api{
 			if($RX_TYPE == 'event'){
 				$name = rand(10000,99999);file_cache($name.'get',$_GET,'');file_cache($name.'postObj',$postObj,'');
 			}
-			if( in_array(trim($postObj->ToUserName),['gh_3c884a361561','gh_8dad206e9538'])  && $RX_TYPE == 'event' ){
+			if( in_array(trim($postObj->ToUserName),['gh_3c884a361561','gh_8dad206e9538'])  && $RX_TYPE == 'event'){
 					$content = $postObj->Event.'from_callback';
 					$result = $this->transmitText($postObj, $content);
 					$component = controller('Weixin/Component');
@@ -86,15 +88,25 @@ class Api{
 						case "VIEW"://"跳转链接 ".$object->EventKey;
 						break;
 						case "weapp_audit_success"://小程序通过审核的消息通知
-							file_cache('88888888888object',$object,'');
+
 							file_cache('88888888888get',$_GET,'');
 							//如果提交审核通过，执行发布版本，并通知所有人
-							$auth_info = model('auth_info') -> where('appid',$_GET['appid'])->find();
+                            $appid = '';
+                            foreach ($_GET as $k => $v){
+                                if(preg_match("/^\/Weixin\/Api\/index\/appid/",$k)){
+                                    preg_match("/wx.{5,18}/",$k,$appid);
+                                    $appid = $appid[0];
+                                    break;
+                                }
+                            }
+                            file_cache('appid',$appid);
+                            $auth_info = model('auth_info') -> where('appid',$appid)->find();
+
 							$weapp = new \app\weixin\controller\Common($auth_info['apps']);
 							$weapp->release();
 							model('app') -> where('appid',$auth_info['apps']) ->update(['is_publish'=>4]);//标注已发布
 							//通知到短信，邮箱，app内有notifytel,notifyemail $object -> SuccTime成功时间
-                            sendAuditMsg($auth_info['apps'],'',1);
+                            sendAuditMsg($auth_info['apps'],'123',1);
 							
 						break;
 						case "weapp_audit_fail":
@@ -102,7 +114,15 @@ class Api{
 							file_cache('9get',$_GET,'');
 							//通知所有人审核失败，更改状态到已绑定
 							file_cache('9Reason',$object->Reason,'');
-							$auth_info = model('auth_info') -> where('appid',$_GET['appid'])->find();
+                            $appid = '';
+                            foreach ($_GET as $k => $v){
+                                if(preg_match("/^\/Weixin\/Api\/index\/appid/",$k)){
+                                    preg_match("/wx.{5,18}/",$k,$appid);
+                                    $appid = $appid[0];
+                                    break;
+                                }
+                            }
+							$auth_info = model('auth_info') -> where('appid',$appid)->find();
 							model('app') -> where('appid',$auth_info['apps']) ->update(['is_publish'=>2]);//标注已上传代码
 							//通知到短信，邮箱，app内有notifytel,notifyemail Reason 失败原因 FailTime 时间
                             sendAuditMsg($auth_info['apps'],$object -> Reason,2);

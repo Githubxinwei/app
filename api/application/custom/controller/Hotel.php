@@ -51,14 +51,13 @@ class Hotel extends Action{
     
         if(!isset($this -> data['stores_name']) || !isset($this -> data['stores_tell']) || !isset($this -> data['stores_address'])){
             $return['code'] = 10007;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
         if(trim($this -> data['stores_name']) == '' || trim($this -> data['stores_tell']) =='' || trim($this -> data['stores_address'] == '')){
             $return['code'] = 10007;
             $return['msg'] = '参数不能为空';
-            $return['msg_test'] = '参数不能为空';
+
             return json($return);
         }
         $data = $this->data;
@@ -75,18 +74,15 @@ class Hotel extends Action{
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '添加门店成功';
-                $return['msg_test'] = '添加门店成功';
                 return json($return);
             }else{
                 $return['code'] = 10001;
                 $return['msg'] = '网络错误';
-                $return['msg_test'] = '网络错误';
                 return json($return);
             }
         }else{
             $return['code'] = 10006;
             $return['msg'] = '门店数量已达上限';
-            $return['msg_test'] = '门店数量已达上限';
             return json($return);
         }
 
@@ -148,7 +144,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -168,12 +163,10 @@ class Hotel extends Action{
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
-            $return['msg_test'] = '修改成功';
             return json($return);
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -217,8 +210,7 @@ class Hotel extends Action{
 
         if(!isset($this -> data['set_meal']) || !isset($this -> data['number'])){
             $return['code'] = 10007;
-
-            $return['msg_test'] = '套餐类型必须选择';
+            $return['msg'] = '套餐类型必须选择';
             return json($return);
         }
         $where['appid'] = $this->data['appid'];
@@ -239,7 +231,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
       }
@@ -249,8 +240,7 @@ class Hotel extends Action{
 
           if(!isset($this -> data['room_type'])     ||  !isset($this -> data['number']) || !isset($this -> data['price']) || !isset($this -> data['man']) || !isset($this -> data['area']) || !isset($this -> data['bed_type']) || !isset($this -> data['facilities']) || !isset($this -> data['photo']) || !isset($this -> data['stores_id'])){
               $return['code'] = 10007;
-              $return['msg'] = '房间参数必须完整';
-              $return['msg_test'] = '房间参数必须完整';
+              $return['msg'] = '输入框不能为空';
               return json($return);
           }
         //如果上传图片，判断图片是否是十个
@@ -259,7 +249,6 @@ class Hotel extends Action{
             if($pic_number > 10){
                 $return['code'] = 10008;
                 $return['msg'] = '一个商品最多上传10张图片';
-                $return['msg_test'] = '一个商品最多上传10张图片';
                 return json($return);
             }
         }
@@ -295,12 +284,10 @@ class Hotel extends Action{
           if($info){
               $return['code'] = 10000;
               $return['msg'] = '添加成功';
-              $return['msg_test'] = '添加成功';
               return json($return);
           }else{
               $return['code'] = 10000;
               $return['msg'] = '网络错误';
-              $return['msg_test'] = '网络错误';
               return json($return);
           }
 
@@ -340,7 +327,6 @@ class Hotel extends Action{
             if($pic_number > 10){
                 $return['code'] = 10008;
                 $return['msg'] = '一个商品最多上传10张图片';
-                $return['msg_test'] = '一个商品最多上传10张图片';
                 return json($return);
             }
         }
@@ -362,12 +348,10 @@ class Hotel extends Action{
         if($info){
             $return['code'] = 10000;
             $return['msg'] = '修改成功';
-            $return['msg_test'] = '修改成功';
             return json($return);
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -387,7 +371,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
     }
@@ -422,7 +405,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -432,8 +414,8 @@ class Hotel extends Action{
     public  function  brands(){
         if(!isset($this -> data['name']) || !isset($this -> data['site_url']) || !isset($this -> data['pic']) || !isset($this -> data['start_time']) || !isset($this -> data['over_time'])){
             $return['code'] = 10007;
-            $return['msg'] = '品牌参数必须完整';
-            $return['msg_test'] = '品牌参数必须完整';
+            $return['msg'] = '品牌信息必须完整';
+            $return['msg_test'] = '品牌信息必须完整';
             return json($return);
         }
         $data = $this->data;
@@ -448,12 +430,10 @@ class Hotel extends Action{
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '添加成功';
-                $return['msg_test'] = '添加成功';
                 return json($return);
             }else{
                 $return['code'] = 10001;
                 $return['msg'] = '网络错误';
-                $return['msg_test'] = '网络错误';
                 return json($return);
             }
         }else{
@@ -462,12 +442,10 @@ class Hotel extends Action{
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '修改成功';
-                $return['msg_test'] = '修改成功';
                 return json($return);
             }else{
                 $return['code'] = 10001;
                 $return['msg'] = '网络错误';
-                $return['msg_test'] = '网络错误';
                 return json($return);
             }
         }
@@ -487,7 +465,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
     }
@@ -499,7 +476,6 @@ class Hotel extends Action{
         if(!isset($this->data['stores_id'])){
             $return['code'] = 10007;
             $return['msg'] = '请选择门店';
-            $return['msg_test'] = '请选择门店';
             return json($return);
         }
         if(isset($this->data['stores_id'])) $where[]=['exp',"FIND_IN_SET(".$this->data['stores_id'].",stores_id)"];
@@ -518,7 +494,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -532,13 +507,11 @@ class Hotel extends Action{
         if(!isset($this -> data['name'])  ||  !isset($this -> data['start_time']) || !isset($this -> data['over_time']) || !isset($this -> data['rules']) || !isset($this -> data['rules_detail']) || !isset($this -> data['rules_range'])){
             $return['code'] = 10008;
             $return['msg'] = '参数必须完整';
-            $return['msg_test'] = '参数必须完整';
             return json($return);
         }
         if(!isset($this->data['stores_id']) || $this->data['stores_id'] == ''){
             $return['code'] = 10007;
             $return['msg'] = '请选择门店';
-            $return['msg_test'] = '请选择门店';
             return json($return);
         }
         $data = $this->data;
@@ -547,12 +520,10 @@ class Hotel extends Action{
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '添加成功';
-            $return['msg_test'] = '添加成功';
             return json($return);
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
 
@@ -591,7 +562,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
     }
@@ -618,12 +588,10 @@ class Hotel extends Action{
         if($res){
             $return['code'] = 10000;
             $return['msg'] = '删除成功';
-            $return['msg_test'] = '删除成功';
             return json($return);
         }else{
             $return['code'] = 10001;
             $return['msg'] = '网络错误';
-            $return['msg_test'] = '网络错误';
             return json($return);
         }
     }
@@ -634,7 +602,6 @@ class Hotel extends Action{
         if(!isset($this -> data['slogan'])  ||  !isset($this -> data['pic'])){
             $return['code'] = 10008;
             $return['msg'] = '标语或者封面图必须填写';
-            $return['msg_test'] = '标语或者封面图必须填写';
             return json($return);
         }
         $data = $this->data;
@@ -650,12 +617,10 @@ class Hotel extends Action{
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '添加成功';
-                $return['msg_test'] = '添加成功';
                 return json($return);
             }else{
                 $return['code'] = 10001;
                 $return['msg'] = '网络错误';
-                $return['msg_test'] = '网络错误';
                 return json($return);
             }
         }else{
@@ -663,12 +628,10 @@ class Hotel extends Action{
             if($res){
                 $return['code'] = 10000;
                 $return['msg'] = '修改成功';
-                $return['msg_test'] = '修改成功';
                 return json($return);
             }else{
                 $return['code'] = 10001;
                 $return['msg'] = '网络错误';
-                $return['msg_test'] = '网络错误';
                 return json($return);
             }
         }
@@ -688,7 +651,6 @@ class Hotel extends Action{
         }else{
             $return['code'] = 10001;
             $return['msg'] = '获取失败';
-            $return['msg_test'] = '获取失败';
             return json($return);
         }
 
@@ -706,11 +668,11 @@ class Hotel extends Action{
         $over = db('rooms_order')->where($where)->update(['state'=>2,'is_refunds'=>2]);
         if($res && $over){
             $return['code'] = 10000;
-            $return['msg_test'] = 'ok';
+            $return['msg'] = '申请成功';
             return json($return);
         }else{
             $return['code'] = 10004;
-            $return['msg_test'] = '失败';
+            $return['msg'] = '申请失败';
             return json($return);
         }
 
@@ -728,7 +690,6 @@ class Hotel extends Action{
             return json($return);
         }else{
             $return['code'] = 10001;
-            $return['msg'] = '获取失败';
             $return['msg_test'] = '获取失败';
             return json($return);
         }
@@ -785,7 +746,6 @@ class Hotel extends Action{
         $return['code'] = 10000;
         $return['data'] = $data;
         $return['number'] = $number;
-        $return['msg_test'] = 'ok';
         return json($return);
     }
 
@@ -807,7 +767,6 @@ class Hotel extends Action{
             return json($return);
         }else{
             $return['code'] = 10001;
-            $return['msg'] = '订单错误';
             $return['msg_test'] = '订单错误';
             return json($return);
         }
@@ -833,29 +792,41 @@ class Hotel extends Action{
             $return['msg_test'] = '订单已退款,不能修改状态';
             return json($return);
         }
+        if($state['state'] == 3){
+            $return['code'] = 10003;
+            $return['msg_test'] = '请勿重复操作';
+            return json($return);
+        }
         if($state['state'] == 4){
             $return['code'] = 10003;
             $return['msg_test'] = '订单退款中,不能修改状态';
             return json($return);
         }
+        if($state['state'] == 5){
+            $return['code'] = 10003;
+            $return['msg_test'] = '请勿重复操作';
+            return json($return);
+        }
+        /*如果是入住操作 接收真实房间号存储*/
+        if($this->data['state'] == 3){
+            $update['in_time'] = time();
+            $update['door_number'] = $this->data['door_number'];
+        }
 
-        $res = db('rooms_order') -> where(['id' => $this->data['id']]) -> update(['state'=>$this->data['state']]); //入住
+        $update['state'] = $this->data['state'];
+
+        db('rooms_order') -> where(['id' => $this->data['id']]) -> update($update); //入住
 
         if($this->data['state'] == 5){
             $rooms = db('rooms_order') ->field('rooms_id')-> where(['id' => $this->data['id']])->find();
             db('rooms')-> where(['id' => $rooms['rooms_id']])->setInc('number_in' , 1);        //入住结束房间剩余数量加上
         }
 
+        $return['code'] = 10000;
+        $return['msg'] = 'ok';
+        $return['msg_test'] = 'ok';
+        return json($return);
 
-        if($res){
-            $return['code'] = 10000;
-            $return['msg_test'] = 'ok';
-            return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg_test'] = '失败';
-            return json($return);
-        }
     }
 
     /*预览使用

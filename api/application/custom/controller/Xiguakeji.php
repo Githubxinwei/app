@@ -28,8 +28,8 @@ class Xiguakeji extends Controller{
 		$this->apps = $this->data['apps'];//当前要操作的小程序的8位识别号
 		$this->user = session('user');//当前发起请求的用户，数组形式，是user表返回信息，内含有id字段
         //判断当前小程序是否禁用
-        $is_forbidden = db('app') -> field('is_forbidden,is_publish') -> where(['appid' => $this->apps]) -> find();
-        if($is_forbidden['is_forbidden'] == 1){
+        $is_forbidden = db('app') -> field('is_forbidden,is_del,is_publish') -> where(['appid' => $this->apps]) -> find();
+        if($is_forbidden['is_forbidden'] == 1 || $is_forbidden['is_del']){
             $return['code'] = 11111;$return['msg_test'] = '当前小程序已被禁用';echo json_encode($return);exit;
         }
 //        if($is_forbidden['is_publish'] != 4){

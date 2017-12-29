@@ -79,9 +79,9 @@ function get_wxpay_parameters($openid,$out_trade_no,$money,$notify_url){
 //返回小程序模板信息
 function get_app($type){
 	$arr = [
-		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.02,'template_id'=>34],
+		1=>['code'=>1,'name'=>'电商小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.02,'template_id'=>50],
 		2=>['code'=>2,'name'=>'预约小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>35],
-        3=>['code'=>3,'name'=>'酒店小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>1]
+        3=>['code'=>3,'name'=>'酒店小程序','pic'=>'Uploads/18595906710/20171007/15073391915109.jpeg','fee'=>0.01,'template_id'=>44]
 
     ];
 	if($type == 'all'){
@@ -153,9 +153,6 @@ function createNonceStr($length = 16) {
 	}
 	return "z".$str;
 }
-
-
-/*验证码短信通知*/
 function msg_everify($tel,$code){
 	$key =  '4c9ff96cc33a783b21329b8c20e8ee7c';//您申请的APPKEY
 	$tpl_id = '43730';//您申请的短信模板ID，根据实际情况修改
@@ -219,114 +216,96 @@ function put_qrcode($value,$name,$qr_path,$logo='',$state=false){
 }
 
 /**
- * @param $appid id
- * @param $appsecret
- * @param $t_id 模板id
- * @param $tel 要向哪个手机发送短信
- * @param $time 有效期 默认是120秒
- * @param $params code:888888
- * @param $code 验证码
- * @return int 结果码
+ * @param $tel
+ * @param $params
+ * @param int $flag 1 表示要扣管理员的钱
+ * @param int $type 用哪个模板
+ * @param int $custom_id 当前管理员的id
+ * @return int|void
+ * type 0 发送验证码 1 前台发送短信给管理员有新订单 2 管理员创建完普通用户给普通用户发送短信 3 后台发货发送短信通知终端用户(区分使用哪个模板id) 4 申请代理商成功或失败发送短信通知
  */
-function sendMsg($appid,$appsecret,$t_id,$tel,$params,$code,$time = 120){
-	if(!isset($appid) || !isset($appsecret) || !isset($t_id) || !isset($tel) || !isset($params)||!isset($code)){
-		return -1;
-	}
-	$url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
-	session(array('name'=>'xigua_verify','expire'=>$time));
-	session('xigua_verify',$code);
-	$data1 = [
-		'appid'=>$appid,
-		'appsecret'=>$appsecret,
-		't_id'=>$t_id,
-		'mobile'=>$tel,
-		'params'=>$params,
-	];
-	$result = http_request($url,$data1);
-	$result = json_decode($result,true);
-	return $result['return_code'];
-}
-
-
-/**
-  添加普通用户 短信提醒
- * $tel  手机号
- *
- */
-function sendMessage($tel,$params,$password){
-    if(!isset($tel) || !isset($params)||!isset($password)){
+function sendMsgInfo($tel,$params,$flag = 0,$type = 0,$custom_id = 0){
+    if(!isset($tel) || !isset($params)){
         return -1;
     }
-    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
-    $data1 = [
-        'appid'=>'183177745941',
-        'appsecret'=>'zaefNsQrp2GJ9F3Y',
-        't_id'=>'TP1709201',
-        'mobile'=>$tel,
-        'params'=>$params,
-    ];
-    $result = http_request($url,$data1);
-    $result = json_decode($result,true);
-    return $result['return_code'];
-}
-
-/**
-商品发货 短信提醒
- * $tel  手机号
- */
-function sendShop($tel,$params,$kd_number){
-    if(!isset($tel) || !isset($params)||!isset($password)){
-        return -1;
+    //获取超级管理员填写的账号信息
+    $smsInfo = db('SystemSms') -> find();
+    if(!$smsInfo){
+        sendMail('741350149@qq.com','没有短信信息','没有短信信息');
+        file_cache('smserror','没有短信信息');return -1;
     }
-    $url = "http://www.xiguakeji.cc/sms/send";  //接口請求地址
-    $data1 = [
-        'appid'=>'183177745941',
-        'appsecret'=>'zaefNsQrp2GJ9F3Y',
-        't_id'=>'TP1709201',
-        'mobile'=>$tel,
-        'params'=>$params,
-    ];
-    $result = http_request($url,$data1);
-    $result = json_decode($result,true);
-    return $result['return_code'];
-}
-
-
-
-/**
- * @param $appid id
- * @param $appsecret
- * @param $t_id 模板id
- * @param $tel 要向哪个手机发送短信
- * @param $time 有效期 默认是120秒
- * @param $params code:888888
- * @param $code 验证码
- * @return int 结果码
- */
-function sendMsgInfo($tel,$params,$code,$time = 120){
-    if(!isset($tel) || !isset($params)||!isset($code)){
-        return -1;
+    if($smsInfo['is_mobile'] == 0){
+        //后台没有开启短信功能
+        sendMail('741350149@qq.com','后台没有开启短信功能','后台没有开启短信功能');
+        file_cache('smserror','后台没有开启短信功能');return -2;
     }
-    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
-    session(array('name'=>'xigua_verify','expire'=>$time));
-    session('xigua_verify',$code);
-    $data1 = [
-        'appid'=>'183177745941',
-        'appsecret'=>'zaefNsQrp2GJ9F3Y',
-        't_id'=>'TP1709201',
-        'mobile'=>$tel,
-        'params'=>$params,
-    ];
-    $result = http_request($url,$data1);
-    $result = json_decode($result,true);
-    return $result['return_code'];
+    if(!$smsInfo['appid'] || !$smsInfo['appsecret']){
+        //后台没有开启短信功能
+        sendMail('741350149@qq.com','后台没有账号信息功能','后台没有账号信息功能');
+        file_cache('smserror','后台没有账号信息功能');return -3;
+    }
+    if($flag == 1){
+        //判断管理员是否有钱
+        if(!$custom_id){
+            return -4;
+        }
+        if(!$smsInfo['sms_money']){
+            sendMail('741350149@qq.com','没有设置短信价格','没有设置短信价格',163);
+            return -5;
+        }
+        $money = db('custom') -> where(['id' => $custom_id]) -> value('wallet');
+        if($money - $smsInfo['sms_money'] < 0){
+            $notifymail = db('app') -> field('notifymail') -> where(['custom_id' => $custom_id]) -> find();
+            if($notifymail){
+                sendMail($notifymail['notifymail'],'你的账户余额不足,无法发送短信','你的账户余额不足,无法发送短信');
+            }
+            return -6;
+        }
+        $res = db('custom') -> where(['id' => $custom_id]) -> setDec('wallet',$smsInfo['sms_money']);
+    }else{
+        $res = true;
+    }
+    $t_id = '';
+    switch ($type){
+        case 0:
+            $t_id = 'TP1709201';
+            break;
+        default:
+            return -7;
+    }
+    if($res){
+        if($flag == 1){
+            //记录账户的流水
+            $smsRecord['custom_id'] = $custom_id;
+            $smsRecord['money'] = $smsInfo['sms_money'];
+            $smsRecord['type'] = $type;
+            $smsRecord['create_time'] = time();
+            db('sms_record') -> insert($smsRecord);
+        }
+        $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
+        $data1 = [
+            'appid'=>$smsInfo['appid'],
+            'appsecret'=>$smsInfo['appsecret'],
+            't_id'=>$t_id,
+            'mobile'=>$tel,
+            'params'=>$params,
+        ];
+        $result = http_request($url,$data1);
+        $result = json_decode($result,true);
+        $return_code =  $result['return_code'];
+        if($return_code == 5007){
+            //短信账户余额不足
+            sendMail($smsInfo['mail_user'],'短信账户平台没钱了','短信账户平台没钱了');
+        }
+        return $return_code;
+    }
 }
 
 /**发送邮件方法
  *@param $to：接收者 $title：标题 $content：邮件内容
  *@return bool true:发送成功 false:发送失败
  */
-function sendMail($to,$title,$content,$type='qq'){
+function sendMail($to,$title,$content,$type='163'){
 	//引入PHPMailer的核心文件 使用require_once包含避免出现PHPMailer类重复定义的警告
 	import("PHPMailer.PHPMailer",EXTEND_PATH,'.class.php');
 	import("PHPMailer.SMTP",EXTEND_PATH,'.class.php');
@@ -386,21 +365,10 @@ function sendAuditMsg($appid,$msg,$type){
         return;
     }
     if($type == 1){
-        $msg = "恭喜你,你的小程序[{$info['name']}]审核成功";
+        //sendMsgInfo($info['notifytel'],)
     }else if($type == 2){
-        $msg = "很遗憾,你的小程序[{$info['name']}]审核失败,失败原因:{$msg}";
+        //$msg = "很遗憾,你的小程序[{$info['name']}]审核失败,失败原因:{$msg}";
     }
-    $url = "http://www.xiguakeji.cc/sms/send";//接口請求地址
-    $data1 = [
-        'appid'=>'18317774594',
-        'appsecret'=>'zaefNsQrp2GJ9F3Y',
-        't_id'=>'TP1709201',
-        'mobile'=>$info['notifytel'],
-        'params'=>"code:" . $type,
-    ];
-
-    $result = http_request($url,$data1);
-    $result = json_decode($result,true);
     sendMail($info['notifyemail'],'小程序审核结果',$msg,'163');
 }
 
@@ -525,6 +493,54 @@ function getAppExtJson($app){
                     ]
                 }
             }';
+            break;
+        case 3:
+            //待定
+            $ext_json = '{
+                "extEnable": true,
+                "extAppid": "'.$appid.'",
+                "window": {
+                    "navigationBarTitleText": "酒店预订",
+                    "navigationBarTextStyle": "white",
+                    "navigationBarBackgroundColor": "'.$color['theme'].'",
+                    "backgroundTextStyle": "light",
+                    "backgroundColor": "#272938"
+                },
+                "ext": {
+                    "xgAppId":"'.$apps.'",
+                    "appid":"'.$appid.'",
+                    "themeColor":"'.$color['theme'].'",
+                    "themeTextColor":"'.$color['text'].'",
+                    "host": "https://weapp.xiguawenhua.com"
+                },
+                "tabBar": {
+                        "selectedColor": "'.$color['selected'].'",
+                        "backgroundColor": "#fff",
+                        "color": "#555",
+                        "borderStyle": "black",
+                        "list": [
+                            {
+                            "pagePath": "pages/index/index",
+                            "iconPath": "./img/images/un-home.png",
+                            "selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
+                            "postion": "top",
+                            "text": "预订"
+                            },
+                            {
+                            "pagePath": "pages/order/order",
+                            "iconPath": "./img/images/un-order.png",
+                            "selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
+                            "text": "订单"
+                            },
+                            {
+                            "pagePath": "pages/more/more",
+                            "iconPath": "./img/images/un-more.png",
+                            "selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
+                            "text": "我的"
+                            }
+                        ]
+                    }
+                }';
             break;
         default:
             $ext_json = 0;

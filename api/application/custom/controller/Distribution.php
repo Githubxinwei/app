@@ -115,7 +115,6 @@ class Distribution extends Action{
         $return['data'] = $info;
         return json($return);
     }
-
     //分销详情
     public function getDistInfo() {
         $info = db('dist_rule')
@@ -183,11 +182,9 @@ class Distribution extends Action{
             $return['msg_test'] =  '小程序参数丢失';
             return  json($return);
         }
-
         $num = db('dist_record')
             -> where(['appid' => $this->data['appid']])
             -> count();
-
         $info = db('dist_record')
             -> alias('a')
             -> field('a.id,a.order_id,a.user_id,a.xj_userid,a.money,a.level,a.create_time,a.type,b.nickName as user_nickName,c.nickName as xj_nickName')
@@ -200,7 +197,6 @@ class Distribution extends Action{
 
         $return['code'] = 10000;
         $return['data'] = ['number'=>$num,'data'=>$info] ;
-
         return json($return);
 
     }

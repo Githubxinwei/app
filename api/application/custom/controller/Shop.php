@@ -281,7 +281,7 @@ class Shop extends Action{
 		}
         $this -> data['content'] = $_POST['content'];
 		model('goods') -> allowField(true) -> save($this -> data,['id' =>$this -> data['good_id'],'custom_id' => $this->custom->id]);
-		$return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
+		$return['code'] = 10000;$return['msg'] = '修改成功';
 		return json($return);
 
 	}
@@ -474,6 +474,49 @@ class Shop extends Action{
 	}
 
 
+	/*获取分类 以及分类所对应的商品*/
+   public  function getCateGoods(){
+
+       $custom_id = $this -> custom -> id;
+       if(!isset($this -> data['appid'])){
+           $return['code'] = 10002;
+           $return['msg_test'] = 'appid不存在或者分类名字不存在';
+           return json($return);
+       }
+       if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+           $return['code'] = 10003;
+           $return['msg_test'] = 'appid是一个8位数';
+           return json($return);
+       }
+       $is_true = db('app') -> where(['appid' => $this -> data['appid']]) -> find();
+       if(!$is_true){
+           $return['code'] = 10004;
+           $return['msg_test'] = '当前用户没有此小程序,也就是appid不对';
+           return json($return);
+       }
+       if($is_true['custom_id'] != $this->custom->id){
+           $return['code'] = 10006;
+           $return['msg_test'] = '当前小程序不是这个用户的';
+           return json($return);
+       }
+
+       $where['appid'] = $this->data['appid'];
+       $where['custom_id'] = $this -> custom -> id;
+       if(isset($this->data['page'])){$page = $this->data['page'];}else{$page = 1;}
+       if(isset($this->data['limit'])){$limit = $this->data['limit'];}else{$limit = 20;}
+
+       $info = db("goods_cate")->where($where)->page($page,$limit)->select();
+
+       foreach($info as $k=>$v){
+           $goods = db('goods')->where(['appid'=> $this->data['appid'],'cid' => $v['id']])->page($page,$limit)->select();
+           $info[$k]['goods'] = $goods;
+       }
+       $return['code'] = 10000;
+       $return['data'] = $info;
+       return json($return);
+
+
+   }
 
 
 }

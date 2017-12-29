@@ -246,11 +246,14 @@ class Config{
             }
         }else{
             $id = db('SystemSms') -> value('id');
-            $return['code'] = 10004;
-            $return['msg'] = '设置信息已存在';
-            $return['msg_test'] = '数据库里面有数据,返回id';
-            $return['data'] = ['id' => $id];
-            return json($return);
+            if($id){
+                $return['code'] = 10004;
+                $return['msg'] = '设置信息已存在';
+                $return['msg_test'] = '数据库里面有数据,返回id';
+                $return['data'] = ['id' => $id];
+                return json($return);
+            }
+
         }
         $arr = array($data);
         $res = model('SystemSms') -> allowField(true) -> saveAll($arr);

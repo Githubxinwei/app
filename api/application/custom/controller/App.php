@@ -525,7 +525,6 @@ class App extends Xiguakeji{
             ->field('id,name,num,pic,price,user_money,order_sn,username,tel,dist,city,province,address,carts,zipcode,kd_code,kd_number,create_time')
             -> where($where)
             -> where($where1)
-
             -> page($page)
             -> limit($limit_num)
             -> order('id desc')
@@ -539,9 +538,7 @@ class App extends Xiguakeji{
                 $info[$k]['spec_value'] = $cart['spec_value'];
             }
 
-	    $cart = model('goods_cart')->where("id",'in',$v['carts'])->select();
-
-
+            $cart = model('goods_cart')->where("id",'in',$v['carts'])->select();
             $info[$k]['goods'] = $cart;
         }
 
@@ -597,7 +594,7 @@ class App extends Xiguakeji{
         }
 
      }
-     
+
 
     /**
      * 订单取消
@@ -747,6 +744,13 @@ class App extends Xiguakeji{
         
     }
 
+    public function getUserMoney(){
+        $money = db('user') -> where(['id' => $this->user['id']]) -> value('money');
+        $return['code'] = 10000;
+        $return['data'] = $money;
+        return json($return);
+    }
+
     /**
      * 用户前台提现
      */
@@ -809,7 +813,9 @@ class App extends Xiguakeji{
             return json($return);
         }
         //判断是否有余额
-        if($money > $this -> user['money']){
+        $userInfo = db('user') -> field('money') -> where(['id' => $this->user['id']]) -> find();
+        $user_money = $userInfo['money'];
+        if($money > $user_money){
             $return['code'] = 10004;
             $return['msg'] = '余额不足';
             return json($return);

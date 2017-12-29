@@ -20,13 +20,11 @@ class Rooms extends Xiguakeji
         $this -> data = input('post.','','htmlspecialchars');
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid不存在或者预约名字不存在';
             $return['msg_test'] = 'appid不存在或者预约名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
-            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -187,13 +185,11 @@ class Rooms extends Xiguakeji
 
         if(!isset($this -> data['start_time'])  || !isset($this -> data['end_time'])  || !isset($this -> data['username'])  || !isset($this -> data['user_tel'])){
             $return['code'] = 10007;
-            $return['msg'] = '参数丢失';
             $return['msg_test'] = '参数丢失';
             return json($return);
         }
         if(!isset($this -> data['stores_id']) || !isset($this -> data['rooms_id'])){
             $return['code'] = 10008;
-            $return['msg'] = '门店id或者房间id丢失';
             $return['msg_test'] = '门店id或者房间id丢失';
             return json($return);
         }
@@ -208,7 +204,6 @@ class Rooms extends Xiguakeji
        if($info['number_in'] <= 0){
            $return['code'] = 10008;
            $return['msg'] = '房间已满';
-           $return['msg_test'] = '房间已满';
            return json($return);
        }
 
@@ -490,12 +485,10 @@ class Rooms extends Xiguakeji
         if($res){
            $return['code'] = 10000;
            $return['msg'] = '申请退款成功';
-           $return['msg_test'] = '申请退款成功';
            return json($return);
        }else{
            $return['code'] = 10001;
            $return['msg'] = '网络错误';
-           $return['msg_test'] = '网络错误';
            return json($return);
        }
 

@@ -17,13 +17,21 @@ class Volun extends Controller{
     public function setOrderStock(){
         
         $info = db('goods_order')
-            -> field('id,carts')
+            -> field('id,user_id,carts,user_money')
             -> where(['state' => 0,'create_time' => ['lt',time() - 7200],'is_expire' => 0])
             -> select();
         if(!$info){return;}
         $orderInfo = array();
         $goodList = array();
+        $userMoney = array();
         foreach ($info as $k => $v){
+            //判断当前订单是否用余额支付
+            if($v['user_money'] != 0){
+                $userMoney[] = array(
+                  'id' => $v['user_id'],
+                  'money' => $v['user_money']
+                );
+            }
             $orderInfo[] = array(
                 'id' => $v['id'],
                 'is_expire' => 1
@@ -62,6 +70,7 @@ class Volun extends Controller{
         }
         model('goods') -> saveAll($goodList);
         model('goods_order') -> saveAll($orderInfo);
+        model('user') -> saveAll($userMoney);
 
     }
 

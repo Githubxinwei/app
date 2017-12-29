@@ -25,7 +25,6 @@ class Price extends Action
 
         if(!isset($this->data['type'])){
             $return['code'] = 10003;
-            $return['msg'] = '小程序类型丢失';
             $return['msg_test'] = '小程序类型丢失';
             return json($return);
         }
@@ -82,33 +81,28 @@ class Price extends Action
     public function get_app_detail(){
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid不存在或者小名字不存在';
             $return['msg_test'] = 'appid不存在或者小名字不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
-            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
         $is_true = db('app')->field('id,name,type,create_time,try_time,custom_id,use_time') -> where(['appid' => $this -> data['appid']]) -> find();
         if(!$is_true){
             $return['code'] = 10004;
-            $return['msg'] = '当前用户没有此小程序,appid不对';
             $return['msg_test'] = '当前用户没有此小程序,appid不对';
             return json($return);
         }
         if($is_true['custom_id'] != $this->custom->id){
             $return['code'] = 10005;
-            $return['msg'] = '当前小程序不是这个用户的';
             $return['msg_test'] = '当前小程序不是这个用户的';
             return json($return);
         }
         $type = $is_true['type'];
         if(!isset($type)){
             $return['code'] = 10003;
-            $return['msg'] = '小程序类型丢失';
             $return['msg_test'] = '小程序类型丢失';
             return json($return);
         }

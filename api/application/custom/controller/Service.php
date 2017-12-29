@@ -92,7 +92,7 @@ class Service extends Action{
         $this->data['service_particulars'] = $_POST['service_particulars'];
 
         $res = model('subscribe_service') -> allowField(true) -> save($this->data,['id' => $this->data['service_id'],'custom_id' => $this->custom->id]);
-	    $return['code'] = 10000;$return['msg'] = '修改成功'.$this->custom->id;
+	    $return['code'] = 10000;$return['msg'] = '修改成功';
 	   
 	    return json($return);
 	

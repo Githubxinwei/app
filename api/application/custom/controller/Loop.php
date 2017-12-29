@@ -241,7 +241,7 @@ class Loop extends Action{
 		return json($return);
 	}
 
-
+   //获取体验二维码
 	function get_qrcode(){
 		$weapp = new \app\weixin\controller\Common($this->data['appid']);
 		$img = $weapp ->get_qrcode();
@@ -258,69 +258,13 @@ class Loop extends Action{
 			return;
 		}
 		$info = db('app') -> field('type,theme,layout,search,on_service') -> where(['appid' => $app]) -> find();
-		$apps = $app;$appid = $appid;//1
+		$apps = $app;
 		$weapp = new \app\weixin\controller\Common($apps);
 		$weapp ->domain();//设置request服务器域名
 		$template = get_app($info['type']);//1
 		$template_id = $template['template_id'];//得到小程序模板ID
-		$color = get_theme($info['theme']);//主题色//1
-		$layout_arr = ['grid','table','table_row'];
-		$layout = $layout_arr[$info['layout']];//布局1
-		$search = 1==$info['search'] ? 'true' : 'false';//启用搜索框1
-		$on_service = 1==$info['on_service'] ? 'true' : 'false';//启用客服1
-		$ext_json = '{
-	"extEnable": true,
-	"extAppid": "'.$appid.'",
-	"window":{
-	"navigationBarTitleText": "西瓜科技演示",
-	"navigationBarTextStyle":"white",
-	"navigationBarBackgroundColor": "'.$color['theme'].'",
-	"backgroundTextStyle":"light"
-	},
-	"ext":{
-	 "xgAppId":"'.$apps.'",
-	"appid":"'.$appid.'",
-	 "themeColor":"'.$color['theme'].'",
-	 "themeTextColor":"'.$color['text'].'",
-	 "layoutType":"'.$layout.'",
-	 "showSearching":'.$search.',
-	 "useOnlineService":'.$on_service.',
-	 "host":"https://weapp.xiguawenhua.com"
-	},
-	"tabBar": {
-		"selectedColor": "'.$color['selected'].'",
-		"backgroundColor": "#fff",
-		"color":"#555",
-		"borderStyle": "black",
-		"list": [
-			{
-				"pagePath": "pages/index/index",
-				"iconPath": "./img/images/un-home.png",
-				"selectedIconPath": "./img/images/'.$color['icon'].'-home.png",
-				"postion": "top",
-				"text": "首页"
-			},
-			{
-				"pagePath": "pages/cart/cart",
-				"iconPath": "./img/images/un-care.png",
-				"selectedIconPath": "./img/images/'.$color['icon'].'-care.png",
-				"text": "购物车"
-			},
-			{
-				"pagePath": "pages/order/order",
-				"iconPath": "./img/images/un-order.png",
-				"selectedIconPath": "./img/images/'.$color['icon'].'-order.png",
-				"text": "订单"
-			},
-			{
-				"pagePath": "pages/more/more",
-				"iconPath": "./img/images/un-more.png",
-				"selectedIconPath": "./img/images/'.$color['icon'].'-more.png",
-				"text": "更多"
-			}
-		]
-	}
-}';
+        $ext_json = getAppExtJson($app);
+        if(!$ext_json){return;}
 		$res = $weapp -> commit($template_id,$ext_json);
 		if($res['errcode'] == 0){
 			//代码上传成功，修改app表里面的字段为1
@@ -335,6 +279,7 @@ class Loop extends Action{
 		$weapp = new \app\weixin\controller\Common($this->data['appid']);
 		$page = ($this->data['page']-1)*20;
 		$res = $weapp -> template_list($page);
+
 		if($res['errcode'] != 0){
 			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
 		}
@@ -347,7 +292,10 @@ class Loop extends Action{
 			}
 			$res['list'][$k]['keyword_name_list'] =  substr($string, 1);
 		}
-		$return['code'] = 10000;$return['page'] = $this->data['page'];$return['data']['total_count'] = $res['total_count'];$return['data']['list'] = $res['list'];
+		$return['code'] = 10000;
+        $return['page'] = $this->data['page'];
+        $return['data']['total_count'] = $res['total_count'];
+        $return['data']['list'] = $res['list'];
 		return json($return);
 	}
 	//获取模板的关键词库
@@ -356,8 +304,8 @@ class Loop extends Action{
 			$return['code']=10002;$return['msg_test']='忘记了参数id';return json($return);
 		}
 		$weapp = new \app\weixin\controller\Common($this->data['appid']);
-		$res = $weapp -> template_get($this->data['id']);//dump($res);
-		if($res['errcode'] != 0){
+		$res = $weapp -> template_get($this->data['id']);
+            if($res['errcode'] != 0){
 			$return['code']=10002;$return['msg']=$res['errmsg'];return json($return);
 		}
 		$return['code'] = 10000;$return['data']['id'] = $res['id'];$return['data']['title'] = $res['title'];$return['data']['list'] = $res['keyword_list'];
@@ -446,6 +394,7 @@ class Loop extends Action{
 		$return['code'] = 10000;$return['msg'] = 'ok';
 		return json($return);
 	}
+    //发送模板消息
 	function template_send(){
 		$openid = 'om2Tu0KIErV-d5naK8zZR15wmIac';
 		$template_id = 'cLF3mZja8WIBSQ6P8xJJnRrEpu0vmXwTA5K_9AHdMsI';

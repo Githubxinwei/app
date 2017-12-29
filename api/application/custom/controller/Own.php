@@ -17,8 +17,8 @@ class Own extends Action{
 	 */
 	public function getUserAppList(){
 		//查询当前用户是否存在
-		$info = db('app') -> where("custom_id",$this->custom->id) -> where('is_del','0') -> select();
-		$arr['code'] = 10000;$arr['msg'] = '获取成功';$arr['msg_test'] = '获取成功';$arr['data'] = $info;
+		$info = db('app') -> where("custom_id",$this->custom->id) -> where('is_del','0') ->order('create_time desc')-> select();
+        $arr['code'] = 10000;$arr['msg'] = '获取成功';$arr['msg_test'] = '获取成功';$arr['data'] = $info;
 		return json($arr);
 
 	}
@@ -384,25 +384,34 @@ class Own extends Action{
 			$return['msg'] = '参数值缺失';
 			return json($return);
 		}
-		if(!preg_match("/^.{10}$/",$this -> data['mchid']) || !preg_match("/^\d{8}$/",$this -> data['appid'])){
-			$return['code'] = 10002;
-			$return['msg'] = '商户号或者appid格式不正确';
-			return json($return);
-		}
+		if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
+            $return['code'] = 10002;
+            $return['msg'] = 'appid格式不正确';
+            return json($return);
+        }
+        if(!preg_match("/^.{10}$/",$this -> data['mchid'])){
+            $return['code'] = 10002;
+            $return['msg'] = '商户号格式不正确';
+            $return['msg_test'] = '商户号格式不正确';
+            return json($return);
+        }
 		$info = db('auth_info') -> field('custom_id,mchid,mkey') -> where(['apps' => $this -> data['appid']]) -> find();
 		if(!$info){
 			$return['code'] = 10003;
 			$return['msg'] = '该小程序的授权信息不存在';
-			return json($return);
+			$return['msg_test'] = '该小程序的授权信息不存在';
+            return json($return);
 		}
 		if($info['custom_id'] != $this->custom->id){
 			$return['code'] = 10006;
-			$return['msg'] = '这个授权信息不是这个用户的';
+            $return['msg'] = '这个授权信息不是这个用户的';
+            $return['msg_test'] = '这个授权信息不是这个用户的';
 			return json($return);
 		}
 		if($info['mchid']|| $info['mkey']){
 			$return['code'] = 10004;
 			$return['msg'] = '商户号或秘钥已存在';
+			$return['msg_test'] = '商户号或秘钥已存在';
 			return json($return);
 		}
 		$mData['mchid'] = $this->data['mchid'];
@@ -411,10 +420,12 @@ class Own extends Action{
 		if($res){
 			$return['code'] = 10000;
 			$return['msg'] = '添加成功';
+			$return['msg_test'] = '添加成功';
 			return json($return);
 		}else{
 			$return['code'] = 10005;
 			$return['msg'] = 'appid或许不对';
+			$return['msg_test'] = 'appid或许不对';
 			return json($return);
 		}
 	}
@@ -472,7 +483,8 @@ class Own extends Action{
 		if(!$info){
 			$return['code'] = 10003;
 			$return['msg'] = '该小程序的授权信息不存在';
-			return json($return);
+            $return['msg_test'] = '该小程序的授权信息不存在';
+            return json($return);
 		}
 		if($info['custom_id'] != $this->custom->id){
 			$return['code'] = 10005;
@@ -482,19 +494,24 @@ class Own extends Action{
 		if(!$info['mchid']||!$info['mkey']){
 			$return['code'] = 10004;
 			$return['msg'] = '商户号或秘钥不存在';
-			return json($return);
+            $return['msg_test'] = '商户号或秘钥不存在';
+            return json($return);
 		}
 		$m_data['mchid'] = '';
 		$m_data['mkey'] = '';
 		$res = db('auth_info') -> where(['apps' => $this->data['appid']]) -> update($m_data);
 		if($res){
 			$return['code'] = 10000;
-			$return['msg'] = 'OK';
-			return json($return);
+			$return['msg'] = '设置成功';
+            $return['msg_test'] = '设置成功';
+
+            return json($return);
 		}else{
 			$return['code'] = 10006;
-			$return['msg'] = '失败了';
-			return json($return);
+			$return['msg'] = '设置失败';
+            $return['msg_test'] = '设置失败';
+
+            return json($return);
 		}
 	}
 

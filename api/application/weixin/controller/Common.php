@@ -54,7 +54,6 @@ class common extends Controller{
 		$url = 'https://api.weixin.qq.com/cgi-bin/wxopen/template/library/get?access_token='.$this->access_token;
 		$data = '{"id":"'.$id.'"}';
 		$res = http_request($url,$data);
-		halt($res);
 		return(json_decode($res,true));
 	}
 	//组合模板并添加至帐号下的个人模板库

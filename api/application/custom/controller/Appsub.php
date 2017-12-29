@@ -21,13 +21,11 @@ class Appsub  extends Xiguakeji
 
         if(!isset($this -> data['appid'])){
             $return['code'] = 10002;
-            $return['msg'] = 'appid不存在';
             $return['msg_test'] = 'appid不存在';
             return json($return);
         }
         if(!preg_match("/^\d{8}$/",$this -> data['appid'])){
             $return['code'] = 10003;
-            $return['msg'] = 'appid是一个8位数';
             $return['msg_test'] = 'appid是一个8位数';
             return json($return);
         }
@@ -198,12 +196,10 @@ class Appsub  extends Xiguakeji
             sendMail($mail['notifyemail'],'你有新的订单,请尽快处理','你有新的订单,请尽快处理【'.$goods['service_name'].'】等...','163');
             $return['code'] = 10000;
             $return['msg'] = '预约成功';
-            $return['msg_test'] = '预约成功';
             return json($return);
         }else{
             $return['code'] = 10004;
             $return['msg'] = '预约失败';
-            $return['msg_test'] = '预约失败';
             return json($return);
         }
     }
@@ -257,16 +253,9 @@ class Appsub  extends Xiguakeji
             $info['user_name']= $user_id['name'];
         }
 
-        if($info){
             $return['code'] = 10000;
             $return['data'] = $info;
             return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = '获取订单失败';
-            $return['msg_test'] = '获取订单失败';
-            return json($return);
-        }
 
     }
 
@@ -300,15 +289,9 @@ class Appsub  extends Xiguakeji
             -> where($where)
             -> find();
 
-        if($info){
             $return['code'] = 10000;
             $return['data'] = $info;
             return json($return);
-        }else{
-            $return['code'] = 10004;
-            $return['msg'] = '基本信息获取失败';
-            $return['msg_test'] = '基本信息获取失败';
-            return json($return);
-        }
+
     }
 }

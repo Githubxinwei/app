@@ -112,7 +112,7 @@ class Recharge extends Action {
             return json($return);
         }
         $user_id = $this -> custom ->id; //用户id
-        $user = db('custom')->field("is_agency_user,is_belong")->where(['id'=>$user_id])->find(); //用户信息
+        $user = db('custom')->field("is_agency_user,is_belong,id_agency")->where(['id'=>$user_id])->find(); //用户信息
         /*代理商的情况*/
         if($user['is_agency_user'] == 1 ){
             $where['type_auto'] = 1 ;
